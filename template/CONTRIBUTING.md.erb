@@ -169,7 +169,7 @@ monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the ch
 dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
 brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
 A bump the new cops fail gets RuboCop's safe corrections as a commit on its branch
-(`rubocop-autocorrect.yml`), and the required checks run again: corrected, it merges as any bump
--- its "workflows awaiting approval" are the commit's own pull request runs, whose checks the
-dispatched ones give: nothing waits on them. What safe corrections leave is yours, a pull
-request of yours too: a failed run's summary holds the corrections as a patch, to `git apply`.
+(`rubocop-autocorrect.yml`): approve its workflows (the pull request's "Approve workflows to
+run"), which GitHub holds for a commit of a workflow's token, and corrected, it merges as any
+bump. What safe corrections leave is yours, a pull request of yours too: a failed run's summary
+holds the corrections as a patch, to `git apply`.

@@ -13,7 +13,8 @@ Rust templates.
   rubocop-performance and rubocop-rake, and the whole project indexed first (rubydex), so the cops
   that can see across files do; in CI, its offences are annotated on the pull request, a failed
   run's summary holds its safe corrections as a patch, and a Dependabot bump the new cops fail gets
-  them as a commit, then merges as any bump (`rubocop-autocorrect.yml`, no token to set).
+  them as a commit, then merges as any bump once you approve its runs (`rubocop-autocorrect.yml`,
+  no token to set).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered.
 - **Security**: bundler-audit over `Gemfile.lock`, daily in CI; a pull request's new gems and

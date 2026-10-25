@@ -77,7 +77,7 @@ checks` and the smoke test pass.
 
 - Enable the repository settings the auto-merge workflow needs, listed at the top of
   `.github/workflows/dependabot-automerge.yml`, with every job of `ci.yml`, `nix.yml`, `smoke.yml`
-  and the style checks required: the workflows `rubocop-autocorrect.yml` runs on its commit.
+  and the style checks required.
 - Enable private vulnerability reporting (Settings → Advanced Security; a public repository's alone).
 - Enable the dependency graph there too, if it is off: `dependency-review.yml` fails without it.
 - Add a pending trusted publisher on
