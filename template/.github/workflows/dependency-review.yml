@@ -14,9 +14,10 @@ on:
 
 permissions: {}
 
-# NOTE: on a private repository, dependency review needs GitHub Code
-# Security (an organization's): without it, this job fails rather than
-# skipping -- delete the workflow or enable the feature.
+# NOTE: it needs the repository's dependency graph (Settings → Advanced
+# Security), and on a private repository GitHub Code Security too (an
+# organization's): without them, this job fails rather than skipping --
+# enable them, or delete the workflow.
 #
 # What it reads: Gemfile.lock has no scopes, so each of its gems counts as
 # runtime -- the gemspec's dependencies and the Gemfile's tools alike --;

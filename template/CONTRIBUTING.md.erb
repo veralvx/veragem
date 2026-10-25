@@ -113,8 +113,9 @@ Then, in whichever order suits you:
   that CI never gated.
 - Enable private vulnerability reporting (Settings → Advanced Security; a public repository's
   alone): it is off by default, and [SECURITY.md](SECURITY.md) and the issue form point to it.
-- A private repository: its dependency review (`dependency-review.yml`) needs GitHub Code
-  Security, an organization's; without it, the workflow fails -- delete it.
+- Enable the dependency graph (Settings → Advanced Security), if it is off: the dependency review
+  (`dependency-review.yml`) fails without it. A private repository's needs GitHub Code Security
+  too, an organization's; without it, delete the workflow.
 - Add a pending trusted publisher on [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers)
   for the gem `<%= name %>`: this repository, the workflow `release.yml`, the environment
   `release`. A release tag then publishes without a stored key, its first version too, and its
