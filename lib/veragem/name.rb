@@ -38,13 +38,14 @@ module Veragem
     end
 
     # Its lib/<path>.rb, first on the load path, must not shadow a library its tools require
-    # (lib/json.rb, JSON's); its tests' classes, Minitest::Test's, must find its module, not one of
-    # Minitest's (`lifecycle_hooks`: Minitest::Test::LifecycleHooks).
+    # (lib/json.rb, JSON's); its tests' classes, Minitest::Test's, and its gemspec, which `gem build`
+    # evaluates in Gem::Specification, must find its module, not one of theirs (`lifecycle_hooks`:
+    # Minitest::Test::LifecycleHooks).
     def self.check_shadowing(name, shadowed, found)
       unless shadowed.empty?
         raise Error, "invalid gem name #{name}: its lib/#{name.tr("-", "/")}.rb would shadow #{shadowed}"
       end
-      raise Error, "invalid gem name #{name}: its tests would find #{found} for its module" unless found.empty?
+      raise Error, "invalid gem name #{name}: #{found} for its module" unless found.empty?
     end
 
     # The +defined+ nestings, outermost first, each with its class: the gem's own module, +innermost+,
@@ -77,21 +78,25 @@ module Veragem
         nil
       end
       answers.puts($LOAD_PATH.resolve_feature_path(path)&.last)
-      tests = defined?(Minitest::Test) ? Minitest::Test.ancestors - Object.ancestors : []
-      answers.puts(tests.find { it.const_defined?(first, false) }&.then { "\#{it}::\#{first}" })
+      readers = { "its tests" => defined?(Minitest::Test) && Minitest::Test, "gem build" => Gem::Specification }
+      found = readers.filter_map do |reader, context|
+        owner = context && (context.ancestors - Object.ancestors).find { it.const_defined?(first, false) }
+        "\#{reader} would find \#{owner}::\#{first}" if owner
+      end
+      answers.puts(found.first)
       nestings.each { answers.puts(Object.const_defined?(it, false) ? Object.const_get(it, false).class : "") }
       answers.flush
       exit!(0)
     RUBY
     private_constant :PROBE
 
-    # The file +path+ already requires, the constant a Minitest::Test finds for the first of
-    # +nestings+, then each nesting's class -- Module, Class... --, each "" when none, where the gem
-    # meets them: in Bundler's CLI, which reads its gemspec (bin/setup's `bundle install`), in Rake
-    # and Minitest, and with its top-level +library+ (`date-holidays`: date), which its tools may
-    # require. Asked of a Ruby of its own, so the answer is the same however this one was started.
-    # Its answers come only once the libraries are loaded, then the child exits: one fewer is a
-    # failure.
+    # The file +path+ already requires, what a Minitest::Test or Gem::Specification finds for the
+    # first of +nestings+, then each nesting's class -- Module, Class... --, each "" when none, where
+    # the gem meets them: in Bundler's CLI, which reads its gemspec (bin/setup's `bundle install`),
+    # in Rake and Minitest, and with its top-level +library+ (`date-holidays`: date), which its tools
+    # may require. Asked of a Ruby of its own, so the answer is the same however this one was
+    # started. Its answers come only once the libraries are loaded, then the child exits: one fewer
+    # is a failure.
     def self.probe(library, path, nestings)
       command = [RbConfig.ruby, "-e", PROBE, library, path, *nestings]
       answers = Dir.mktmpdir do |dir|

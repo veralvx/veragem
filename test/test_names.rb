@@ -51,14 +51,16 @@ class TestNames < Minitest::Test
     end
   end
 
-  # a test's class body finds a constant in Minitest::Test's ancestors before the gem's module
-  def test_a_name_minitest_tests_would_take_for_their_own_is_refused
-    { "lifecycle_hooks" => "Minitest::Test::LifecycleHooks", "u_n_d_e_f_i_n_e_d" => "Minitest::Assertions::UNDEFINED" }
-      .each do |name, found|
-        error = assert_raises(Veragem::Error) { project(name) }
+  # a test's class body, and the gemspec as `gem build` evaluates it, find a constant of Minitest::Test's
+  # or Gem::Specification's ancestors before the gem's module
+  def test_a_name_its_tests_or_gem_build_would_take_for_their_own_is_refused
+    { "lifecycle_hooks" => "its tests would find Minitest::Test::LifecycleHooks",
+      "u_n_d_e_f_i_n_e_d" => "its tests would find Minitest::Assertions::UNDEFINED",
+      "date_like" => "gem build would find Gem::Specification::DateLike" }.each do |name, found|
+      error = assert_raises(Veragem::Error) { project(name) }
 
-        assert_equal "invalid gem name #{name}: its tests would find #{found} for its module", error.message
-      end
+      assert_equal "invalid gem name #{name}: #{found} for its module", error.message
+    end
   end
 
   # `module Set` cannot reopen the class Set; nor `module Date`, once a tool requires date

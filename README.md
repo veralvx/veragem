@@ -65,8 +65,8 @@ The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/m
 is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined -- by Ruby, Bundler, Rake
 or Minitest, or by its top-level library where this Ruby has one (`set`, `option_parser`,
 `date-holidays`: Date is a class) --, whose file would shadow a library this Ruby has (`json`:
-lib/json.rb), whose module its tests would take for Minitest's (`lifecycle_hooks`), that `bundle
-gem` would refuse or mangle (`1gem`, `my--gem`), one of the Gemfile's own tools (`rubocop-rake`),
+lib/json.rb), whose module its tests or `gem build` would take for Minitest's or RubyGems' own
+(`lifecycle_hooks`, `date_like`), that `bundle gem` would refuse or mangle (`1gem`, `my--gem`), one of the Gemfile's own tools (`rubocop-rake`),
 one longer than 40 characters or deeper than 4 modules (the generated code's lines fit RuboCop's),
 or, with `--exe`, one whose module is CLI or VERSION (`my-c_l_i`: its command line would find
 another first), is refused before anything is written. The summary is plain text: written into the
