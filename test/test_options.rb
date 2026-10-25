@@ -54,6 +54,16 @@ class TestOptions < Minitest::Test
     end
   end
 
+  # ARGV under a UTF-8 locale: an invalid byte is refused as the value it is in
+  def test_an_invalid_utf8_argument_is_refused
+    invalid = "\xFF".dup.force_encoding(Encoding::UTF_8)
+
+    { %W[#{invalid}] => /invalid gem name/, ["my_gem", "--author", invalid] => /invalid author/,
+      ["my_gem", "--#{invalid}"] => /invalid option/ }.each do |argv, message|
+      assert_match message, assert_raises(Veragem::Error) { parse(*argv) }.message
+    end
+  end
+
   def test_options_may_come_first_whatever_posixly_correct
     with_env("POSIXLY_CORRECT" => "1") { assert parse("--exe", "my_gem").exe }
     with_env("POSIXLY_CORRECT" => "1") { assert parse("my_gem", "--exe").exe }
@@ -66,7 +76,8 @@ class TestOptions < Minitest::Test
   # in a directory of no repository, whose own config would answer too
   def test_git_config_reads_gits_config
     Dir.mktmpdir do |home|
-      with_env("HOME" => home, "GIT_CONFIG_GLOBAL" => File.join(home, ".gitconfig"), "GIT_CONFIG_NOSYSTEM" => "1") do
+      with_env("HOME" => home, "GIT_CONFIG_GLOBAL" => File.join(home, ".gitconfig"), "GIT_CONFIG_NOSYSTEM" => "1",
+               "GIT_CONFIG_COUNT" => nil, "GIT_CONFIG_PARAMETERS" => nil) do
         Dir.chdir(home) { assert_git_config }
       end
     end

@@ -40,8 +40,9 @@ licence's (`Generator::EXE`, `Generator::LICENSE_FILES`).
 Keep a file plain unless it needs a value: a plain file is checked in place, as this repository's
 own. **This repository's harness is the template's**: each plain file of `template/` is here too,
 the same bytes and mode, and `test/test_sync.rb` fails on any drift -- but the files it names as
-different (Dependabot's configuration, which moves both). Change one, change both: edit the
-template's, then copy it here (or the other way round).
+different (Dependabot's configuration, which moves both), and the command line's own
+(`Generator::EXE`: this gem has none), which the smoke test's command gem checks. Change one,
+change both: edit the template's, then copy it here (or the other way round).
 
 A value written into a Ruby string goes through `quote`, which writes it as given whatever the
 locale. Each value is checked first: one line of UTF-8 (`Project#text`), a gem name `bundle gem`
@@ -87,8 +88,8 @@ checks` and the smoke test pass.
 From a clean `main`, CI green on it:
 
 ```sh
-bundle exec rake changelog          # the section the release will write
-bundle exec rake "bump[minor]"      # or major, or patch; the first release keeps 0.1.0
+bundle exec rake changelog          # the changes the next release will list
+bundle exec rake "bump[minor]"      # or major, or patch; the first keeps the version declared
 bundle exec rake release
 ```
 

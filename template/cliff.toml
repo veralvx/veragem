@@ -42,12 +42,11 @@ trim = true
 
 [git]
 conventional_commits = true
-# what cog lets through unconventional -- merges, fixups (cog.toml) -- skipped below
-filter_unconventional = false
+# what cog lets through unconventional -- merges, whatever their message, and fixups (cog.toml)
+filter_unconventional = true
 protect_breaking_commits = true # a breaking change is listed whatever its type, first
 # by type, the HTML comments ordering the groups
 commit_parsers = [
-    { message = "^(Merge |fixup! |squash! |amend! )", skip = true },
     { message = "^[a-z]+(\\([^)]*\\))?!:", group = "<!-- 0 -->Breaking changes" },
     { footer = "^BREAKING[ -]CHANGE", group = "<!-- 0 -->Breaking changes" },
     { message = "^(chore|ci|style)", skip = true },

@@ -6,7 +6,7 @@ require_relative "../plugins"
 class TestVeragem < Minitest::Test
   include Veragem::TestSupport
 
-  ARGS = %w[my_gem --author Jane --github jane].freeze
+  ARGS = %w[my_gem --author Jane --email jane@example.com --github jane].freeze
 
   def test_it_generates_the_gem_named_in_the_directory_given
     in_tmpdir do |dir|

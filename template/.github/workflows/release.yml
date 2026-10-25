@@ -30,7 +30,13 @@ jobs:
         uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
         with:
           ruby-version: "4.0"
-          bundler-cache: true
+
+      - name: The gems, from Gemfile.lock
+        # installed afresh, not restored from bundler-cache: a cache other runs wrote (main's, whose
+        # smoke test runs code from unpinned gems) is never an input to the gem published
+        env:
+          BUNDLE_FROZEN: "true"
+        run: bundle install
 
       - name: RuboCop, Steep, the tests
         run: bundle exec rake

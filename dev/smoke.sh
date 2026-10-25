@@ -33,7 +33,11 @@ for gem in smoke_lib smoke-omniauth-google_oauth2 smoke_apache; do
     if [ -e exe/"$gem" ] && [ "$(uname -s)" = Linux ] && docker info > /dev/null 2>&1; then
       "$(nix build --no-link --print-out-paths .#image.stream)" | docker load
       version="$(nix eval --raw .#image.imageTag)"
-      [ "$(docker run --rm --pull never "$gem:$version" --version)" = "$gem $version" ]
+      actual="$(docker run --rm --pull never "$gem:$version" --version)"
+      if [ "$actual" != "$gem $version" ]; then
+        echo "the image's --version gave '$actual', expected '$gem $version'" >&2
+        exit 1
+      fi
     fi
   )
 done

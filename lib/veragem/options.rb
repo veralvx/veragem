@@ -10,7 +10,9 @@ module Veragem
 
     def self.parse(argv, config: ->(key) { git_config(key) })
       values = GIT_CONFIG.transform_values { config.call(it) }
-      names = parser.permute(argv, into: values)
+      # the arguments' bytes, as git's values are: under a UTF-8 locale, OptionParser's matching
+      # raises on an invalid one, which Project refuses
+      names = parser.permute(argv.map(&:b), into: values)
       raise Error, "one gem name, not #{names.size} (bundle veragem --help)" unless names.size == 1
 
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it

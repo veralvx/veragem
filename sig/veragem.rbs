@@ -36,10 +36,10 @@ module Veragem
     def check_modules: (String name) -> void
     PROBE: String
 
-    def defined_of: (String name, Array[String] nestings) -> Array[[String, String?]]
+    def check_defined: (String name, Array[[String, String?]] defined, String? innermost) -> void
     def library_of: (String name) -> String
     def nestings_of: (String name) -> Array[String]
-    def probe: (String library, Array[String] nestings) -> Array[String]
+    def probe: (String library, String path, Array[String] nestings) -> Array[String]
     def valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     def modules_of: (String name) -> Array[String]
     def text: (String field, String value) -> String
@@ -57,12 +57,14 @@ module Veragem
   module Generator
     TEMPLATE: String
     EXE: Array[String]
+    GIT_LOCAL: Hash[String, nil]
     LICENSE_FILES: Hash[String, String]
 
     def self.files: (Project project) -> Hash[String, String]
     def self.skipped: (Project project) -> Array[String]
     def self.tools: () -> Array[String]
     def self.check: (Project project, Array[String] paths) -> void
+    def self.check_command: (Project project) -> void
     def self.path_of: (String file, Project project) -> String
     def self.generate: (Project project, String target) -> void
     def self.removed_unless_done: (String target) { () -> void } -> void

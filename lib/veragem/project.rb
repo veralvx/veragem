@@ -72,20 +72,25 @@ module Veragem
       name
     end
 
-    # The gem writes `module` for each of its modules: one defined already, as Set or Logger, it would
-    # reopen -- and an outer one that is a class, it could not.
+    # The gem writes lib/<path>.rb, which must not shadow a library its tools require (lib/json.rb,
+    # JSON's), and `module` for each of its modules.
     def check_modules(name)
+      path = name.tr("-", "/")
       nestings = nestings_of(name)
-      defined = defined_of(name, nestings)
-      raise Error, "invalid gem name #{name}: #{nestings.last} is already defined" if defined.size == nestings.size
+      shadowed, *kinds = probe(library_of(name), path, nestings)
+      raise Error, "invalid gem name #{name}: its lib/#{path}.rb would shadow #{shadowed}" unless shadowed.to_s.empty?
+
+      check_defined(name, nestings.zip(kinds).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
+    end
+
+    # The +defined+ nestings, outermost first, each with its class: the gem's own module, +innermost+,
+    # one defined already (Comparable, Bundler) would reopen; an outer one that is a class (Set,
+    # Logger), it could not open.
+    def check_defined(name, defined, innermost)
+      raise Error, "invalid gem name #{name}: #{innermost} is already defined" if defined.last&.first == innermost
 
       outer = defined.find { |_, kind| kind != "Module" }
       raise Error, "invalid gem name #{name}: #{outer[0]} is a #{outer[1]}, not a module" if outer
-    end
-
-    # The +nestings+ defined already, outermost first, each with its class.
-    def defined_of(name, nestings)
-      nestings.zip(probe(library_of(name), nestings)).take_while { |_, kind| !kind.to_s.empty? }
     end
 
     # The gem's top-level library: `date-holidays`' date
@@ -94,36 +99,38 @@ module Veragem
     # My, My::Gem
     def nestings_of(name) = modules_of(name).then { |modules| (1..modules.size).map { modules.first(it).join("::") } }
 
-    # The child: no stdin, a scratch directory, its arguments cleared before the library loads, the
-    # library's own output kept from the answers, no exit hooks.
+    # The child: no stdin, a scratch directory, its arguments cleared before the libraries load, their
+    # own output kept from the answers, no exit hooks.
     PROBE = <<~RUBY
-      library, *nestings = ARGV
+      library, path, *nestings = ARGV
       ARGV.clear
       answers = $stdout.dup
       $stdout.reopen($stderr)
-      ["bundler/cli", library].each do |feature|
+      ["bundler", "bundler/cli", "rake", library].each do |feature|
         require feature
       rescue StandardError, ScriptError
         nil
       end
+      answers.puts($LOAD_PATH.resolve_feature_path(path)&.last)
       nestings.each { answers.puts(Object.const_defined?(it, false) ? Object.const_get(it, false).class : "") }
       answers.flush
       exit!(0)
     RUBY
     private_constant :PROBE
 
-    # Each of +nestings+' class -- Module, Class... -- or "" when undefined, where the gem meets
-    # them: in Bundler's CLI, which reads its gemspec (bin/setup's `bundle install`), and with its
-    # top-level +library+ (`date-holidays`: date), which its tools may require. Asked of a Ruby of
-    # its own, so the answer is the same however this one was started. Its answers come only once
-    # the libraries are loaded, then the child exits: one fewer is a failure.
-    def probe(library, nestings)
-      command = [RbConfig.ruby, "-e", PROBE, library, *nestings]
+    # The file +path+ already requires, then each of +nestings+' class -- Module, Class... -- each ""
+    # when none, where the gem meets them: in Bundler's CLI, which reads its gemspec (bin/setup's
+    # `bundle install`), in Rake, and with its top-level +library+ (`date-holidays`: date), which its
+    # tools may require. Asked of a Ruby of its own, so the answer is the same however this one was
+    # started. Its answers come only once the libraries are loaded, then the child exits: one fewer
+    # is a failure.
+    def probe(library, path, nestings)
+      command = [RbConfig.ruby, "-e", PROBE, library, path, *nestings]
       answers = Dir.mktmpdir do |dir|
         IO.popen(Bundler.unbundled_env, command, unsetenv_others: true, in: File::NULL, err: File::NULL, chdir: dir,
                  &:readlines)
       end
-      raise Error, "could not check #{library}'s modules" unless answers.size == nestings.size
+      raise Error, "could not check #{library}'s modules" unless answers.size == nestings.size + 1
 
       answers.map(&:chomp)
     end
@@ -136,11 +143,13 @@ module Veragem
 
     def modules_of(name) = name.split("-").map { |word| word.split("_").map(&:capitalize).join }
 
-    # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped, short enough
-    # for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as unfinished.
+    # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped (Unicode's too),
+    # short enough for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as
+    # unfinished.
     def text(field, value)
       value = value.dup.force_encoding(Encoding::UTF_8)
-      line = value.valid_encoding? && !value.match?(/[[:cntrl:]]/) ? value.strip : ""
+      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]]/)
+      line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
       raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
       raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
       if line.match?(/\A(TODO|FIXME)/)

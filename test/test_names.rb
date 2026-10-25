@@ -31,13 +31,24 @@ class TestNames < Minitest::Test
   end
 
   def test_a_name_whose_module_is_already_defined_is_refused
-    { "set" => "Set", "logger" => "Logger", "bundler" => "Bundler", "bundler-plugin" => "Bundler::Plugin",
-      "bundler-thor" => "Bundler::Thor" }
+    { "set" => "Set", "comparable" => "Comparable",
+      "bundler-thor" => "Bundler::Thor", "option_parser" => "OptionParser" }
       .each do |name, defined|
         error = assert_raises(Veragem::Error) { project(name) }
 
         assert_equal "invalid gem name #{name}: #{defined} is already defined", error.message
       end
+  end
+
+  # lib/json.rb, first on the load path, would be every tool's `require "json"`
+  def test_a_name_whose_library_would_shadow_another_is_refused
+    %w[json logger bundler bundler-plugin].each do |name|
+      error = assert_raises(Veragem::Error) { project(name) }
+
+      path = name.tr("-", "/")
+
+      assert_match %r{\Ainvalid gem name #{name}: its lib/#{path}\.rb would shadow /.*/#{path}\.rb\z}, error.message
+    end
   end
 
   # `module Set` cannot reopen the class Set; nor `module Date`, once a tool requires date
@@ -49,19 +60,22 @@ class TestNames < Minitest::Test
     end
   end
 
-  # in a Ruby of its own: nothing the library prints is taken for an answer
+  # in a Ruby of its own: nothing the library prints is taken for an answer, and it loads with no
+  # arguments, in an empty directory
   def test_the_probe_requires_the_top_level_library_alone
-    assert_equal %w[Module Class], project.send(:probe, "date", %w[Comparable Date])
+    assert_equal ["", "Module", "Class"], project.send(:probe, "date", "my_gem", %w[Comparable Date])
     in_tmpdir do |dir|
       noisy = File.join(dir, "noisy.rb")
-      File.write(noisy, "puts 'Class'\nwarn 'Class'\nNoisy = 1\n")
+      File.write(noisy, "puts 'Class'\nwarn 'Class'\nNoisy = 1\nCleared = 1 if ARGV.empty?\n" \
+                        "Scratch = 1 if Dir.empty?('.')\n")
 
-      assert_equal ["Integer", ""], project.send(:probe, noisy, %w[Noisy Quiet])
+      assert_equal ["", "Integer", "", "Integer", "Integer"],
+                   project.send(:probe, noisy, "my_gem", %w[Noisy Quiet Cleared Scratch])
     end
   end
 
   def test_a_failing_probe_refuses
-    error = assert_raises(Veragem::Error) { project.send(:probe, "set", ["not a constant"]) }
+    error = assert_raises(Veragem::Error) { project.send(:probe, "set", "my_gem", ["not a constant"]) }
 
     assert_equal "could not check set's modules", error.message
   end

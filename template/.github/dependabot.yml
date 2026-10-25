@@ -58,8 +58,8 @@ updates:
 
   # the flake's inputs, monthly, in one pull request (Dependabot's `nix` ecosystem: each input to
   # its branch's newest commit). A person merges it: dependabot-automerge.yml takes patch and minor
-  # bumps alone, and a commit's move is neither. A private repository's are not moved (the `nix`
-  # ecosystem is public repositories' alone): `nix flake update` by hand there
+  # bumps alone, and a commit's move is neither. An input in a private repository is not moved
+  # (docs.github.com, "Supported ecosystems and repositories"): `nix flake update` by hand for it
   - package-ecosystem: "nix"
     directory: "/"
     schedule:

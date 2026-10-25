@@ -83,8 +83,8 @@ collection init`, then `rbs collection install`, as rbs's `docs/collection.md` d
 ## Creating a Pull Request
 
 1. Make sure `bundle exec rake checks` passes.
-2. Open a pull request against `main`, titled as a conventional commit: a squash merge makes the
-   title its commit, and so a changelog entry (CI checks it). Describe the problem it solves, and
+2. Open a pull request against `main`, titled as a conventional commit: a squash merge of two or
+   more commits makes the title its commit, and so a changelog entry (CI checks it). Describe the problem it solves, and
    link its issue (`Fixes #123`), if any.
 3. Wait for a maintainer's review.
 
@@ -126,7 +126,7 @@ Then, in whichever order suits you:
 - To publish the image to Docker Hub too: create its repository there, then set the repository
   variable `DOCKERHUB_USERNAME` and the secret `DOCKERHUB_TOKEN` (an access token that writes) --
   and the variable `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`.
-  A Docker Hub failure holds the GHCR release back too.
+  Docker Hub's login failing holds the GHCR release back too.
 <%- end -%>
 - Run `bundle exec rake checks` once to confirm your tools are complete: a step that stops on a
   missing command names it ([Prerequisites](#prerequisites) lists them; `nix develop` has them
@@ -141,7 +141,7 @@ Then, in whichever order suits you:
 From a clean `main`, CI green on it:
 
 ```sh
-bundle exec rake changelog          # the section the release will write
+bundle exec rake changelog          # the changes the next release will list
 bundle exec rake "bump[minor]"      # or major, or patch
 bundle exec rake release
 ```
@@ -153,7 +153,7 @@ declared, whatever the level), updates the lock, writes the changelog (git-cliff
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
 tag; it pushes no gem. The tag runs `release.yml`: the checks and the build, the push to RubyGems
 by Trusted Publishing, then the GitHub release of the same gem, its notes the changelog's new
-section<%= exe ? "; `image.yml` too, the command's OCI image to GHCR (`nix build .#image` builds it here)" : "" %>.
+section<%= exe ? "; `image.yml` too, beside it -- not after: it waits for no RubyGems push -- the command's OCI image to GHCR (`nix build .#image` builds it here)" : "" %>.
 
 `rake release` pushes to `main` directly: with "Require a pull request before merging" on, the
 maintainer cutting it needs the rule's bypass. A refused push leaves the release commit and
@@ -162,6 +162,6 @@ removes the tag (Bundler's doing): run `rake release` again once allowed.
 ## Updating the tools
 
 Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake's inputs
-monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass. A new
-RuboCop brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before
-silencing any.
+monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass.
+dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
+brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.

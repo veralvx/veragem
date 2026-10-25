@@ -42,6 +42,17 @@ class TestRefusals < Minitest::Test
     refute_empty Veragem::Generator.files(project("cli"))
   end
 
+  # CLI::CLI's code would take its own module for CLI; CLI::X::CLI's finds CLI::X for X
+  def test_a_command_line_in_a_module_cli_is_refused
+    %w[c_l_i x-c_l_i].each do |name|
+      error = assert_raises(Veragem::Error) { Veragem::Generator.files(project(name, exe: true)) }
+
+      assert_match(/its command line, .*::CLI, would take itself for CLI\z/, error.message)
+    end
+    refute_empty Veragem::Generator.files(project("c_l_i"))
+    refute_empty Veragem::Generator.files(project("c_l_i-x", exe: true))
+  end
+
   def test_a_name_of_the_gemfiles_tools_is_refused
     %w[rubocop-rake rubocop-minitest rubocop-performance].each do |name|
       error = assert_raises(Veragem::Error) { Veragem::Generator.files(project(name)) }
@@ -62,6 +73,21 @@ class TestRefusals < Minitest::Test
         assert_equal "git frobnicate failed in #{where}", error.message
         assert_match(/frobnicate/, err) if where == dir
       end
+    end
+  end
+
+  # as from a git hook, which points git at its own repository
+  def test_another_repository_is_left_alone
+    in_tmpdir do |dir|
+      other = File.join(dir, "other")
+      system("git", "init", "--quiet", other, exception: true)
+      git = File.join(other, ".git")
+      with_env("GIT_DIR" => git, "GIT_INDEX_FILE" => File.join(git, "index")) do
+        Veragem::Generator.generate(project, File.join(dir, "my_gem"))
+      end
+
+      assert_path_exists File.join(dir, "my_gem/.git")
+      assert_empty IO.popen(%w[git ls-files], chdir: other, &:read)
     end
   end
 
