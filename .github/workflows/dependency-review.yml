@@ -1,0 +1,50 @@
+name: Dependency Review
+
+# The licences and advisories of what a pull request adds to Gemfile.lock and the workflows. Not a
+# required check: it reports only when those files change.
+on:
+  pull_request:
+    paths:
+      - "Gemfile"
+      - "Gemfile.lock"
+      - "*.gemspec"
+      - ".github/workflows/**"
+
+permissions: {}
+
+# NOTE: this action needs the dependency graph, which is on by default
+# for public repositories but requires GitHub Advanced Security on a
+# private one. On a private repo without it, this job fails rather than
+# skipping -- delete the workflow or enable the feature.
+#
+# What it reads: Gemfile.lock, its every gem -- the gemspec's dependencies
+# and the Gemfile's tools alike, the Gemfile naming no group -- for
+# licences and advisories, as security.yml's bundler-audit reads it daily;
+# the actions for licences in effect: advisories match actions by semantic
+# version alone, not the commits these are pinned to ("Dependency graph
+# supported package ecosystems").
+jobs:
+  dependency-review:
+    name: License & Security Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # the summary's comment
+    # no checkout: the action compares the pull request's base and head through GitHub's API
+    steps:
+      - name: Dependency Review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+          # Audit your current dependency licenses with:
+          #   bundle exec ruby -e 'Bundler.load.specs.each { puts "#{it.name} #{it.licenses.join(" | ")}" }'
+          # and add anything legitimate that is missing rather than
+          # deleting this list -- an empty allow-list allows everything.
+          # Ruby: Ruby's own licence, its standard gems' (json, reline, erb...)
+          allow-licenses: >
+            0BSD, Apache-2.0, BlueOak-1.0.0, BSD-2-Clause, BSD-3-Clause,
+            BSL-1.0, CC0-1.0, CC-BY-4.0, ISC, MIT, MIT-0, MPL-2.0,
+            Ruby, Unlicense, Zlib
+          # bundler-audit is GPL-3.0-or-later: a tool of the Gemfile's, run here, never shipped
+          allow-dependencies-licenses: pkg:gem/bundler-audit
+          comment-summary-in-pr: on-failure
