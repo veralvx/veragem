@@ -3,7 +3,7 @@
 require "test_helper"
 require "<%= path %>/cli"
 
-class TestCLI < Minitest::Test
+class Test<%= constant.delete(":") %>CLI < Minitest::Test
   COMMAND = <%= constant %>::CLI
 
   def test_it_greets_the_name_given

@@ -32,8 +32,8 @@ jobs:
           ruby-version: "4.0"
 
       - name: The gems, from Gemfile.lock
-        # installed afresh, not restored from bundler-cache: a cache other runs wrote (main's, whose
-        # smoke test runs code from unpinned gems) is never an input to the gem published
+        # installed afresh, not restored from bundler-cache: a cache any run on main can write is
+        # never an input to the gem published
         env:
           BUNDLE_FROZEN: "true"
         run: bundle install

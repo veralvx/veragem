@@ -15,7 +15,8 @@ class TestProject < Minitest::Test
   end
 
   def test_a_text_is_one_line_of_utf8_rubygems_takes
-    ["", " ", "\u3000", "two\nlines", "tab\there", "TODO: write", " FIXME", "\xFF".b, "x" * 99].each do |summary|
+    ["", " ", "\u3000", "two\nlines", "two\u2028lines", "tab\there", "TODO: write", " FIXME", "\xFF".b,
+     "x" * 99].each do |summary|
       assert_raises(Veragem::Error, summary.inspect) { project(summary:) }
     end
   end

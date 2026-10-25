@@ -84,8 +84,8 @@ module Veragem
     end
 
     # The +defined+ nestings, outermost first, each with its class: the gem's own module, +innermost+,
-    # one defined already (Comparable, Bundler) would reopen; an outer one that is a class (Set,
-    # Logger), it could not open.
+    # one defined already (Comparable) would reopen; an outer one that is a class (Set, Logger), it
+    # could not open.
     def check_defined(name, defined, innermost)
       raise Error, "invalid gem name #{name}: #{innermost} is already defined" if defined.last&.first == innermost
 
@@ -148,7 +148,7 @@ module Veragem
     # unfinished.
     def text(field, value)
       value = value.dup.force_encoding(Encoding::UTF_8)
-      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]]/)
+      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029]/)
       line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
       raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
       raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100

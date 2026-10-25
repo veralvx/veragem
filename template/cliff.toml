@@ -42,11 +42,13 @@ trim = true
 
 [git]
 conventional_commits = true
-# what cog lets through unconventional -- merges, whatever their message, and fixups (cog.toml)
-filter_unconventional = true
+# unconventional commits too: one cog takes (a body with no blank line before it) is listed by its
+# type; one cog lets through (a merge, a fixup: cog.toml) is skipped, as is any of no type below
+filter_unconventional = false
 protect_breaking_commits = true # a breaking change is listed whatever its type, first
 # by type, the HTML comments ordering the groups
 commit_parsers = [
+    { message = "^(fixup|squash|amend)! ", skip = true },
     { message = "^[a-z]+(\\([^)]*\\))?!:", group = "<!-- 0 -->Breaking changes" },
     { footer = "^BREAKING[ -]CHANGE", group = "<!-- 0 -->Breaking changes" },
     { message = "^(chore|ci|style)", skip = true },
@@ -58,7 +60,7 @@ commit_parsers = [
     { message = "^doc", group = "<!-- 6 -->Documentation" },
     { message = "^test", group = "<!-- 7 -->Tests" },
     { message = "^revert", group = "<!-- 8 -->Reverts" },
-    { message = ".*", group = "<!-- 9 -->Other" },
+    { message = ".*", skip = true },
 ]
 sort_commits = "oldest"
 # the release tags, `v0.1.0` on (Bundler's own form, `rake release`)

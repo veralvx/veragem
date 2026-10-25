@@ -126,7 +126,7 @@ Then, in whichever order suits you:
 - To publish the image to Docker Hub too: create its repository there, then set the repository
   variable `DOCKERHUB_USERNAME` and the secret `DOCKERHUB_TOKEN` (an access token that writes) --
   and the variable `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`.
-  Docker Hub's login failing holds the GHCR release back too.
+  A Docker Hub failure in the build (its login, its name, a push) holds GHCR's tag back too.
 <%- end -%>
 - Run `bundle exec rake checks` once to confirm your tools are complete: a step that stops on a
   missing command names it ([Prerequisites](#prerequisites) lists them; `nix develop` has them

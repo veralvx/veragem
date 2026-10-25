@@ -43,7 +43,7 @@ its repository instead: `bundle plugin install veragem --git https://github.com/
 ## Usage
 
 ```sh
-bundle veragem my_gem   # and --github USER, unless git config github.user is set
+bundle veragem my_gem   # and --author, --github where git config has no user.name, github.user
 cd my_gem
 bin/setup               # the gems, and Gemfile.lock written
 git add .
@@ -67,8 +67,9 @@ Rake, or by its top-level library where this Ruby has one (`set`, `option_parser
 Date is a class) --, whose file would shadow a library this Ruby has (`json`: lib/json.rb), that
 `bundle gem` would refuse or mangle (`1gem`, `my--gem`), one of the Gemfile's own tools
 (`rubocop-rake`), one longer than 40 characters or deeper than 4 modules (the generated code's
-lines fit RuboCop's), or, with `--exe`, one whose module is CLI (`c_l_i`, `my-c_l_i`: its command
-line, CLI::CLI, would take itself for CLI), is refused before anything is written. The summary is plain text: written into the
+lines fit RuboCop's), or, with `--exe`, one with a module CLI or OptionParser (`c_l_i`,
+`my-option_parser`: its command line would take it for the one its code means), is refused before
+anything is written. The summary is plain text: written into the
 README as given, Markdown in it is dprint's to check. As `bundle gem` does, it makes the git
 repository and adds the files, and runs no `bundle install`: `bin/setup` writes the lock, to commit.
 The generated `CONTRIBUTING.md` lists the first steps: the repository's settings, RubyGems' pending

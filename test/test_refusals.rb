@@ -42,15 +42,18 @@ class TestRefusals < Minitest::Test
     refute_empty Veragem::Generator.files(project("cli"))
   end
 
-  # CLI::CLI's code would take its own module for CLI; CLI::X::CLI's finds CLI::X for X
-  def test_a_command_line_in_a_module_cli_is_refused
-    %w[c_l_i x-c_l_i].each do |name|
-      error = assert_raises(Veragem::Error) { Veragem::Generator.files(project(name, exe: true)) }
+  # CLI::CLI's code would take its own module for CLI, My::OptionParser::CLI's My::OptionParser for
+  # OptionParser
+  def test_a_command_line_in_a_module_cli_or_option_parser_is_refused
+    { "c_l_i" => "CLI", "x-c_l_i" => "CLI", "c_l_i-x" => "CLI", "my-option_parser" => "OptionParser" }
+      .each do |name, clash|
+        error = assert_raises(Veragem::Error) { Veragem::Generator.files(project(name, exe: true)) }
 
-      assert_match(/its command line, .*::CLI, would take itself for CLI\z/, error.message)
-    end
+        assert_equal "invalid gem name #{name}: its command line would take its module #{clash} for the one its " \
+                     "code means", error.message
+      end
     refute_empty Veragem::Generator.files(project("c_l_i"))
-    refute_empty Veragem::Generator.files(project("c_l_i-x", exe: true))
+    refute_empty Veragem::Generator.files(project("c-l-i", exe: true))
   end
 
   def test_a_name_of_the_gemfiles_tools_is_refused
