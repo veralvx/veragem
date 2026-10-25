@@ -1,7 +1,7 @@
 # The Ruby checks, `bundle exec rake` (RuboCop, Steep, the tests with their coverage gate), on each
 # Ruby the matrix lists, the gems installed from Gemfile.lock; then TypeProf's verdict, advisory.
 # nix.yml runs the flake's checks: the Nix format, the shell, the workflows, the package.
-name: CI
+name: Ruby CI
 
 on:
   push:
