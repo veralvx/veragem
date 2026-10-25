@@ -1,8 +1,10 @@
 # A Dependabot pull request that moves Gemfile.lock gets RuboCop's safe corrections (`rake
 # rubocop:autocorrect`), when the bumped RuboCop finds any, as a commit of their own on its branch;
 # the checks then run on it, and dependabot-automerge.yml's merge follows as for any bump. No
-# token is stored: the job's GITHUB_TOKEN pushes, and as its push starts no workflow (the commit
-# says `[skip ci]` too, so none waits for approval), it dispatches those whose checks are required.
+# token is stored: the job's GITHUB_TOKEN pushes, whose push the pull request's workflows wait on a
+# person's approval for -- creating no check meanwhile --, so it dispatches those whose checks are
+# required, which run at once on the commit. `[dependabot skip]`: Dependabot rebases the bump still,
+# over the commit, and this workflow corrects the new one.
 name: RuboCop Autocorrect
 
 on:
@@ -83,22 +85,38 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
           CORRECTED: ${{ github.event.pull_request.head.sha }}
+          MESSAGE: "style: apply RuboCop's safe corrections [dependabot skip]"
+          PATCH: ${{ runner.temp }}/corrections.patch
         run: |
           set -euo pipefail
-          # corrections of the commit they were made on: a newer one of Dependabot's has its own run
-          if [[ $(git rev-parse HEAD) != "$CORRECTED" ]]; then
+          if [[ $(git rev-parse HEAD) == "$CORRECTED" ]]; then
+            # RuboCop's files alone, edited in place: nothing else the bumped gems could write
+            ruby_files='^(([^/]+/)*[^/]+\.(rb|gemspec)|Gemfile|Rakefile|Steepfile|(bin|exe)/[^/]+)$'
+            if [[ -n $(git apply --summary "$PATCH") ]] ||
+              git apply --numstat "$PATCH" | cut -f 3 | grep -Ev "$ruby_files"; then
+              echo "::error::the corrections change more than RuboCop's files, in place: not committed"
+              exit 1
+            fi
+            git apply "$PATCH"
+            git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit --all --quiet --message "$MESSAGE"
+            if ! git push origin "HEAD:$BRANCH"; then
+              echo "$BRANCH moved on: its own run corrects it"
+              exit 0
+            fi
+          elif [[ $(git rev-parse HEAD^) == "$CORRECTED" && $(git log -1 --format=%s) == "$MESSAGE" ]]; then
+            echo "the corrections are pushed already (a re-run): the checks dispatched again"
+          else
             echo "$BRANCH moved on since $CORRECTED: its own run corrects it"
             exit 0
           fi
-          git apply "$RUNNER_TEMP/corrections.patch"
-          git -c user.name="github-actions[bot]" \
-            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit --all --quiet --message "style: apply RuboCop's safe corrections [skip ci]"
-          git push origin "HEAD:$BRANCH"
           # the workflows whose checks a merge requires (dependabot-automerge.yml), each where it
-          # exists: keep the list with the required checks
+          # exists, every one tried: keep the list with the required checks
+          failed=0
           for workflow in ci.yml nix.yml smoke.yml style-check-cocogitto.yml style-check-dprint.yml; do
             if [[ -e .github/workflows/$workflow ]]; then
-              gh workflow run "$workflow" --ref "$BRANCH"
+              gh workflow run "$workflow" --ref "$BRANCH" || failed=1
             fi
           done
+          exit "$failed"
