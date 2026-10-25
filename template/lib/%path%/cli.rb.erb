@@ -10,7 +10,7 @@ require_relative "../<%= File.basename(path) %>"
     def self.run(argv)
       options = { version: false }
       names = parser.parse(argv, into: options)
-      puts(options[:version] ? "#{name} \#{VERSION}" : #{constant}.greeting(names.first || ""))
+      puts(options[:version] ? parser.ver : #{modules.last}.greeting(names.first || ""))
       0
     rescue OptionParser::ParseError => e
       warn e.message, parser.help
@@ -18,7 +18,11 @@ require_relative "../<%= File.basename(path) %>"
     end
 
     def self.parser
-      OptionParser.new("Usage: #{name} [options] [NAME]") { it.on("--version", "Print the version") }
+      OptionParser.new("Usage: #{name} [options] [NAME]") do |opts|
+        opts.program_name = "#{name}"
+        opts.version = VERSION
+        opts.on("--version", "Print the version")
+      end
     end
     private_class_method :parser
   end

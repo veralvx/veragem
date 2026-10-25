@@ -16,7 +16,7 @@ module Veragem
     project = Options.parse(argv)
     target = File.join(dir, project.name)
     Generator.generate(project, target)
-    puts "Created #{project.name}. Next: cd #{project.name} && bin/setup (its README's first steps)"
+    puts "Created #{project.name}. Next: cd #{project.name} && bin/setup (CONTRIBUTING.md's first steps)"
     target
   end
 end

@@ -59,7 +59,9 @@ bundle exec rake checks
 
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`,
 `my-gem` is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined (`set`), or that
-`bundle gem` would mangle (`1gem`, `my--gem`), is refused before anything is written. As `bundle
+`bundle gem` would mangle (`1gem`, `my--gem`), or one of the Gemfile's own tools (`rake`), is
+refused before anything is written. The summary is plain text: written into the README as given,
+Markdown in it is dprint's to check. As `bundle
 gem` does, it makes the git repository and adds the files, and runs no `bundle install`:
 `bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists the first steps: the
 repository's settings, RubyGems' pending trusted publisher.

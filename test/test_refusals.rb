@@ -23,6 +23,14 @@ class TestRefusals < Minitest::Test
     refute_empty Veragem::Generator.files(project("cli"))
   end
 
+  def test_a_name_of_the_gemfiles_tools_is_refused
+    %w[rake steep typeprof rubocop-rake].each do |name|
+      error = assert_raises(Veragem::Error) { Veragem::Generator.files(project(name)) }
+
+      assert_equal "invalid gem name #{name}: the Gemfile's own tool", error.message
+    end
+  end
+
   def test_a_failing_git_is_refused
     in_tmpdir do |dir|
       ["/nonexistent", dir].each do |where|

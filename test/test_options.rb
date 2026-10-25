@@ -63,17 +63,22 @@ class TestOptions < Minitest::Test
     assert_output("bundle veragem #{Veragem::VERSION}\n") { assert_raises(SystemExit) { parse("--version") } }
   end
 
+  # in a directory of no repository, whose own config would answer too
   def test_git_config_reads_gits_config
     Dir.mktmpdir do |home|
-      with_env("HOME" => home, "XDG_CONFIG_HOME" => home, "GIT_CONFIG_NOSYSTEM" => "1") do
-        system("git", "config", "--global", "github.user", "ada", exception: true)
-        system("git", "config", "--global", "user.name", "Jos\u00E9", exception: true)
-
-        assert_equal ["ada", nil], [Veragem::Options.git_config("github.user"), Veragem::Options.git_config("user.email")]
-        # its bytes, whatever the locale: Project reads them as UTF-8
-        assert_equal "José", parse("my_gem", config: ->(key) { Veragem::Options.git_config(key) || "x" }).author
+      with_env("HOME" => home, "GIT_CONFIG_GLOBAL" => File.join(home, ".gitconfig"), "GIT_CONFIG_NOSYSTEM" => "1") do
+        Dir.chdir(home) { assert_git_config }
       end
     end
+  end
+
+  def assert_git_config
+    system("git", "config", "--global", "github.user", "ada", exception: true)
+    system("git", "config", "--global", "user.name", "Jos\u00E9", exception: true)
+
+    assert_equal ["ada", nil], [Veragem::Options.git_config("github.user"), Veragem::Options.git_config("user.email")]
+    # its bytes, whatever the locale: Project reads them as UTF-8
+    assert_equal "José", parse("my_gem", config: ->(key) { Veragem::Options.git_config(key) || "x" }).author
   end
 
   def test_without_git_no_value

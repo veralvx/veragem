@@ -16,10 +16,10 @@ generate() {
   bundle veragem "$@" --author "Smoke Test" --email smoke@example.com --github veragem-smoke
 }
 generate smoke_lib
-generate smoke-cli --exe --license mit
+generate smoke-omniauth-google_oauth2 --exe --license mit
 generate smoke_apache --license apache
 
-for gem in smoke_lib smoke-cli smoke_apache; do
+for gem in smoke_lib smoke-omniauth-google_oauth2 smoke_apache; do
   echo "== $gem"
   (
     cd "$gem"

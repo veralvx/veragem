@@ -11,7 +11,9 @@ class TestVeragem < Minitest::Test
   def test_it_generates_the_gem_named_in_the_directory_given
     in_tmpdir do |dir|
       target = nil
-      assert_output(%r{\ACreated my_gem\. Next: cd my_gem && bin/setup}) { target = Veragem.run(ARGV_, dir:) }
+      assert_output(%r{\ACreated my_gem\. Next: cd my_gem && bin/setup \(CONTRIBUTING\.md's first steps\)}) do
+        target = Veragem.run(ARGV_, dir:)
+      end
 
       assert_equal File.join(dir, "my_gem"), target
       assert_path_exists File.join(target, "my_gem.gemspec")

@@ -4,21 +4,23 @@ require "test_helper"
 require "<%= path %>/cli"
 
 class TestCLI < Minitest::Test
+  CLI = <%= constant %>::CLI
+
   def test_it_greets_the_name_given
-    assert_output("Hello, Ada!\n") { assert_equal 0, <%= constant %>::CLI.run(["Ada"]) }
+    assert_output("Hello, Ada!\n") { assert_equal 0, CLI.run(["Ada"]) }
   end
 
   def test_nobody_named_it_greets_the_world
-    assert_output("Hello, world!\n") { assert_equal 0, <%= constant %>::CLI.run([]) }
+    assert_output("Hello, world!\n") { assert_equal 0, CLI.run([]) }
   end
 
   def test_version
     expected = "<%= name %> #{<%= constant %>::VERSION}\n"
-    assert_output(expected) { assert_equal 0, <%= constant %>::CLI.run(["--version"]) }
+    assert_output(expected) { assert_equal 0, CLI.run(["--version"]) }
   end
 
   def test_an_unknown_option_is_refused
-    assert_output("", /invalid option: --nope/) { assert_equal 2, <%= constant %>::CLI.run(["--nope"]) }
+    assert_output("", /invalid option: --nope/) { assert_equal 2, CLI.run(["--nope"]) }
   end
 
   def test_the_executable_runs_it

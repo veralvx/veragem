@@ -17,12 +17,21 @@ module Veragem
     def self.files(project)
       files = Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).sort.to_h { [it, path_of(it, project)] }
       files.reject! { |file, _| skipped(project).include?(file) || File.directory?(File.join(TEMPLATE, file)) }
-      # a name can be a template file's: `helper`'s test would be test/test_helper.rb
-      clash = files.values.tally.find { |_, count| count > 1 }
-      raise Error, "invalid gem name #{project.name}: it would write #{clash[0]} twice" if clash
-
+      check(project, files.values)
       files
     end
+
+    # A name can be a tool's, which the Gemfile would name twice, or a template file's: `helper`'s
+    # test would be test/test_helper.rb.
+    def self.check(project, paths)
+      raise Error, "invalid gem name #{project.name}: the Gemfile's own tool" if tools.include?(project.name)
+
+      clash = paths.tally.find { |_, count| count > 1 }
+      raise Error, "invalid gem name #{project.name}: it would write #{clash[0]} twice" if clash
+    end
+
+    # The gems template/Gemfile names.
+    def self.tools = File.read(File.join(TEMPLATE, "Gemfile")).scan(/^gem "([^"]+)"/).flatten
 
     # The files another kind or licence takes.
     def self.skipped(project)
