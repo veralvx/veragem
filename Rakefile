@@ -55,7 +55,7 @@ task :actionlint do
   sh "actionlint"
 end
 
-desc "Run the flake's checks: the Nix format, the shell, the workflows (git's files alone)"
+desc "Run the flake's checks: the Nix format, the shell, the workflows, the package (git's files alone)"
 task :nix do
   sh "nix", "flake", "check"
 end

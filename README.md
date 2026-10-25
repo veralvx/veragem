@@ -20,8 +20,10 @@ Rust templates.
   written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own `rake release`; the
   tag publishes to RubyGems by Trusted Publishing -- no API key stored -- and makes the GitHub
   release.
-- **Nix**: a flake with the development shell (Ruby and every tool the checks run), `nix fmt`, and
-  checks for the Nix, the shell scripts and the workflows.
+- **Nix**: a flake with the development shell (Ruby and every tool the checks run), the gem as a
+  package (`nix build`), `nix fmt`, and checks for the Nix, the shell scripts, the workflows and
+  the package. With `--exe`, `nix run` runs the command, and its OCI image (`nix build .#image`)
+  is published to GHCR at each release (`image.yml`), as the templates' Python and Rust ones are.
 - dprint for the Markdown and TOML, an `.editorconfig`, the community documents (`CONTRIBUTING.md`,
   `AGENTS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`), issue and pull request templates.
 
@@ -80,17 +82,20 @@ Steepfile, sig/       the types; typeprof.conf.jsonc, TypeProf's editor support
 .rubocop.yml          RuboCop and its extensions
 lib/, test/           starter code: typed, documented, every line and branch tested
 bin/setup, bin/console
-flake.nix, flake.lock the dev shell, `nix fmt`, the checks that need no gem
+flake.nix, flake.lock the dev shell, the package (and the command's image), `nix fmt`, the checks
 .githooks/            opt-in (`rake hooks`): the quick checks before a commit, Conventional Commits
 cliff.toml, cog.toml  git-cliff's changelog, cocogitto's commit checks
 dprint.json, .editorconfig
-.github/              CI, the flake, bundler-audit, the release, the style checks, Dependabot and
-                      its auto-merge; issue and pull request templates
+.github/              CI, the flake, bundler-audit, the release (and the image), the style checks,
+                      Dependabot and its auto-merge; issue and pull request templates
 README, CONTRIBUTING, AGENTS, SECURITY, CODE_OF_CONDUCT, LICENSE-MIT / LICENSE-APACHE
 ```
 
 The development tools are unconstrained in the Gemfile: the lock pins them, at the versions current
-when `bin/setup` first runs, and Dependabot moves it.
+when `bin/setup` first runs, and Dependabot moves it. They need no development group: the built gem
+holds neither the Gemfile nor the lock, its dependencies the gemspec's alone. The dev shell gives
+Ruby and the other tools, not the gems: those are Bundler's, from the lock CI installs from too
+(nixpkgs packages few of them, and older).
 
 ## How it is verified
 

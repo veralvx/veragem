@@ -21,11 +21,11 @@ Gem::Specification.new do |spec|
   spec.metadata["bug_tracker_uri"] = "#{spec.homepage}/issues"
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  # What the gem ships, as git tracks it: the plugin (plugins.rb, which Bundler loads), its code and
-  # signatures, the template -- its dotfiles too -- and the documents.
-  spec.files = IO.popen(%w[git ls-files -z -- plugins.rb lib sig template README.md CHANGELOG.md LICENSE-*],
-                        chdir: __dir__, &:read).split("\0")
-  raise "veragem.gemspec: git ls-files failed: build from a git checkout" unless Process.last_status.success?
+  # What the gem ships: the plugin (plugins.rb, which Bundler loads), its code and signatures, the
+  # template -- its dotfiles too -- and the documents. Read from the files, not git: the gem builds
+  # in Nix's sandbox too, which has none.
+  spec.files = Dir.glob(%w[plugins.rb lib/**/*.rb sig/**/*.rbs README.md CHANGELOG.md LICENSE-*], base: __dir__) +
+               Dir.glob("template/**/*", File::FNM_DOTMATCH, base: __dir__).select { File.file?(File.join(__dir__, it)) }
 
   spec.require_paths = ["lib"]
 end

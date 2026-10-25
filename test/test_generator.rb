@@ -23,9 +23,10 @@ class TestGenerator < Minitest::Test
 
   def test_a_command_line_is_the_exe_kinds_alone
     each_kind do |gem, _, files|
-      cli = %W[exe/#{gem.name} lib/#{gem.path}/cli.rb test/test_cli.rb]
+      cli = %W[exe/#{gem.name} lib/#{gem.path}/cli.rb test/test_cli.rb .github/workflows/image.yml
+               .github/image-registries.sh]
 
-      assert_equal gem.exe ? cli : [], files & cli
+      assert_equal gem.exe ? cli.sort : [], (files & cli).sort
     end
   end
 
@@ -46,7 +47,7 @@ class TestGenerator < Minitest::Test
 
   def test_the_executables_keep_their_mode
     each_kind do |gem, target, files|
-      executables = EXECUTABLES + (gem.exe ? ["exe/#{gem.name}"] : [])
+      executables = EXECUTABLES + (gem.exe ? ["exe/#{gem.name}", ".github/image-registries.sh"] : [])
 
       assert_equal executables.sort, files.select { File.executable?(File.join(target, it)) }.sort
     end

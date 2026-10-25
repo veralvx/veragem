@@ -1,6 +1,7 @@
-# The flake's checks (flake.nix): the Nix format, the shell scripts, the workflows -- built on each
-# system the flake declares: x86_64 and aarch64 Linux, Apple silicon (macos-latest). The dev shell
-# is built too, so each system's tools are known to install.
+# The flake's checks (flake.nix): the Nix format, the shell scripts, the workflows, the gem built
+# as a package (and a command's run, and its OCI image on Linux) -- built on each system the flake
+# declares: x86_64 and aarch64 Linux, Apple silicon (macos-latest). The dev shell is built too, so
+# each system's tools are known to install.
 name: Nix
 
 on:

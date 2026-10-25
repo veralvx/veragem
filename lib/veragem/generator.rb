@@ -8,8 +8,9 @@ module Veragem
   # its mode; then a git repository, its files added, as `bundle gem` leaves one.
   module Generator
     TEMPLATE = File.expand_path("../../template", __dir__) # steep:ignore ArgumentTypeMismatch
-    # The files a command line alone needs.
-    EXE = %w[exe/%name%.erb lib/%path%/cli.rb.erb test/test_cli.rb.erb].freeze
+    # The files a command line alone needs: its code, its test, its OCI image's workflow.
+    EXE = %w[exe/%name%.erb lib/%path%/cli.rb.erb test/test_cli.rb.erb .github/workflows/image.yml
+             .github/image-registries.sh].freeze
     # Each LICENSE-* file's SPDX identifier.
     LICENSE_FILES = { "LICENSE-MIT.erb" => "MIT", "LICENSE-APACHE.erb" => "Apache-2.0" }.freeze
 

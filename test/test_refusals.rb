@@ -53,9 +53,14 @@ class TestRefusals < Minitest::Test
   def test_a_failing_git_is_refused
     in_tmpdir do |dir|
       ["/nonexistent", dir].each do |where|
-        error = assert_raises(Veragem::Error) { Veragem::Generator.git(where, "frobnicate") }
+        error = nil
+        # git's own complaint goes to the user's terminal; here, nowhere
+        _, err = capture_subprocess_io do
+          error = assert_raises(Veragem::Error) { Veragem::Generator.git(where, "frobnicate") }
+        end
 
         assert_equal "git frobnicate failed in #{where}", error.message
+        assert_match(/frobnicate/, err) if where == dir
       end
     end
   end

@@ -36,8 +36,9 @@ module Veragem
     def check_modules: (String name) -> void
     PROBE: String
 
+    def defined_of: (String name, Array[String] nestings) -> Array[[String, String?]]
+    def library_of: (String name) -> String
     def nestings_of: (String name) -> Array[String]
-    def kinds: (String name, Array[String] nestings) -> Array[String]
     def probe: (String library, Array[String] nestings) -> Array[String]
     def valid: (String field, untyped value) { (untyped) -> bool } -> untyped
     def modules_of: (String name) -> Array[String]
