@@ -1,0 +1,80 @@
+# The gems (Gemfile.lock), weekly; GitHub Actions, pinned to commits, each release in a comment,
+# and Dependabot moves both (docs.github.com, "Dependabot supported ecosystems"), weekly; the
+# flake's inputs, monthly.
+version: 2
+updates:
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "07:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    # `chore(deps): ...` -- no changelog entry: the lock is not in the gem, whose users resolve its
+    # gemspec's requirements themselves
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels: # each created once (Issues > Labels): one the repository lacks is ignored
+      - "dependencies"
+      - "ruby"
+    groups:
+      # minor and patch updates in one pull request (dependabot-automerge.yml merges it once the
+      # checks pass); a major one alone, for review
+      gems:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    cooldown:
+      default-days: 3 # Dependabot's default too (its options reference), set explicitly
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "07:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    # `ci(deps): ...` -- nothing a user of the gem meets, so no changelog entry
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "actions"
+    groups:
+      actions-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    cooldown:
+      default-days: 3
+
+  # the flake's inputs, monthly, in one pull request (Dependabot's `nix` ecosystem: each input to
+  # its branch's newest commit). A person merges it: dependabot-automerge.yml takes patch and minor
+  # bumps alone, and a commit's move is neither. A private repository's are not moved (the `nix`
+  # ecosystem is public repositories' alone): `nix flake update` by hand there
+  - package-ecosystem: "nix"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 1
+    # `chore(deps): ...` -- the flake is the development shell and the checks, nothing the gem ships
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "nix"
+    groups:
+      flake-inputs:
+        patterns:
+          - "*"

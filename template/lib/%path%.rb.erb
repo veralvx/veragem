@@ -1,0 +1,13 @@
+# frozen_string_literal: true
+
+require_relative "<%= File.basename(path) %>/version"
+
+<%= nest(<<~RUBY, doc: summary)
+  # A greeting for +name+, its surrounding whitespace stripped; nobody named, the world.
+  def self.greeting(name)
+    who = name.strip
+    who = "world" if who.empty?
+    "Hello, \#{who}!"
+  end
+RUBY
+-%>

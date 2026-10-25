@@ -1,0 +1,27 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class Test<%= constant.delete(":") %> < Minitest::Test
+  def test_the_version_is_major_minor_patch
+    assert_match(/\A\d+\.\d+\.\d+\z/, <%= constant %>::VERSION)
+  end
+
+  def test_it_greets_the_name_given
+    assert_equal "Hello, Ada!", <%= constant %>.greeting("Ada")
+  end
+
+  def test_nobody_named_it_greets_the_world
+    assert_equal "Hello, world!", <%= constant %>.greeting(" \n")
+  end
+
+  # A property, checked on many generated names (pbt): surrounding whitespace changes nothing.
+  def test_surrounding_whitespace_changes_nothing
+    gem = <%= constant %>
+    Pbt.assert do
+      Pbt.property(Pbt.printable_string) do |name|
+        assert_equal gem.greeting(name), gem.greeting(" #{name}\n")
+      end
+    end
+  end
+end

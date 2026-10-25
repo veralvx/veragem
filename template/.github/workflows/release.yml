@@ -1,0 +1,109 @@
+# A release tag, v<version> (`rake bump`, then `rake release`), publishes the gem: checked and built
+# once, pushed to RubyGems through Trusted Publishing -- no API key stored; once, on rubygems.org, a
+# (pending) trusted publisher naming this repository, this workflow (release.yml) and the `release`
+# environment -- then its GitHub release of the same file, its notes the release's section of
+# CHANGELOG.md (release-notes.sh). Least privilege, as RubyGems' Trusted Publishing advises, after
+# PyPI's security model: the build, which runs the checks and the gemspec, writes nothing but its
+# artifacts and mints no key; only the RubyGems job can mint one -- with nothing checked out and no
+# Gemfile or Rakefile loaded -- and only the release job can write the repository.
+name: Release
+
+on:
+  push:
+    tags: ["v[0-9]*"]
+
+permissions: {}
+
+jobs:
+  build:
+    name: Check and build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+
+      - name: RuboCop, Steep, the tests
+        run: bundle exec rake
+
+      - name: Build the gem, and its notes
+        run: |
+          set -euo pipefail
+          version="$(ruby -e 'puts Gem::Specification.load(Dir["*.gemspec"].first).version')"
+          if [[ $GITHUB_REF_NAME != "v$version" ]]; then
+            echo "::error::$GITHUB_REF_NAME, but the gemspec's version is $version" >&2
+            exit 1
+          fi
+          # into pkg/, as Bundler's gem tasks build it
+          bundle exec rake build
+          .github/release-notes.sh CHANGELOG.md "$version" > notes.md
+
+      - name: Keep the gem
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gem
+          path: pkg/
+          if-no-files-found: error
+
+      - name: Keep the notes
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: notes
+          path: notes.md
+          if-no-files-found: error
+
+  rubygems:
+    name: RubyGems
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+    permissions:
+      id-token: write # the short-lived token Trusted Publishing exchanges for an API key
+    steps:
+      - name: The build's gem
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: gem
+          path: pkg/
+
+      - name: Trusted Publishing's API key
+        uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
+
+      - name: Push
+        # the runner image's RubyGems: no other action in the one job that can mint a key
+        run: gem push pkg/*.gem
+
+  release:
+    name: GitHub release
+    needs: rubygems
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: The build's gem
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: gem
+          path: pkg/
+
+      - name: Its notes
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: notes
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" pkg/*.gem --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "$GITHUB_REF_NAME" --notes-file notes.md

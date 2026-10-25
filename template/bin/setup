@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# The gems at Gemfile.lock's versions; the first run writes the lock, to commit.
+system("bundle", "install", exception: true)

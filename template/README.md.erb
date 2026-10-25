@@ -1,0 +1,74 @@
+# <%= name %>
+
+<%= summary %>
+
+## Requirements
+
+Ruby 4.0 or later.
+
+## Install
+
+```sh
+<%- if exe -%>
+gem install <%= name %>
+<%- else -%>
+bundle add <%= name %>
+<%- end -%>
+```
+
+## Usage
+<%- if exe -%>
+
+```sh
+<%= name %> Ada
+```
+
+or, as a library:
+<%- end -%>
+
+```ruby
+require "<%= path %>"
+
+<%= constant %>.greeting("Ada") # => "Hello, Ada!"
+```
+
+## Development
+
+`bin/setup` installs the gems at `Gemfile.lock`'s versions (the first run writes the lock), then
+`bundle exec rake` runs the Ruby checks -- RuboCop, Steep and the tests with their coverage gate --
+and `bundle exec rake checks` everything CI runs:
+
+```sh
+bin/setup
+bundle exec rake checks
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the tools those checks need, how a release is cut and,
+in a project just generated, its [first steps](CONTRIBUTING.md#first-steps); and
+[AGENTS.md](AGENTS.md) for the lint and type policy.
+
+## License
+<%- if license == "dual" -%>
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
+  <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in
+the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without
+any additional terms or conditions.
+<%- elsif license == "mit" -%>
+
+Licensed under the MIT license ([LICENSE-MIT](LICENSE-MIT) or
+<http://opensource.org/licenses/MIT>).
+<%- else -%>
+
+Licensed under the Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
+<http://www.apache.org/licenses/LICENSE-2.0>).
+<%- end -%>

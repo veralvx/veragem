@@ -1,0 +1,12 @@
+# Bundler's settings and gems (setup-ruby installs into vendor/), the built gems, the coverage
+/.bundle/
+/vendor/
+/pkg/
+/coverage/
+/doc/
+/tmp/
+# rbs collection install's (the lock, rbs_collection.lock.yaml, is committed)
+/.gem_rbs_collection/
+# Nix's build links, direnv's cache
+/result*
+/.direnv

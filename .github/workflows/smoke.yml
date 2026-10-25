@@ -1,0 +1,38 @@
+# The plugin end to end (dev/smoke.sh): installed from this checkout, it generates a gem of each
+# kind and licence, and each passes its own checks, in this repository's dev shell -- the
+# template's. Weekly too: the generated gems take each tool's newest release, which can break them
+# with nothing changed here.
+name: Smoke
+
+on:
+  push:
+    branches: [main]
+  # every pull request, whatever it touches: a path-filtered workflow never reports, and a
+  # required check that never reports blocks the merge
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays, 06:00 UTC
+
+# a pull request's newest run cancels its older ones; any other run, a group of its own: every
+# commit on main checked (in a shared group, a pending run gives way to the newest: the default)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Generate and check each kind
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
+
+      - name: Smoke test
+        run: nix develop --command dev/smoke.sh
