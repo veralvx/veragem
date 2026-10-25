@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "tmpdir"
+
 module Veragem
   # The gem to generate: the values given, checked, and what follows from them.
   class Project
@@ -71,8 +73,7 @@ module Veragem
     end
 
     # The gem writes `module` for each of its modules: one defined already, as Set or Logger, it would
-    # reopen -- and an outer one that is a class, it could not. Asked of a Ruby of its own, which
-    # requires the gem's paths first (`date-holidays`: date), as its tools may load them.
+    # reopen -- and an outer one that is a class, it could not.
     def check_modules(name)
       nestings = nestings_of(name)
       defined = nestings.zip(kinds(name, nestings)).take_while { |_, kind| !kind.to_s.empty? }
@@ -85,14 +86,44 @@ module Veragem
     # My, My::Gem
     def nestings_of(name) = modules_of(name).then { |modules| (1..modules.size).map { modules.first(it).join("::") } }
 
-    # Each of +nestings+' class -- Module, Class... -- or "" when undefined, once each of the gem's
-    # paths is required (date, date/holidays), in a Ruby outside any bundle.
+    # Each of +nestings+' class -- Module, Class... -- or "" when undefined: here, in Bundler's
+    # process, which reads the gem's gemspec; else in a Ruby of its own once the gem's top-level
+    # library is required (`date-holidays`: date), as its tools may require it.
     def kinds(name, nestings)
-      paths = (1..nestings.size).map { name.split("-").first(it).join("/") }
-      probe = "ARGV.shift(Integer(ARGV.shift)).each { begin; require it; rescue LoadError; end }; " \
-              "ARGV.each { puts Object.const_defined?(it, false) ? Object.const_get(it, false).class : '' }"
-      command = [RbConfig.ruby, "-e", probe, paths.size.to_s, *paths, *nestings]
-      IO.popen(Bundler.unbundled_env, command, unsetenv_others: true, &:readlines).map(&:chomp)
+      there = probe(name.split("-").fetch(0), nestings)
+      nestings.zip(there).map do |nesting, kind|
+        Object.const_defined?(nesting, false) ? Object.const_get(nesting, false).class.to_s : kind.to_s
+      end
+    end
+
+    # The child: no stdin, a scratch directory, its arguments cleared before the library loads, the
+    # library's own output kept from the answers, no exit hooks.
+    PROBE = <<~RUBY
+      library, *nestings = ARGV
+      ARGV.clear
+      answers = $stdout.dup
+      $stdout.reopen($stderr)
+      begin
+        require library
+      rescue StandardError, ScriptError
+        nil
+      end
+      nestings.each { answers.puts(Object.const_defined?(it, false) ? Object.const_get(it, false).class : "") }
+      answers.flush
+      exit!(0)
+    RUBY
+    private_constant :PROBE
+
+    # Its answers come only once the library is loaded, then the child exits: one fewer is a failure.
+    def probe(library, nestings)
+      command = [RbConfig.ruby, "-e", PROBE, library, *nestings]
+      answers = Dir.mktmpdir do |dir|
+        IO.popen(Bundler.unbundled_env, command, unsetenv_others: true, in: File::NULL, err: File::NULL, chdir: dir,
+                 &:readlines)
+      end
+      raise Error, "could not check #{library}'s modules" unless answers.size == nestings.size
+
+      answers.map(&:chomp)
     end
 
     def valid(field, value)

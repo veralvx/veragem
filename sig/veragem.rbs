@@ -34,8 +34,11 @@ module Veragem
     def indent: (String code) -> String
     def check_name: (String name) -> String
     def check_modules: (String name) -> void
+    PROBE: String
+
     def nestings_of: (String name) -> Array[String]
     def kinds: (String name, Array[String] nestings) -> Array[String]
+    def probe: (String library, Array[String] nestings) -> Array[String]
     def valid: (String field, untyped value) { (untyped) -> bool } -> untyped
     def modules_of: (String name) -> Array[String]
     def text: (String field, String value) -> String

@@ -31,7 +31,8 @@ class TestNames < Minitest::Test
   end
 
   def test_a_name_whose_module_is_already_defined_is_refused
-    { "set" => "Set", "logger" => "Logger", "bundler" => "Bundler", "bundler-plugin" => "Bundler::Plugin" }
+    { "set" => "Set", "logger" => "Logger", "bundler" => "Bundler", "bundler-plugin" => "Bundler::Plugin",
+      "bundler-thor" => "Bundler::Thor" }
       .each do |name, defined|
         error = assert_raises(Veragem::Error) { project(name) }
 
@@ -46,6 +47,23 @@ class TestNames < Minitest::Test
 
       assert_equal "invalid gem name #{name}: #{outer} is a Class, not a module", error.message
     end
+  end
+
+  # in a Ruby of its own: nothing the library prints is taken for an answer
+  def test_the_probe_requires_the_top_level_library_alone
+    assert_equal %w[Module Class], project.send(:probe, "date", %w[Comparable Date])
+    in_tmpdir do |dir|
+      noisy = File.join(dir, "noisy.rb")
+      File.write(noisy, "puts 'Class'\nwarn 'Class'\nNoisy = 1\n")
+
+      assert_equal ["Integer", ""], project.send(:probe, noisy, %w[Noisy Quiet])
+    end
+  end
+
+  def test_a_failing_probe_refuses
+    error = assert_raises(Veragem::Error) { project.send(:probe, "set", ["not a constant"]) }
+
+    assert_equal "could not check set's modules", error.message
   end
 
   def test_a_name_nested_in_a_module_reopens_it

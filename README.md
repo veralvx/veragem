@@ -57,15 +57,16 @@ bundle exec rake checks
 | `--github=USER`     | `git config github.user` (required) | the homepage, the repository's links            |
 | `--summary=TEXT`    | `A Ruby gem.`                       | the gemspec, the README, the module's comment   |
 
-The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`,
-`my-gem` is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined (`set`), or that
-`bundle gem` would mangle (`1gem`, `my--gem`), one of the Gemfile's own tools (`rubocop-rake`), or
-one longer than 40 characters or 4 modules deep (the generated code's lines fit RuboCop's), is
-refused before anything is written. The summary is plain text: written into the README as given,
-Markdown in it is dprint's to check. As `bundle
-gem` does, it makes the git repository and adds the files, and runs no `bundle install`:
-`bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists the first steps: the
-repository's settings, RubyGems' pending trusted publisher.
+The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
+is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined -- by Ruby or by Bundler, or
+by its top-level library where this Ruby has one (`set`, `logger`, `date-holidays`: Date is a class)
+-- or that `bundle gem` would mangle (`1gem`, `my--gem`), one of the Gemfile's own tools
+(`rubocop-rake`), or one longer than 40 characters or 4 modules deep (the generated code's lines fit
+RuboCop's), is refused before anything is written. The summary is plain text: written into the
+README as given, Markdown in it is dprint's to check. As `bundle gem` does, it makes the git
+repository and adds the files, and runs no `bundle install`: `bin/setup` writes the lock, to commit.
+The generated `CONTRIBUTING.md` lists the first steps: the repository's settings, RubyGems' pending
+trusted publisher.
 
 ## What you get
 
