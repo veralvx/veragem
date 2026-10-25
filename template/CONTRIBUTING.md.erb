@@ -113,6 +113,9 @@ Then, in whichever order suits you:
   that CI never gated.
 - Enable private vulnerability reporting (Settings → Advanced Security; a public repository's
   alone): it is off by default, and [SECURITY.md](SECURITY.md) and the issue form point to it.
+- Enable the dependency graph (Settings → Advanced Security), if it is off: the dependency review
+  (`dependency-review.yml`) fails without it. A private repository's needs GitHub Code Security
+  too, an organization's; without it, delete the workflow.
 - Add a pending trusted publisher on [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers)
   for the gem `<%= name %>`: this repository, the workflow `release.yml`, the environment
   `release`. A release tag then publishes without a stored key, its first version too, and its
@@ -165,3 +168,8 @@ Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake
 monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass.
 dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
 brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
+A bump the new cops fail gets RuboCop's safe corrections as a commit on its branch
+(`rubocop-autocorrect.yml`): approve its workflows (the pull request's "Approve workflows to
+run"), which GitHub holds for a commit of a workflow's token, and corrected, it merges as any
+bump. What safe corrections leave is yours, a pull request of yours too: a failed run's summary
+holds the corrections as a patch, to `git apply`.
