@@ -20,8 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    outputs:
-      prerelease: ${{ steps.build.outputs.prerelease }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -38,7 +36,6 @@ jobs:
         run: bundle exec rake
 
       - name: Build the gem, and its notes
-        id: build
         run: |
           set -euo pipefail
           version="$(ruby -e 'puts Gem::Specification.load(Dir["*.gemspec"].first).version')"
@@ -49,8 +46,6 @@ jobs:
           # into pkg/, as Bundler's gem tasks build it
           bundle exec rake build
           .github/release-notes.sh CHANGELOG.md "$version" > notes.md
-          # a prerelease version (1.0.0.rc1) is a GitHub pre-release
-          echo "prerelease=$(ruby -e 'puts Gem::Version.new(ARGV[0]).prerelease?' "$version")" >> "$GITHUB_OUTPUT"
 
       - name: Keep the gem
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -81,21 +76,16 @@ jobs:
           name: gem
           path: pkg/
 
-      - name: Set up Ruby
-        # Ruby and RubyGems alone: nothing checked out, so no bundle
-        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
-        with:
-          ruby-version: "4.0"
-
       - name: Trusted Publishing's API key
         uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
 
       - name: Push
+        # the runner image's RubyGems: no other action in the one job that can mint a key
         run: gem push pkg/*.gem
 
   release:
     name: GitHub release
-    needs: [build, rubygems]
+    needs: rubygems
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -114,7 +104,6 @@ jobs:
       - name: Release
         env:
           GH_TOKEN: ${{ github.token }}
-          PRERELEASE: ${{ needs.build.outputs.prerelease }}
         run: |
           gh release create "$GITHUB_REF_NAME" pkg/*.gem --repo "$GITHUB_REPOSITORY" --verify-tag \
-            --prerelease="$PRERELEASE" --title "$GITHUB_REF_NAME" --notes-file notes.md
+            --title "$GITHUB_REF_NAME" --notes-file notes.md

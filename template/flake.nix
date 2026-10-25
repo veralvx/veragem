@@ -51,7 +51,7 @@
       formatter = forAllSystems (pkgs: pkgs.nixfmt-tree);
 
       checks = forAllSystems (pkgs: {
-        format = check pkgs "format" [ pkgs.nixfmt ] "nixfmt --check flake.nix";
+        format = check pkgs "format" [ pkgs.nixfmt ] "find . -name '*.nix' -exec nixfmt --check {} +";
         # shfmt finds the scripts, by extension or shebang, and formats them as .editorconfig says
         shell = check pkgs "shell" [ pkgs.shellcheck pkgs.shfmt ] ''
           shfmt --find . | xargs shellcheck

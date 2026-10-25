@@ -72,7 +72,7 @@ bundle exec rake typeprof # the signatures TypeProf infers from lib/, to start s
 A new dependency of the gem goes in the gemspec (`spec.add_dependency`), a new tool in the
 Gemfile; `bundle install` then updates the lock. Steep reads the standard library's signatures
 when the Steepfile names the library (`library "json"`); a gem's, through an RBS collection (`rbs
-collection init`, then `rbs collection install`, as rbs's README describes).
+collection init`, then `rbs collection install`, as rbs's `docs/collection.md` describes).
 
 ## Creating a Pull Request
 
@@ -105,8 +105,8 @@ Then, in whichever order suits you:
 - Enable the repository settings the auto-merge workflow needs -- they are listed at the top of
   `.github/workflows/dependabot-automerge.yml`. Without required status checks, it merges bumps
   that CI never gated.
-- Enable private vulnerability reporting (Settings → Code security): it is off by default, and
-  [SECURITY.md](SECURITY.md) and the issue form point to it.
+- Enable private vulnerability reporting (Settings → Advanced Security; a public repository's
+  alone): it is off by default, and [SECURITY.md](SECURITY.md) and the issue form point to it.
 - Add a pending trusted publisher on [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers)
   for the gem `<%= name %>`: this repository, the workflow `release.yml`, the environment
   `release`. A release tag then publishes without a stored key, its first version too, and its
@@ -142,8 +142,8 @@ by Trusted Publishing, then the GitHub release of the same gem, its notes the ch
 section.
 
 `rake release` pushes to `main` directly: with "Require a pull request before merging" on, the
-maintainer cutting it needs the rule's bypass. A refused push leaves the commit and the tag
-local: run `rake release` again once allowed.
+maintainer cutting it needs the rule's bypass. A refused push leaves the release commit and
+removes the tag (Bundler's doing): run `rake release` again once allowed.
 
 ## Updating the tools
 

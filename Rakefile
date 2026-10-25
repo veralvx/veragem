@@ -108,6 +108,7 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
   abort "error: nothing to release: no commit since the last tag enters the changelog" if entries.zero?
 
   file = "lib/#{gemspec.name.tr("-", "/")}/version.rb"
+  abort "error: #{file} declares no \"#{current}\"" unless File.read(file).include?(%("#{current}"))
   first = !File.exist?("CHANGELOG.md")
   begin
     File.write(file, File.read(file).sub(%("#{current}"), %("#{version}")))
@@ -126,6 +127,8 @@ end
 
 # The gem is published by release.yml, on the tag, through RubyGems' Trusted Publishing: `rake
 # release` builds it, tags v<version> and pushes the branch and the tag, and pushes no gem.
+Rake::Task["release"].clear_comments
+Rake::Task["release"].add_description("Tag v#{gemspec.version}, push the branch and the tag: release.yml publishes it")
 Rake::Task["release:rubygem_push"].clear_actions
 desc "Push no gem: release.yml publishes the tag"
 task "release:rubygem_push" do

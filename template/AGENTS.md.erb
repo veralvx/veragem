@@ -30,7 +30,7 @@ allows: `untyped` only where the value truly is any value.
 ```ruby
 eval(code) # rubocop:disable Security/Eval -- code is this gem's own, never its input
 
-# the library declares no signature (Steep reads nothing after the diagnostic's name)
+# the library declares no signature -- above: text after Steep's diagnostic name voids the ignore
 value = client.fetch # steep:ignore NoMethod
 ```
 
@@ -55,7 +55,7 @@ footer lists a commit first:
 feat: accept the name as a symbol too
 fix: strip a trailing newline from the name
 docs: explain the greeting's fallback
-build(deps): require json 3
+build(deps): depend on json
 ```
 
 The git hooks (`bundle exec rake hooks`) check the same before a commit and a push; never bypass

@@ -31,7 +31,7 @@ allows: `untyped` only where the value truly is any value.
 ```ruby
 eval(code) # rubocop:disable Security/Eval -- code is this gem's own, never its input
 
-# the library declares no signature (Steep reads nothing after the diagnostic's name)
+# the library declares no signature -- above: text after Steep's diagnostic name voids the ignore
 value = client.fetch # steep:ignore NoMethod
 ```
 

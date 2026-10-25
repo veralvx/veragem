@@ -5,6 +5,8 @@
 /coverage/
 /doc/
 /tmp/
+# rbs collection install's (the lock, rbs_collection.lock.yaml, is committed)
+/.gem_rbs_collection/
 # Nix's build links, direnv's cache
 /result*
 /.direnv
