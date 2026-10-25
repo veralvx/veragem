@@ -7,8 +7,15 @@ plugins:
   - rubocop-performance
   - rubocop-rake
 
+inherit_mode:
+  merge:
+    - Exclude
+
 AllCops:
   NewCops: enable
+  # `nix build`'s links: the gem installed, which the project index would take for a second copy
+  Exclude:
+    - "result*/**/*"
   # the whole project indexed first (the rubydex gem), so the cops that can see across files do: a
   # method defined twice in two files, a constant reassigned in another
   UseProjectIndex: true

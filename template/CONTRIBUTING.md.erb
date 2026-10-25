@@ -71,10 +71,12 @@ nix build                 # the gem, built and installed by Nix (flake.nix)
 
 `bundle exec rake -T` lists every task.
 
-A new dependency of the gem goes in the gemspec (`spec.add_dependency`), and its nixpkgs package
-in flake.nix's `gemPath` (`pkgs.rubyPackages_4_0.<gem>`) for the Nix package<%= exe ? ", whose `command` check fails without it" : "" %>. A new tool goes in
-the Gemfile, which the built gem never holds: its dependencies are the gemspec's alone. `bundle
-install` then updates the lock. Steep reads the standard library's signatures
+A new dependency of the gem goes in the gemspec (`spec.add_dependency`), and, for the Nix package,
+its nixpkgs package in flake.nix's `dependencies` (`pkgs.rubyPackages_4_0.<gem>`): the flake's
+`library` check, which loads the gem with its dependencies, fails without it, or with a version
+the gemspec's requirement excludes -- one nixpkgs lacks is built there by `pkgs.buildRubyGem`. A
+new tool goes in the Gemfile, which the built gem never holds: its dependencies are the gemspec's
+alone. `bundle install` then updates the lock. Steep reads the standard library's signatures
 when the Steepfile names the library (`library "json"`); a gem's, through an RBS collection (`rbs
 collection init`, then `rbs collection install`, as rbs's `docs/collection.md` describes).
 

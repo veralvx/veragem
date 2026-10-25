@@ -8,11 +8,11 @@
 #                    .#image` builds it as an OCI image (image.yml publishes it)
 #   nix fmt          the Nix, by nixfmt
 #   nix flake check  the Nix format, the shell scripts (shellcheck, shfmt), the workflows
-#                    (actionlint), the package -- and the command, and the image -- offline in the
-#                    sandbox: git's files alone
+#                    (actionlint), the package and its library loaded -- and the command run, and
+#                    its image -- offline in the sandbox: git's files alone
 #
-# Nothing here names the gem: its name is the gemspec's file, its version lib/<path>/version.rb's
-# VERSION, its summary and homepage the gemspec's.
+# Nothing here names the gem: its name is the gemspec's file; its version, lib/<path>/version.rb's
+# VERSION; its summary, homepage and licences, the gemspec's lines that set them.
 {
   description = "A Ruby gem's development shell, package and checks";
 
@@ -37,37 +37,39 @@
           lib.removeSuffix ".gemspec" (lib.head gemspecs)
         else
           throw "flake.nix: one *.gemspec expected, found ${toString gemspecs}";
-      # a gemspec's `spec.<field> = "<value>"`, its value, its escapes read; null if it has none in
-      # this form
+      path = lib.replaceStrings [ "-" ] [ "/" ] name;
+      # the groups of the first of +file+'s lines that +pattern+ matches whole, or null
+      line =
+        pattern: file:
+        lib.findFirst (groups: groups != null) null (
+          map (builtins.match pattern) (lib.splitString "\n" (builtins.readFile file))
+        );
+      # a Ruby string literal's value: its escapes read
+      unquote = lib.replaceStrings [ "\\\\" "\\\"" "\\#" ] [ "\\" "\"" "#" ];
+      # the gemspec's `spec.<attribute> = "<value>"`, its value; "" if no line sets it so
       field =
         attribute:
         let
-          found = builtins.match ''.*spec\.${attribute} = "((\\.|[^"\\])*)".*'' (
-            builtins.readFile ./${name}.gemspec
-          );
+          found = line ''[[:space:]]*spec\.${attribute} *= *"((\\.|[^"\\])*)" *'' ./${name}.gemspec;
         in
-        if found == null then
-          null
-        else
-          lib.replaceStrings [ "\\\\" "\\\"" "\\#" ] [ "\\" "\"" "#" ] (lib.head found);
+        if found == null then "" else unquote (lib.head found);
       version =
         let
-          found = builtins.match ''.*VERSION = "([^"]+)".*'' (
-            builtins.readFile ./lib/${lib.replaceStrings [ "-" ] [ "/" ] name}/version.rb
-          );
-        in
-        if found == null then throw "flake.nix: no VERSION = \"...\" in version.rb" else lib.head found;
-      # spec.licenses' SPDX identifiers, as one expression: MIT OR Apache-2.0
-      licence =
-        let
-          found = builtins.match ''.*spec\.licenses = \[([^]]*)].*'' (builtins.readFile ./${name}.gemspec);
+          found = line ''[[:space:]]*VERSION *= *"([^"]+)"( *\.freeze)? *'' ./lib/${path}/version.rb;
         in
         if found == null then
-          null
+          throw "flake.nix: no VERSION = \"...\" line in version.rb"
         else
-          lib.concatStringsSep " OR " (
-            lib.concatLists (lib.filter lib.isList (builtins.split ''"([^"]*)"'' (lib.head found)))
-          );
+          lib.head found;
+      # the SPDX identifiers of `spec.licenses = [...]` or `spec.license = "..."`
+      licences =
+        let
+          found = line ''[[:space:]]*spec\.licenses? *= *(.*)'' ./${name}.gemspec;
+        in
+        if found == null then
+          [ ]
+        else
+          lib.concatLists (lib.filter lib.isList (builtins.split ''"([^"]*)"'' (lib.head found)));
       command = builtins.pathExists ./exe/${name};
 
       # a check: its command run in the repository's files, its tools on PATH
@@ -82,17 +84,19 @@
       perSystem =
         pkgs:
         let
+          ruby = pkgs.ruby_4_0;
+          # the gem's runtime dependencies (its gemspec's add_dependency), as nixpkgs packages
+          # them: pkgs.rubyPackages_4_0.<gem>. The `library` check fails on one missing
+          dependencies = [ ];
           package = pkgs.buildRubyGem {
             gemName = name;
-            inherit version;
-            ruby = pkgs.ruby_4_0;
+            inherit version ruby;
             src = self;
-            # the gem's runtime dependencies (its gemspec's add_dependency), as nixpkgs packages
-            # them: pkgs.rubyPackages_4_0.<gem>
-            gemPath = [ ];
+            gemPath = dependencies;
             meta = {
               description = field "summary";
               homepage = field "homepage";
+              license = map lib.getLicenseFromSpdxId licences;
             }
             // lib.optionalAttrs command { mainProgram = name; };
           };
@@ -102,20 +106,27 @@
           image = pkgs.dockerTools.buildLayeredImage {
             inherit name;
             tag = version;
-            # Dir.tmpdir's default; the image has no other
+            # Dir.tmpdir's default, and HOME's: the image has no other directory to write
             extraCommands = "mkdir -m 1777 tmp";
             config = {
               Entrypoint = [ (lib.getExe package) ];
               # nobody: nothing in it needs root, and a numeric user needs no /etc/passwd
               User = "65534:65534";
+              Env = [
+                # UTF-8 text, ARGV and files alike (glibc's built-in locale)
+                "LANG=C.UTF-8"
+                "HOME=/tmp"
+                # what OpenSSL verifies HTTPS against: the image has no /etc/ssl
+                "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+              ];
               # what GHCR reads (docs.github.com, "Working with the Container registry"): the
               # source links the image to its repository
-              Labels = lib.filterAttrs (_: value: value != null) {
+              Labels = lib.filterAttrs (_: value: value != "") {
                 "org.opencontainers.image.title" = name;
                 "org.opencontainers.image.description" = field "summary";
                 "org.opencontainers.image.version" = version;
                 "org.opencontainers.image.source" = field "homepage";
-                "org.opencontainers.image.licenses" = licence;
+                "org.opencontainers.image.licenses" = lib.concatStringsSep " OR " licences;
               };
             };
           };
@@ -140,6 +151,17 @@
               pkgs.shellcheck
             ] "actionlint .github/workflows/*.yml";
             inherit package;
+            # the library as a user loads it: the gem activated -- its dependencies with it -- then
+            # required, in an environment of nothing else (env -i)
+            library =
+              pkgs.runCommand "library"
+                {
+                  gemPath = lib.concatMapStringsSep ":" (gem: "${gem}/${ruby.gemPath}") ([ package ] ++ dependencies);
+                }
+                ''
+                  env -i GEM_PATH="$gemPath" ${lib.getExe ruby} -e 'gem "${name}"; require "${path}"'
+                  touch $out
+                '';
           }
           // lib.optionalAttrs command {
             # the command as a user runs it: its wrapper alone gives it its environment (env -i)
@@ -162,7 +184,7 @@
 
           devShells.default = pkgs.mkShell {
             packages = [
-              pkgs.ruby_4_0
+              ruby
               pkgs.cocogitto
               pkgs.git-cliff
               pkgs.dprint
@@ -179,16 +201,6 @@
       packages = output "packages";
       checks = output "checks";
       devShells = output "devShells";
-      apps = lib.optionalAttrs command (
-        lib.mapAttrs (_: packages: {
-          default = {
-            type = "app";
-            program = lib.getExe packages.default;
-            meta.description = packages.default.meta.description;
-          };
-        }) self.packages
-      );
-
       formatter = forAllSystems (pkgs: pkgs.nixfmt-tree);
     };
 }
