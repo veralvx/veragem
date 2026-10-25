@@ -6,8 +6,21 @@ module Veragem
 
   def self.run: (Array[String] argv, ?dir: String) -> String
 
+  module Name
+    PATTERN: Regexp
+    PROBE: String
+
+    def self.modules: (String name) -> Array[String]
+    def self.check: (String name) -> String
+    def self.check_modules: (String name) -> void
+    def self.check_shadowing: (String name, String shadowed, String found) -> void
+    def self.check_defined: (String name, Array[[String, String?]] defined, String? innermost) -> void
+    def self.library_of: (String name) -> String
+    def self.nestings_of: (String name) -> Array[String]
+    def self.probe: (String library, String path, Array[String] nestings) -> Array[String]
+  end
+
   class Project
-    NAME: Regexp
     GITHUB: Regexp
     LICENSES: Hash[String, Array[String]]
 
@@ -32,16 +45,7 @@ module Veragem
     private
 
     def indent: (String code) -> String
-    def check_name: (String name) -> String
-    def check_modules: (String name) -> void
-    PROBE: String
-
-    def check_defined: (String name, Array[[String, String?]] defined, String? innermost) -> void
-    def library_of: (String name) -> String
-    def nestings_of: (String name) -> Array[String]
-    def probe: (String library, String path, Array[String] nestings) -> Array[String]
     def valid: [T < Object] (String field, T value) { (T) -> bool } -> T
-    def modules_of: (String name) -> Array[String]
     def text: (String field, String value) -> String
   end
 

@@ -23,7 +23,8 @@ bundle exec rake hooks   # optional: the quick checks before a commit, Conventio
 plugins.rb              what Bundler loads: the `bundle veragem` command
 lib/veragem.rb          Veragem.run: the command line, the project, the generation
 lib/veragem/options.rb  OptionParser, git config's defaults
-lib/veragem/project.rb  the values, checked (bundle gem's name rules), and what follows from them
+lib/veragem/name.rb     the gem's name, checked: bundle gem's rules, what its files and tools meet
+lib/veragem/project.rb  the values, checked, and what follows from them
 lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, modes kept; git
 template/               the generated gem
 sig/, test/, dev/smoke.sh

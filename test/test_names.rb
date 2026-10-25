@@ -51,6 +51,16 @@ class TestNames < Minitest::Test
     end
   end
 
+  # a test's class body finds a constant in Minitest::Test's ancestors before the gem's module
+  def test_a_name_minitest_tests_would_take_for_their_own_is_refused
+    { "lifecycle_hooks" => "Minitest::Test::LifecycleHooks", "u_n_d_e_f_i_n_e_d" => "Minitest::Assertions::UNDEFINED" }
+      .each do |name, found|
+        error = assert_raises(Veragem::Error) { project(name) }
+
+        assert_equal "invalid gem name #{name}: its tests would find #{found} for its module", error.message
+      end
+  end
+
   # `module Set` cannot reopen the class Set; nor `module Date`, once a tool requires date
   def test_a_name_nested_in_a_class_is_refused
     { "set-extras" => "Set", "string-utils" => "String", "date-holidays" => "Date" }.each do |name, outer|
@@ -63,19 +73,19 @@ class TestNames < Minitest::Test
   # in a Ruby of its own: nothing the library prints is taken for an answer, and it loads with no
   # arguments, in an empty directory
   def test_the_probe_requires_the_top_level_library_alone
-    assert_equal ["", "Module", "Class"], project.send(:probe, "date", "my_gem", %w[Comparable Date])
+    assert_equal ["", "", "Module", "Class"], Veragem::Name.probe("date", "my_gem", %w[Comparable Date])
     in_tmpdir do |dir|
       noisy = File.join(dir, "noisy.rb")
       File.write(noisy, "puts 'Class'\nwarn 'Class'\nNoisy = 1\nCleared = 1 if ARGV.empty?\n" \
                         "Scratch = 1 if Dir.empty?('.')\n")
 
-      assert_equal ["", "Integer", "", "Integer", "Integer"],
-                   project.send(:probe, noisy, "my_gem", %w[Noisy Quiet Cleared Scratch])
+      assert_equal ["", "", "Integer", "", "Integer", "Integer"],
+                   Veragem::Name.probe(noisy, "my_gem", %w[Noisy Quiet Cleared Scratch])
     end
   end
 
   def test_a_failing_probe_refuses
-    error = assert_raises(Veragem::Error) { project.send(:probe, "set", "my_gem", ["not a constant"]) }
+    error = assert_raises(Veragem::Error) { Veragem::Name.probe("set", "my_gem", ["not a constant"]) }
 
     assert_equal "could not check set's modules", error.message
   end
@@ -100,7 +110,7 @@ class TestNames < Minitest::Test
     Pbt.assert do
       Pbt.property(Pbt.array(Pbt.one_of("a", "b", "0", "_", "-"), min: 1, max: 8)) do |chars|
         name = chars.join
-        next unless Veragem::Project::NAME.match?(name)
+        next unless Veragem::Name::PATTERN.match?(name)
 
         gem = project(name)
 

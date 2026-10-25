@@ -12,7 +12,7 @@ require_relative "../<%= File.basename(path) %>"
       names = parser.parse(argv, into: options)
       puts output(options, names.first || "")
       0
-    rescue OptionParser::ParseError => e
+    rescue ::OptionParser::ParseError => e
       warn e.message, parser.help
       2
     end
@@ -29,9 +29,10 @@ require_relative "../<%= File.basename(path) %>"
     end
     private_class_method :output
 
-    # --help as an option of its own: OptionParser's built-in one exits the process
+    # --help as an option of its own: OptionParser's built-in one exits the process. `::`: a module of
+    # the gem's could be named OptionParser
     def self.parser
-      OptionParser.new("Usage: #{name} [options] [NAME]") do |opts|
+      ::OptionParser.new("Usage: #{name} [options] [NAME]") do |opts|
         opts.program_name = "#{name}"
         opts.version = VERSION
         opts.on("-h", "--help", "Print this help")

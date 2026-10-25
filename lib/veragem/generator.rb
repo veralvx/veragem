@@ -39,14 +39,14 @@ module Veragem
       raise Error, "invalid gem name #{project.name}: it would write #{clash[0]} twice" if clash
     end
 
-    # A command line's code runs in the gem's modules, which come first in its constant lookup: one
-    # named CLI or OptionParser would be taken for the gem's own or Ruby's (CLI::CLI's CLI).
+    # A command line names the gem's module from within it, <Gem>::CLI, whose constant lookup finds
+    # CLI and VERSION first: the gem's module cannot be named either.
     def self.check_command(project)
-      clash = (project.modules & %w[CLI OptionParser]).first if project.exe
-      return unless clash
+      innermost = project.modules.last
+      return unless project.exe && %w[CLI VERSION].include?(innermost)
 
-      raise Error, "invalid gem name #{project.name}: its command line would take its module #{clash} for " \
-                   "the one its code means"
+      raise Error, "invalid gem name #{project.name}: its command line would find another #{innermost} " \
+                   "before its module"
     end
 
     # The gems template/Gemfile names.

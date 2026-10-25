@@ -42,24 +42,27 @@ trim = true
 
 [git]
 conventional_commits = true
-# unconventional commits too: one cog takes (a body with no blank line before it) is listed by its
-# type; one cog lets through (a merge, a fixup: cog.toml) is skipped, as is any of no type below
-filter_unconventional = false
+# a body right under its subject, which cog takes, set apart as git-cliff's parser needs it: its
+# footers (BREAKING CHANGE) read
+commit_preprocessors = [{ pattern = '\A([^\n]*)\n([^\n])', replace = "${1}\n\n${2}" }]
+# what cog lets through unconventional -- a fixup (cog.toml) -- left out
+filter_unconventional = true
 protect_breaking_commits = true # a breaking change is listed whatever its type, first
-# by type, the HTML comments ordering the groups
+# by type, in any case (cog takes `Feat:`), the HTML comments ordering the groups
 commit_parsers = [
-    { message = "^(fixup|squash|amend)! ", skip = true },
-    { message = "^[a-z]+(\\([^)]*\\))?!:", group = "<!-- 0 -->Breaking changes" },
+    # a merge, whatever its message: cog checks none (ignore_merge_commits)
+    { field = "merge_commit", pattern = "true", skip = true },
+    { message = "^[a-zA-Z]+(\\([^)]*\\))?!:", group = "<!-- 0 -->Breaking changes" },
     { footer = "^BREAKING[ -]CHANGE", group = "<!-- 0 -->Breaking changes" },
-    { message = "^(chore|ci|style)", skip = true },
-    { message = "^feat", group = "<!-- 1 -->Features" },
-    { message = "^fix", group = "<!-- 2 -->Fixes" },
-    { message = "^perf", group = "<!-- 3 -->Performance" },
-    { message = "^refactor", group = "<!-- 4 -->Refactoring" },
-    { message = "^build", group = "<!-- 5 -->Build" },
-    { message = "^doc", group = "<!-- 6 -->Documentation" },
-    { message = "^test", group = "<!-- 7 -->Tests" },
-    { message = "^revert", group = "<!-- 8 -->Reverts" },
+    { message = "(?i)^(chore|ci|style)", skip = true },
+    { message = "(?i)^feat", group = "<!-- 1 -->Features" },
+    { message = "(?i)^fix", group = "<!-- 2 -->Fixes" },
+    { message = "(?i)^perf", group = "<!-- 3 -->Performance" },
+    { message = "(?i)^refactor", group = "<!-- 4 -->Refactoring" },
+    { message = "(?i)^build", group = "<!-- 5 -->Build" },
+    { message = "(?i)^doc", group = "<!-- 6 -->Documentation" },
+    { message = "(?i)^test", group = "<!-- 7 -->Tests" },
+    { message = "(?i)^revert", group = "<!-- 8 -->Reverts" },
     { message = ".*", skip = true },
 ]
 sort_commits = "oldest"

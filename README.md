@@ -62,14 +62,14 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 | `--summary=TEXT`    | `A Ruby gem.`                       | the gemspec, the README, the module's comment   |
 
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
-is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined -- by Ruby, Bundler or
-Rake, or by its top-level library where this Ruby has one (`set`, `option_parser`, `date-holidays`:
-Date is a class) --, whose file would shadow a library this Ruby has (`json`: lib/json.rb), that
-`bundle gem` would refuse or mangle (`1gem`, `my--gem`), one of the Gemfile's own tools
-(`rubocop-rake`), one longer than 40 characters or deeper than 4 modules (the generated code's
-lines fit RuboCop's), or, with `--exe`, one with a module CLI or OptionParser (`c_l_i`,
-`my-option_parser`: its command line would take it for the one its code means), is refused before
-anything is written. The summary is plain text: written into the
+is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined -- by Ruby, Bundler, Rake
+or Minitest, or by its top-level library where this Ruby has one (`set`, `option_parser`,
+`date-holidays`: Date is a class) --, whose file would shadow a library this Ruby has (`json`:
+lib/json.rb), whose module its tests would take for Minitest's (`lifecycle_hooks`), that `bundle
+gem` would refuse or mangle (`1gem`, `my--gem`), one of the Gemfile's own tools (`rubocop-rake`),
+one longer than 40 characters or deeper than 4 modules (the generated code's lines fit RuboCop's),
+or, with `--exe`, one whose module is CLI or VERSION (`my-c_l_i`: its command line would find
+another first), is refused before anything is written. The summary is plain text: written into the
 README as given, Markdown in it is dprint's to check. As `bundle gem` does, it makes the git
 repository and adds the files, and runs no `bundle install`: `bin/setup` writes the lock, to commit.
 The generated `CONTRIBUTING.md` lists the first steps: the repository's settings, RubyGems' pending

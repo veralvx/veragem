@@ -1,15 +1,16 @@
+<%# `::`: a module of the gem's could be named String, or Hash -%>
 <%= nest(<<~RBS + (exe ? <<~CLI : ""))
-  VERSION: String
+  VERSION: ::String
 
-  def self.greeting: (String name) -> String
+  def self.greeting: (::String name) -> ::String
 RBS
 
   module CLI
-    def self.run: (Array[String] argv) -> Integer
+    def self.run: (::Array[::String] argv) -> ::Integer
 
-    private def self.output: (Hash[Symbol, bool] options, String name) -> String?
+    private def self.output: (::Hash[::Symbol, bool] options, ::String name) -> ::String?
 
-    private def self.parser: () -> OptionParser
+    private def self.parser: () -> ::OptionParser
   end
 CLI
 -%>

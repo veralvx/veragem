@@ -4,29 +4,30 @@ require "test_helper"
 require "<%= path %>/cli"
 
 class Test<%= constant.delete(":") %>CLI < Minitest::Test
-  COMMAND = <%= constant %>::CLI
+  # no module of the gem's can be named so: its names have no `_`
+  COMMAND_LINE = <%= constant %>::CLI
 
   def test_it_greets_the_name_given
-    assert_output("Hello, Ada!\n") { assert_equal 0, COMMAND.run(["Ada"]) }
+    assert_output("Hello, Ada!\n") { assert_equal 0, COMMAND_LINE.run(["Ada"]) }
   end
 
   def test_nobody_named_it_greets_the_world
-    assert_output("Hello, world!\n") { assert_equal 0, COMMAND.run([]) }
+    assert_output("Hello, world!\n") { assert_equal 0, COMMAND_LINE.run([]) }
   end
 
   def test_version
     expected = "<%= name %> #{<%= constant %>::VERSION}\n"
-    assert_output(expected) { assert_equal 0, COMMAND.run(["--version"]) }
+    assert_output(expected) { assert_equal 0, COMMAND_LINE.run(["--version"]) }
   end
 
   def test_help
     usage = /\AUsage: <%= name %> \[options\] \[NAME\]\n/
 
-    assert_output(usage) { assert_equal 0, COMMAND.run(["--help"]) }
+    assert_output(usage) { assert_equal 0, COMMAND_LINE.run(["--help"]) }
   end
 
   def test_an_unknown_option_is_refused
-    assert_output("", /invalid option: --nope/) { assert_equal 2, COMMAND.run(["--nope"]) }
+    assert_output("", /invalid option: --nope/) { assert_equal 2, COMMAND_LINE.run(["--nope"]) }
   end
 
   def test_the_executable_runs_it
