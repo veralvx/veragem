@@ -11,8 +11,9 @@ Rust templates.
   TypeProf infers signatures to start them from, and its editor support is configured.
 - **Lint and format**: RuboCop, every new cop on, with rubocop-minitest, rubocop-packaging,
   rubocop-performance and rubocop-rake, and the whole project indexed first (rubydex), so the cops
-  that can see across files do; in CI, its offences are annotated on the pull request, and a failed
-  run's summary holds its safe corrections as a patch.
+  that can see across files do; in CI, its offences are annotated on the pull request, a failed
+  run's summary holds its safe corrections as a patch, and a Dependabot bump the new cops fail gets
+  them as a commit, then merges as any bump (`rubocop-autocorrect.yml`, no token to set).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered.
 - **Security**: bundler-audit over `Gemfile.lock`, daily in CI; a pull request's new gems and
@@ -93,8 +94,8 @@ flake.nix, flake.lock the dev shell, the package (and the command's image), `nix
 cliff.toml, cog.toml  git-cliff's changelog, cocogitto's commit checks
 dprint.json, .editorconfig
 .github/              CI, the flake, bundler-audit, the dependency review, the release (and the
-                      image), the style checks, Dependabot and its auto-merge; issue and pull
-                      request templates
+                      image), the style checks, Dependabot, its auto-merge and its bumps'
+                      RuboCop corrections; issue and pull request templates
 README, CONTRIBUTING, AGENTS, SECURITY, CODE_OF_CONDUCT, LICENSE-MIT / LICENSE-APACHE
 ```
 
