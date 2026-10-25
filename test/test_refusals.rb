@@ -6,6 +6,25 @@ require "test_helper"
 class TestRefusals < Minitest::Test
   include Veragem::TestSupport
 
+  def test_a_symlink_is_refused_and_kept
+    in_tmpdir do |dir|
+      link = File.join(dir, "my_gem")
+      File.symlink(File.join(dir, "nowhere"), link)
+
+      assert_raises(Veragem::Error) { Veragem::Generator.generate(project, link) }
+      assert File.symlink?(link)
+    end
+  end
+
+  def test_a_missing_parent_is_refused
+    in_tmpdir do |dir|
+      error = assert_raises(Veragem::Error) { Veragem::Generator.generate(project, File.join(dir, "no/my_gem")) }
+
+      assert_match(/No such file or directory/, error.message)
+      refute_path_exists File.join(dir, "no")
+    end
+  end
+
   def test_an_existing_directory_is_refused
     in_tmpdir do |dir|
       error = assert_raises(Veragem::Error) { Veragem::Generator.generate(project, dir) }
@@ -24,7 +43,7 @@ class TestRefusals < Minitest::Test
   end
 
   def test_a_name_of_the_gemfiles_tools_is_refused
-    %w[rake steep typeprof rubocop-rake].each do |name|
+    %w[rubocop-rake rubocop-minitest rubocop-performance].each do |name|
       error = assert_raises(Veragem::Error) { Veragem::Generator.files(project(name)) }
 
       assert_equal "invalid gem name #{name}: the Gemfile's own tool", error.message

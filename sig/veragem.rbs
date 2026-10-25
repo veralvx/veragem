@@ -33,7 +33,9 @@ module Veragem
 
     def indent: (String code) -> String
     def check_name: (String name) -> String
-    def check_modules: (Array[String] modules) -> void
+    def check_modules: (String name) -> void
+    def nestings_of: (String name) -> Array[String]
+    def kinds: (String name, Array[String] nestings) -> Array[String]
     def valid: (String field, untyped value) { (untyped) -> bool } -> untyped
     def modules_of: (String name) -> Array[String]
     def text: (String field, String value) -> String
@@ -59,6 +61,7 @@ module Veragem
     def self.check: (Project project, Array[String] paths) -> void
     def self.path_of: (String file, Project project) -> String
     def self.generate: (Project project, String target) -> void
+    def self.removed_unless_done: (String target) { () -> void } -> void
     def self.write: (String source, String destination, Project project) -> void
     def self.render: (String source, Project project) -> String
     def self.git: (String dir, *String args) -> void

@@ -25,5 +25,7 @@ Gem::Specification.new do |spec|
   # signatures, the template -- its dotfiles too -- and the documents.
   spec.files = IO.popen(%w[git ls-files -z -- plugins.rb lib sig template README.md CHANGELOG.md LICENSE-*],
                         chdir: __dir__, &:read).split("\0")
+  raise "veragem.gemspec: git ls-files failed: build from a git checkout" unless Process.last_status.success?
+
   spec.require_paths = ["lib"]
 end

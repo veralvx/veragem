@@ -103,8 +103,11 @@ class TestGenerator < Minitest::Test
   def test_the_modes_follow_the_umask
     in_tmpdir do |dir|
       umask = File.umask(0o077)
-      Veragem::Generator.generate(project, File.join(dir, "my_gem"))
-      File.umask(umask)
+      begin
+        Veragem::Generator.generate(project, File.join(dir, "my_gem"))
+      ensure
+        File.umask(umask)
+      end
 
       assert_equal([0o600, 0o700], %w[README.md bin/setup].map { File.stat(File.join(dir, "my_gem", it)).mode & 0o777 })
     end

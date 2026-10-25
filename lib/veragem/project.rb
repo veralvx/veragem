@@ -59,21 +59,40 @@ module Veragem
         raise Error, "invalid gem name #{name.inspect}: lower-case words of letters and digits, each a " \
                      "letter first after a dash, joined by _ or - (my_gem, my-gem)"
       end
+      # the generated code's lines within RuboCop's 120 columns
+      if name.length > 40 || name.count("-") > 3
+        raise Error, "invalid gem name #{name}: at most 40 characters and 4 modules deep"
+      end
       # lib/test_helper.rb would shadow the tests' own (Minitest's -Ilib:test)
       raise Error, "invalid gem name #{name}: its lib/test_helper.rb would shadow the tests'" if name == "test_helper"
 
-      check_modules(modules_of(name))
+      check_modules(name)
       name
     end
 
-    # The gem writes `module` for each of its modules: one defined here already, as Set or Bundler,
-    # it would reopen -- and an outer one that is a class, it could not.
-    def check_modules(modules)
-      defined = (1..modules.size).map { modules.first(it).join("::") }.take_while { Object.const_defined?(it, false) }
-      raise Error, "invalid gem name: #{defined.last} is already defined" if defined.size == modules.size
+    # The gem writes `module` for each of its modules: one defined already, as Set or Logger, it would
+    # reopen -- and an outer one that is a class, it could not. Asked of a Ruby of its own, which
+    # requires the gem's paths first (`date-holidays`: date), as its tools may load them.
+    def check_modules(name)
+      nestings = nestings_of(name)
+      defined = nestings.zip(kinds(name, nestings)).take_while { |_, kind| !kind.to_s.empty? }
+      raise Error, "invalid gem name #{name}: #{nestings.last} is already defined" if defined.size == nestings.size
 
-      outer = defined.find { !Object.const_get(it, false).instance_of?(Module) }
-      raise Error, "invalid gem name: #{outer} is defined, not as a module" if outer
+      outer = defined.find { |_, kind| kind != "Module" }
+      raise Error, "invalid gem name #{name}: #{outer[0]} is a #{outer[1]}, not a module" if outer
+    end
+
+    # My, My::Gem
+    def nestings_of(name) = modules_of(name).then { |modules| (1..modules.size).map { modules.first(it).join("::") } }
+
+    # Each of +nestings+' class -- Module, Class... -- or "" when undefined, once each of the gem's
+    # paths is required (date, date/holidays), in a Ruby outside any bundle.
+    def kinds(name, nestings)
+      paths = (1..nestings.size).map { name.split("-").first(it).join("/") }
+      probe = "ARGV.shift(Integer(ARGV.shift)).each { begin; require it; rescue LoadError; end }; " \
+              "ARGV.each { puts Object.const_defined?(it, false) ? Object.const_get(it, false).class : '' }"
+      command = [RbConfig.ruby, "-e", probe, paths.size.to_s, *paths, *nestings]
+      IO.popen(Bundler.unbundled_env, command, unsetenv_others: true, &:readlines).map(&:chomp)
     end
 
     def valid(field, value)
@@ -90,7 +109,7 @@ module Veragem
       value = value.dup.force_encoding(Encoding::UTF_8)
       line = value.valid_encoding? && !value.match?(/[[:cntrl:]]/) ? value.strip : ""
       raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
-      raise Error, "invalid #{field}: at most 100 characters, quoted" if quote(line).length > 100
+      raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
       if line.match?(/\A(TODO|FIXME)/)
         raise Error,
               "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"

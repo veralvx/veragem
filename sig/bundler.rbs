@@ -1,5 +1,7 @@
 # The part of Bundler the plugin uses: Bundler ships no signatures, nor does gem_rbs_collection.
 module Bundler
+  def self.unbundled_env: () -> Hash[String, String]
+
   class BundlerError < StandardError
   end
 

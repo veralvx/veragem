@@ -15,8 +15,9 @@ module Veragem
 
     # Each template file the project takes, and its path in the gem.
     def self.files(project)
+      skipped = skipped(project)
       files = Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).sort.to_h { [it, path_of(it, project)] }
-      files.reject! { |file, _| skipped(project).include?(file) || File.directory?(File.join(TEMPLATE, file)) }
+      files.reject! { |file, _| skipped.include?(file) || File.directory?(File.join(TEMPLATE, file)) }
       check(project, files.values)
       files
     end
@@ -44,17 +45,28 @@ module Veragem
           .gsub("%underscored%", project.underscored)
     end
 
+    # Into +target+, a new directory: a failure, an interrupt included, leaves none behind.
     def self.generate(project, target)
-      raise Error, "#{target} already exists" if File.exist?(target)
+      raise Error, "#{target} already exists" if File.exist?(target) || File.symlink?(target)
 
       files = files(project)
-      begin
+      Dir.mkdir(target)
+      removed_unless_done(target) do
         files.each { |file, path| write(File.join(TEMPLATE, file), File.join(target, path), project) }
         git(target, "init", "--quiet", "--initial-branch=main")
         git(target, "add", "--all")
-      rescue StandardError
-        FileUtils.rm_rf(target) # it did not exist: no half-made gem left behind
-        raise
+      end
+    rescue SystemCallError => e
+      raise Error, e.message
+    end
+
+    def self.removed_unless_done(target)
+      done = false
+      begin
+        yield
+        done = true
+      ensure
+        FileUtils.rm_rf(target) unless done
       end
     end
 
