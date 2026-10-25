@@ -1,0 +1,8 @@
+# The part of Bundler the plugin uses: Bundler ships no signatures, nor does gem_rbs_collection.
+module Bundler
+  class BundlerError < StandardError
+  end
+
+  class PluginError < BundlerError
+  end
+end

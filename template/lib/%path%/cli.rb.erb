@@ -1,0 +1,26 @@
+# frozen_string_literal: true
+
+require "optparse"
+require_relative "../<%= File.basename(path) %>"
+
+<%= nest(<<~RUBY)
+  # The command line: `#{name} [NAME]` prints the greeting.
+  module CLI
+    # Runs the command line with +argv+; returns the exit status.
+    def self.run(argv)
+      options = { version: false }
+      names = parser.parse(argv, into: options)
+      puts(options[:version] ? "#{name} \#{VERSION}" : #{constant}.greeting(names.first || ""))
+      0
+    rescue OptionParser::ParseError => e
+      warn e.message, parser.help
+      2
+    end
+
+    def self.parser
+      OptionParser.new("Usage: #{name} [options] [NAME]") { it.on("--version", "Print the version") }
+    end
+    private_class_method :parser
+  end
+RUBY
+-%>

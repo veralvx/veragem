@@ -1,0 +1,30 @@
+# frozen_string_literal: true
+
+require_relative "lib/<%= path %>/version"
+
+Gem::Specification.new do |spec|
+  spec.name = "<%= name %>"
+  spec.version = <%= constant %>::VERSION
+  spec.authors = [<%= quote(author) %>]
+<%- if email -%>
+  spec.email = [<%= quote(email) %>]
+<%- end -%>
+
+  spec.summary = <%= quote(summary) %>
+  spec.homepage = "https://github.com/<%= github %>/<%= name %>"
+  spec.licenses = <%= licenses.inspect %>
+  spec.required_ruby_version = ">= 4.0"
+
+  spec.metadata["source_code_uri"] = spec.homepage
+  spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
+  spec.metadata["bug_tracker_uri"] = "#{spec.homepage}/issues"
+  spec.metadata["rubygems_mfa_required"] = "true"
+
+  # What the gem ships: its code, its signatures and its documents -- not the tests or the tooling.
+  spec.files = Dir.glob(%w[lib/**/*.rb sig/**/*.rbs exe/* README.md CHANGELOG.md LICENSE-*], base: __dir__)
+<%- if exe -%>
+  spec.bindir = "exe"
+  spec.executables = ["<%= name %>"]
+<%- end -%>
+  spec.require_paths = ["lib"]
+end

@@ -1,0 +1,41 @@
+# bundler-audit: Gemfile.lock against the Ruby Advisory Database -- daily, on demand, and when the
+# lock changes (`rake audit`). A finding fails the run, notified to the workflow's creator (or
+# whoever last changed its cron: docs.github.com, "Notifications for workflow runs"). GitHub
+# disables a public repository's schedule after 60 days without activity ("Events that trigger
+# workflows"): Dependabot alerts, the repository's setting, watch the lock without one.
+name: Security
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # daily, midnight UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "Gemfile.lock"
+      - ".github/workflows/security.yml"
+  pull_request:
+    paths:
+      - "Gemfile.lock"
+      - ".github/workflows/security.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  bundler-audit:
+    name: bundler-audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+
+      - name: bundler-audit
+        # the advisory database updated first, then the lock checked
+        run: bundle exec rake audit

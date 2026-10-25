@@ -1,0 +1,13 @@
+<%= nest(<<~RBS + (exe ? <<~CLI : ""))
+  VERSION: String
+
+  def self.greeting: (String name) -> String
+RBS
+
+  module CLI
+    def self.run: (Array[String] argv) -> Integer
+
+    def self.parser: () -> OptionParser
+  end
+CLI
+-%>

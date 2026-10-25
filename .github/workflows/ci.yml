@@ -1,0 +1,47 @@
+# The Ruby checks, `bundle exec rake` (RuboCop, Steep, the tests with their coverage gate), on each
+# Ruby the matrix lists, the gems installed from Gemfile.lock; then TypeProf's verdict, advisory.
+# nix.yml runs the flake's checks: the Nix format, the shell, the workflows.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  # every pull request, whatever it touches: a path-filtered workflow never reports, and a
+  # required check that never reports blocks the merge
+  pull_request:
+  workflow_dispatch:
+
+# a pull request's newest run cancels its older ones; any other run, a group of its own: every
+# commit on main checked (in a shared group, a pending run gives way to the newest: the default)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks (Ruby ${{ matrix.ruby }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # the gemspec's required_ruby_version, and each newer Ruby once released
+        ruby: ["4.0"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Ruby
+        # bundler-cache: `bundle install`, frozen to Gemfile.lock, cached
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - name: RuboCop, Steep, the tests
+        run: bundle exec rake
+
+      - name: TypeProf (advisory)
+        run: bundle exec rake typeprof

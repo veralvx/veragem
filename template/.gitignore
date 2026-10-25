@@ -1,0 +1,10 @@
+# Bundler's settings and gems (setup-ruby installs into vendor/), the built gems, the coverage
+/.bundle/
+/vendor/
+/pkg/
+/coverage/
+/doc/
+/tmp/
+# Nix's build links, direnv's cache
+/result*
+/.direnv

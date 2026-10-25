@@ -1,0 +1,62 @@
+module Veragem
+  VERSION: String
+
+  class Error < Bundler::PluginError
+  end
+
+  def self.run: (Array[String] argv, ?dir: String) -> String
+
+  class Project
+    NAME: Regexp
+    GITHUB: Regexp
+    LICENSES: Hash[String, Array[String]]
+
+    attr_reader name: String
+    attr_reader author: String
+    attr_reader email: String?
+    attr_reader github: String
+    attr_reader summary: String
+    attr_reader license: String
+    attr_reader exe: bool
+
+    def initialize: (String name, Hash[Symbol, untyped] values) -> void
+    def path: () -> String
+    def underscored: () -> String
+    def constant: () -> String
+    def modules: () -> Array[String]
+    def licenses: () -> Array[String]
+    def year: () -> Integer
+    def quote: (String value) -> String
+    def nest: (String body, ?doc: String?) -> String
+
+    private
+
+    def indent: (String code) -> String
+    def check_name: (String name) -> String
+    def valid: (String field, untyped value) { (untyped) -> bool } -> untyped
+    def modules_of: (String name) -> Array[String]
+    def text: (String field, String value) -> String
+  end
+
+  module Options
+    GIT_CONFIG: Hash[Symbol, String]
+
+    def self.parse: (Array[String] argv, ?config: ^(String) -> String?) -> Project
+    def self.given: (Hash[Symbol, untyped] values) -> Hash[Symbol, untyped]
+    def self.parser: () -> OptionParser
+    def self.git_config: (String key) -> String?
+  end
+
+  module Generator
+    TEMPLATE: String
+    EXE: Array[String]
+    LICENSE_FILES: Hash[String, String]
+
+    def self.files: (Project project) -> Array[[String, String]]
+    def self.path_of: (String file, Project project) -> String
+    def self.generate: (Project project, String target) -> void
+    def self.write: (String source, String destination, Project project) -> void
+    def self.render: (String source, Project project) -> String
+    def self.git: (String dir, *String args) -> void
+  end
+end

@@ -1,0 +1,15 @@
+# RuboCop's defaults, each new cop on as it ships, and its extensions for the tests, performance
+# and the Rakefile. The Ruby version is the gemspec's required_ruby_version.
+plugins:
+  - rubocop-minitest
+  - rubocop-performance
+  - rubocop-rake
+
+AllCops:
+  NewCops: enable
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
