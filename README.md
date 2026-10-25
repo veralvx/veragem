@@ -9,8 +9,9 @@ Rust templates.
 - **Ruby 4.0** or later, `required_ruby_version` and CI alike.
 - **Types**: Steep checks `lib/` against the signatures in `sig/`, its strictest diagnostics on;
   TypeProf infers signatures to start them from, and its editor support is configured.
-- **Lint and format**: RuboCop, every new cop on, with rubocop-minitest, rubocop-performance and
-  rubocop-rake.
+- **Lint and format**: RuboCop, every new cop on, with rubocop-minitest, rubocop-packaging,
+  rubocop-performance and rubocop-rake, and the whole project indexed first (rubydex), so the cops
+  that can see across files do.
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered.
 - **Security**: bundler-audit over `Gemfile.lock`, daily in CI; Dependabot for the gems, the

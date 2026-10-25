@@ -8,9 +8,10 @@ and in every gem veragem generates: `template/AGENTS.md.erb` is their source.
 ## 1. The lint and type policy is the design
 
 RuboCop runs with its defaults and every new cop as it ships (`NewCops: enable`), its Minitest,
-performance and Rake extensions on (`.rubocop.yml`). Steep checks `lib/` against the signatures
-in `sig/`, its strictest diagnostics on (`Steepfile`): every method of `lib/` is declared in
-`sig/`, and a warning fails as an error does. Gemfile.lock pins both, so the verdict is the same
+packaging, performance and Rake extensions on, and the project indexed first (`UseProjectIndex`, the
+rubydex gem) for the cops that look across files (`.rubocop.yml`). Steep checks `lib/` against the
+signatures in `sig/`, its strictest diagnostics on (`Steepfile`): every method of `lib/` is declared
+in `sig/`, and a warning fails as an error does. Gemfile.lock pins both, so the verdict is the same
 locally and in CI.
 
 **Never silence a new cop or diagnostic wholesale.** Either fix the site, or configure it in

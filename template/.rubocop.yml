@@ -1,12 +1,17 @@
-# RuboCop's defaults, each new cop on as it ships, and its extensions for the tests, performance
-# and the Rakefile. The Ruby version is the gemspec's required_ruby_version.
+# RuboCop's defaults, each new cop on as it ships, and its extensions for the tests, packaging (the
+# gem as distributions build it), performance and the Rakefile. The Ruby version is the gemspec's
+# required_ruby_version.
 plugins:
   - rubocop-minitest
+  - rubocop-packaging
   - rubocop-performance
   - rubocop-rake
 
 AllCops:
   NewCops: enable
+  # the whole project indexed first (the rubydex gem), so the cops that can see across files do: a
+  # method defined twice in two files, a constant reassigned in another
+  UseProjectIndex: true
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes

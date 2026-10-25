@@ -21,6 +21,7 @@ module Veragem
   module TestSupport
     VALUES = { author: "Jane Doe", github: "jane", summary: "A Ruby gem.", license: "dual" }.freeze
 
+    # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
     def project(name = "my_gem", **values) = Project.new(name, VALUES.merge(values))
 
     def in_tmpdir(&) = Dir.mktmpdir("veragem-test", &)

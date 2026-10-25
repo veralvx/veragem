@@ -13,6 +13,7 @@ module Veragem
       names = parser.permute(argv, into: values)
       raise Error, "one gem name, not #{names.size} (bundle veragem --help)" unless names.size == 1
 
+      # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
       Project.new(names.fetch(0), { summary: "A Ruby gem.", license: "dual", **given(values) })
     rescue OptionParser::ParseError => e
       raise Error, "#{e.message} (bundle veragem --help)"

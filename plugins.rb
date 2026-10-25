@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Bundler loads this file to find the plugin's command: `bundle veragem`.
-require_relative "lib/veragem"
+require "veragem" # Bundler puts the plugin's lib/ on the load path first
 
 module Veragem
   # The command, Bundler's plugin API.
