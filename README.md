@@ -11,12 +11,13 @@ Rust templates.
   TypeProf infers signatures to start them from, and its editor support is configured.
 - **Lint and format**: RuboCop, every new cop on, with rubocop-minitest, rubocop-packaging,
   rubocop-performance and rubocop-rake, and the whole project indexed first (rubydex), so the cops
-  that can see across files do; in CI, its offences annotate a pull request's lines.
+  that can see across files do; in CI, its offences are annotated on the pull request, and a failed
+  run's summary holds its safe corrections as a patch.
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered.
 - **Security**: bundler-audit over `Gemfile.lock`, daily in CI; a pull request's new gems and
-  actions reviewed for their licences and advisories (`dependency-review.yml`, as the templates'
-  Python and Rust ones are); Dependabot for the gems, the actions and the flake.
+  actions reviewed for their licences and advisories, advisory (`dependency-review.yml`, as the
+  templates' Python and Rust ones are); Dependabot for the gems, the actions and the flake.
 - **Commits and releases**: Conventional Commits (cocogitto, CI and opt-in git hooks), a changelog
   written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own `rake release`; the
   tag publishes to RubyGems by Trusted Publishing -- no API key stored -- and makes the GitHub

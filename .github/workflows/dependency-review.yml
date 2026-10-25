@@ -1,7 +1,9 @@
 name: Dependency Review
 
-# The licences and advisories of what a pull request adds to Gemfile.lock and the workflows. Not a
-# required check: it reports only when those files change.
+# The licences and advisories of what a pull request adds to Gemfile.lock and the workflows, as the
+# templates' Python and Rust ones review theirs. Advisory: it reports only when those files change,
+# so no required check can be it, and dependabot-automerge.yml merges a bump it flags (security.yml's
+# bundler-audit holds the lock daily).
 on:
   pull_request:
     paths:
@@ -12,14 +14,12 @@ on:
 
 permissions: {}
 
-# NOTE: this action needs the dependency graph, which is on by default
-# for public repositories but requires GitHub Advanced Security on a
-# private one. On a private repo without it, this job fails rather than
+# NOTE: on a private repository, dependency review needs GitHub Code
+# Security (an organization's): without it, this job fails rather than
 # skipping -- delete the workflow or enable the feature.
 #
-# What it reads: Gemfile.lock, its every gem -- the gemspec's dependencies
-# and the Gemfile's tools alike, the Gemfile naming no group -- for
-# licences and advisories, as security.yml's bundler-audit reads it daily;
+# What it reads: Gemfile.lock has no scopes, so each of its gems counts as
+# runtime -- the gemspec's dependencies and the Gemfile's tools alike --;
 # the actions for licences in effect: advisories match actions by semantic
 # version alone, not the commits these are pinned to ("Dependency graph
 # supported package ecosystems").
@@ -29,22 +29,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write # the summary's comment
     # no checkout: the action compares the pull request's base and head through GitHub's API
     steps:
       - name: Dependency Review
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: moderate
-          # Audit your current dependency licenses with:
-          #   bundle exec ruby -e 'Bundler.load.specs.each { puts "#{it.name} #{it.licenses.join(" | ")}" }'
-          # and add anything legitimate that is missing rather than
-          # deleting this list -- an empty allow-list allows everything.
-          # Ruby: Ruby's own licence, its standard gems' (json, reline, erb...)
+          # The licences are ClearlyDefined's, not the gemspecs'; a gem's:
+          #   curl -s https://api.clearlydefined.io/definitions/gem/rubygems/-/NAME/VERSION
+          # (.licensed.declared). Add anything legitimate that is missing rather
+          # than deleting this list -- an empty allow-list allows everything.
+          # Ruby: Ruby's own licence, with MIT or BSD's (concurrent-ruby, reline)
           allow-licenses: >
             0BSD, Apache-2.0, BlueOak-1.0.0, BSD-2-Clause, BSD-3-Clause,
             BSL-1.0, CC0-1.0, CC-BY-4.0, ISC, MIT, MIT-0, MPL-2.0,
             Ruby, Unlicense, Zlib
-          # bundler-audit is GPL-3.0-or-later: a tool of the Gemfile's, run here, never shipped
-          allow-dependencies-licenses: pkg:gem/bundler-audit
-          comment-summary-in-pr: on-failure
+          # bundler-audit: GPL-3.0-or-later, a tool run here, never shipped. rake: MIT,
+          # to which ClearlyDefined adds a warranty disclaimer it takes for a licence
+          allow-dependencies-licenses: pkg:gem/bundler-audit, pkg:gem/rake

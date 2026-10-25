@@ -113,8 +113,8 @@ Then, in whichever order suits you:
   that CI never gated.
 - Enable private vulnerability reporting (Settings → Advanced Security; a public repository's
   alone): it is off by default, and [SECURITY.md](SECURITY.md) and the issue form point to it.
-- A private repository: `dependency-review.yml` needs the dependency graph, GitHub Advanced
-  Security's there; without it, it fails -- enable it, or delete the workflow.
+- A private repository: its dependency review (`dependency-review.yml`) needs GitHub Code
+  Security, an organization's; without it, the workflow fails -- delete it.
 - Add a pending trusted publisher on [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers)
   for the gem `<%= name %>`: this repository, the workflow `release.yml`, the environment
   `release`. A release tag then publishes without a stored key, its first version too, and its
@@ -167,7 +167,7 @@ Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake
 monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass.
 dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
 brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
-A bump CI fails on them, its offences annotated, waits for you: on its branch, `bundle exec rake
-rubocop:autocorrect` applies the safe corrections -- read them, commit and push, and CI runs
-again. No workflow does it: a push made with the workflow's token runs no checks, and one that
-did would need a stored token that writes, in the hands of the gems just bumped.
+A bump CI fails on them waits for you: the failed run's summary holds RuboCop's safe corrections
+as a patch -- read it, `git apply` it on the bump's branch (or run `bundle exec rake
+rubocop:autocorrect` there), commit and push. No workflow commits it: a new cop's corrections are
+code, to read before they merge.

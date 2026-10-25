@@ -46,5 +46,15 @@ jobs:
           RUBOCOP_OPTS: --format progress --format github
         run: bundle exec rake
 
+      - name: RuboCop's safe corrections, as a patch
+        # a failed run's: what `rake rubocop:autocorrect` changes, in the run's summary, to read and
+        # `git apply` -- never committed by a workflow, whose corrections would merge unread
+        if: failure()
+        run: |
+          bundle exec rake rubocop:autocorrect || true
+          if ! git diff --quiet; then
+            { echo '```diff'; git diff; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: TypeProf (advisory)
         run: bundle exec rake typeprof
