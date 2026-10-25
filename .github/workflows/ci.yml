@@ -47,8 +47,8 @@ jobs:
         run: bundle exec rake
 
       - name: RuboCop's safe corrections, as a patch
-        # a failed run's: what `rake rubocop:autocorrect` changes, in the run's summary, to read and
-        # `git apply` -- never committed by a workflow, whose corrections would merge unread
+        # a failed run's: what `rake rubocop:autocorrect` changes, in the run's summary, to `git
+        # apply` (a Dependabot bump's, rubocop-autocorrect.yml commits)
         if: failure()
         run: |
           bundle exec rake rubocop:autocorrect || true

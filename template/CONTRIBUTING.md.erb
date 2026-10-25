@@ -168,7 +168,7 @@ Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake
 monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass.
 dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
 brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
-A bump CI fails on them waits for you: the failed run's summary holds RuboCop's safe corrections
-as a patch -- read it, `git apply` it on the bump's branch (or run `bundle exec rake
-rubocop:autocorrect` there), commit and push. No workflow commits it: a new cop's corrections are
-code, to read before they merge.
+A bump the new cops fail gets RuboCop's safe corrections as a commit on its branch
+(`rubocop-autocorrect.yml`), and the checks run again: corrected, it merges as any bump. What
+safe corrections leave is yours, a pull request of yours too: a failed run's summary holds the
+corrections as a patch, to `git apply`.

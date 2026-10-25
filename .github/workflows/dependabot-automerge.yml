@@ -8,7 +8,9 @@ name: Dependabot Auto-Merge
 #      - Require status checks to pass before merging (select the real CI
 #        jobs: every job the workflows run on every pull request -- not one
 #        whose `pull_request:` has `paths:`, which reports only when those
-#        paths change, so would block every other merge)
+#        paths change, so would block every other merge). A workflow of
+#        theirs goes in rubocop-autocorrect.yml's list too, which runs them on
+#        the commit it pushes
 #
 # The `permissions:` below are all this workflow's token needs; the
 # repository's default token permissions can stay read-only, and nothing

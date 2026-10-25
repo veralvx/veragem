@@ -10,6 +10,8 @@ on:
     branches: [main]
   pull_request:
     types: [opened, synchronize, reopened, edited]
+  # rubocop-autocorrect.yml's, on the commit it pushes: the whole history, as on a push
+  workflow_dispatch:
 
 # a pull request's newest run cancels its older ones; any other run, a group of its own: every
 # commit on main checked (in a shared group, a pending run gives way to the newest: the default)
@@ -48,7 +50,7 @@ jobs:
         run: cog verify -- "$TITLE"
 
       - name: Check Push Commits
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: cocogitto/cocogitto-action@52d0023b4396897f1815648e553db2ab8d782f3a # v4.2.0
         with:
           command: check
