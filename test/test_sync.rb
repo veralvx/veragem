@@ -3,7 +3,8 @@
 require "test_helper"
 
 # This repository's harness is the template's: each file the template holds as is (no ERB) is
-# here too, the same bytes and mode -- but those that must differ, below.
+# here too, the same bytes and mode -- but those that must differ, below, and a command line's
+# alone (this gem has none).
 class TestSync < Minitest::Test
   ROOT = File.expand_path("..", __dir__)
   TEMPLATE = Veragem::Generator::TEMPLATE
@@ -12,7 +13,8 @@ class TestSync < Minitest::Test
 
   def plain_files
     Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).reject do |file|
-      file.end_with?(".erb") || File.directory?(File.join(TEMPLATE, file)) || DIFFERENT.include?(file)
+      file.end_with?(".erb") || File.directory?(File.join(TEMPLATE, file)) ||
+        (DIFFERENT + Veragem::Generator::EXE).include?(file)
     end
   end
 

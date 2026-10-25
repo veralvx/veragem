@@ -15,6 +15,14 @@ gem install <%= name %>
 bundle add <%= name %>
 <%- end -%>
 ```
+<%- if exe -%>
+
+With Nix, `nix run github:<%= github %>/<%= name %>`. As an OCI image, for Linux on amd64 and arm64:
+
+```sh
+docker run --rm ghcr.io/<%= github.downcase %>/<%= name %> --version
+```
+<%- end -%>
 
 ## Usage
 <%- if exe -%>

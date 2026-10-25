@@ -7,7 +7,8 @@ A project just generated: start at [First steps](#first-steps), under Maintainer
 ## Prerequisites
 
 Either **Nix** -- `nix develop` gives Ruby and every tool below at the versions `flake.lock` pins
--- or, installed yourself:
+-- or, installed yourself. The gems are Bundler's in both: `bin/setup` installs them from
+`Gemfile.lock`, the lock CI installs from too (nixpkgs packages few of them, and older).
 
 - **[Ruby](https://www.ruby-lang.org) 4.0** or later, with Bundler (Ruby's own). `bin/setup`
   installs the gems `Gemfile.lock` pins: Rake, RuboCop, its extensions and rubydex (its project
@@ -65,12 +66,15 @@ bundle exec rake          # RuboCop, Steep, the tests: ci.yml
 bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, actionlint, the flake's checks
 bundle exec rake format   # RuboCop's corrections, dprint and nixfmt, in place
 bundle exec rake typeprof # the signatures TypeProf infers from lib/, to start sig/ from
+nix build                 # the gem, built and installed by Nix (flake.nix)
 ```
 
 `bundle exec rake -T` lists every task.
 
-A new dependency of the gem goes in the gemspec (`spec.add_dependency`), a new tool in the
-Gemfile; `bundle install` then updates the lock. Steep reads the standard library's signatures
+A new dependency of the gem goes in the gemspec (`spec.add_dependency`), and its nixpkgs package
+in flake.nix's `gemPath` (`pkgs.rubyPackages_4_0.<gem>`) for the Nix package<%= exe ? ", whose `command` check fails without it" : "" %>. A new tool goes in
+the Gemfile, which the built gem never holds: its dependencies are the gemspec's alone. `bundle
+install` then updates the lock. Steep reads the standard library's signatures
 when the Steepfile names the library (`library "json"`); a gem's, through an RBS collection (`rbs
 collection init`, then `rbs collection install`, as rbs's `docs/collection.md` describes).
 
@@ -114,6 +118,14 @@ Then, in whichever order suits you:
 - If you limit the `release` environment's deployments (Settings → Environments), admit the
   release tags, a rule of ref type Tag, `v*`: the RubyGems job runs on the tag, and an environment
   that refuses it publishes nothing.
+<%- if exe -%>
+- After the first release, make the image public: GHCR publishes a new package as private (its
+  page, Package settings → Change visibility).
+- To publish the image to Docker Hub too: create its repository there, then set the repository
+  variable `DOCKERHUB_USERNAME` and the secret `DOCKERHUB_TOKEN` (an access token that writes) --
+  and the variable `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`.
+  A Docker Hub failure holds the GHCR release back too.
+<%- end -%>
 - Run `bundle exec rake checks` once to confirm your tools are complete: a step that stops on a
   missing command names it ([Prerequisites](#prerequisites) lists them; `nix develop` has them
   all).
@@ -139,7 +151,7 @@ declared, whatever the level), updates the lock, writes the changelog (git-cliff
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
 tag; it pushes no gem. The tag runs `release.yml`: the checks and the build, the push to RubyGems
 by Trusted Publishing, then the GitHub release of the same gem, its notes the changelog's new
-section.
+section<%= exe ? "; `image.yml` too, the command's OCI image to GHCR (`nix build .#image` builds it here)" : "" %>.
 
 `rake release` pushes to `main` directly: with "Require a pull request before merging" on, the
 maintainer cutting it needs the rule's bypass. A refused push leaves the release commit and

@@ -76,25 +76,23 @@ module Veragem
     # reopen -- and an outer one that is a class, it could not.
     def check_modules(name)
       nestings = nestings_of(name)
-      defined = nestings.zip(kinds(name, nestings)).take_while { |_, kind| !kind.to_s.empty? }
+      defined = defined_of(name, nestings)
       raise Error, "invalid gem name #{name}: #{nestings.last} is already defined" if defined.size == nestings.size
 
       outer = defined.find { |_, kind| kind != "Module" }
       raise Error, "invalid gem name #{name}: #{outer[0]} is a #{outer[1]}, not a module" if outer
     end
 
+    # The +nestings+ defined already, outermost first, each with its class.
+    def defined_of(name, nestings)
+      nestings.zip(probe(library_of(name), nestings)).take_while { |_, kind| !kind.to_s.empty? }
+    end
+
+    # The gem's top-level library: `date-holidays`' date
+    def library_of(name) = name.split("-").fetch(0)
+
     # My, My::Gem
     def nestings_of(name) = modules_of(name).then { |modules| (1..modules.size).map { modules.first(it).join("::") } }
-
-    # Each of +nestings+' class -- Module, Class... -- or "" when undefined: here, in Bundler's
-    # process, which reads the gem's gemspec; else in a Ruby of its own once the gem's top-level
-    # library is required (`date-holidays`: date), as its tools may require it.
-    def kinds(name, nestings)
-      there = probe(name.split("-").fetch(0), nestings)
-      nestings.zip(there).map do |nesting, kind|
-        Object.const_defined?(nesting, false) ? Object.const_get(nesting, false).class.to_s : kind.to_s
-      end
-    end
 
     # The child: no stdin, a scratch directory, its arguments cleared before the library loads, the
     # library's own output kept from the answers, no exit hooks.
@@ -103,8 +101,8 @@ module Veragem
       ARGV.clear
       answers = $stdout.dup
       $stdout.reopen($stderr)
-      begin
-        require library
+      ["bundler/cli", library].each do |feature|
+        require feature
       rescue StandardError, ScriptError
         nil
       end
@@ -114,7 +112,11 @@ module Veragem
     RUBY
     private_constant :PROBE
 
-    # Its answers come only once the library is loaded, then the child exits: one fewer is a failure.
+    # Each of +nestings+' class -- Module, Class... -- or "" when undefined, where the gem meets
+    # them: in Bundler's CLI, which reads its gemspec (bin/setup's `bundle install`), and with its
+    # top-level +library+ (`date-holidays`: date), which its tools may require. Asked of a Ruby of
+    # its own, so the answer is the same however this one was started. Its answers come only once
+    # the libraries are loaded, then the child exits: one fewer is a failure.
     def probe(library, nestings)
       command = [RbConfig.ruby, "-e", PROBE, library, *nestings]
       answers = Dir.mktmpdir do |dir|
