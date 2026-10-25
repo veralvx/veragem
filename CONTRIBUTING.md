@@ -52,7 +52,7 @@ takes, a GitHub user GitHub takes.
 ## Checks
 
 ```sh
-bundle exec rake          # RuboCop, Steep, the tests: ci.yml
+bundle exec rake          # RuboCop, Steep, the tests: ruby-ci.yml
 bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, actionlint, the flake's checks
 nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
 ```
@@ -76,7 +76,7 @@ checks` and the smoke test pass.
 ### Going live
 
 - Enable the repository settings the auto-merge workflow needs, listed at the top of
-  `.github/workflows/dependabot-automerge.yml`, with every job of `ci.yml`, `nix.yml`, `smoke.yml`
+  `.github/workflows/dependabot-automerge.yml`, with every job of `ruby-ci.yml`, `nix.yml`, `smoke.yml`
   and the style checks required.
 - Enable private vulnerability reporting (Settings → Advanced Security; a public repository's alone).
 - Enable the dependency graph there too, if it is off: `dependency-review.yml` fails without it.

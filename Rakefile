@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# `rake` runs the Ruby checks, as ci.yml does; `rake checks` runs everything CI runs. `rake -T`
-# lists the tasks.
+# `rake` runs the Ruby checks, as ruby-ci.yml does; `rake checks` runs everything CI runs.
+# `rake -T` lists the tasks.
 
 require "bundler/audit/task"
 require "bundler/gem_tasks"
