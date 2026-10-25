@@ -1,9 +1,9 @@
 # A Dependabot pull request that moves Gemfile.lock gets RuboCop's safe corrections (`rake
 # rubocop:autocorrect`), when the bumped RuboCop finds any, as a commit of their own on its branch;
 # the checks then run on it, and dependabot-automerge.yml's merge follows as for any bump. No
-# token is stored: the job's GITHUB_TOKEN pushes, whose push the pull request's workflows wait on a
-# person's approval for -- creating no check meanwhile --, so it dispatches those whose checks are
-# required, which run at once on the commit. `[dependabot skip]`: Dependabot rebases the bump still,
+# token is stored: the job's GITHUB_TOKEN pushes, and a push of that token starts the pull
+# request's workflows only once a person approves them (their runs creating no check meanwhile),
+# so it dispatches those whose checks are required, which run at once on the commit. `[dependabot skip]`: Dependabot rebases the bump still,
 # over the commit, and this workflow corrects the new one.
 name: RuboCop Autocorrect
 
@@ -73,6 +73,8 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.ref }}
+          # the head and its parent: a re-run finds its own commit on the one corrected
+          fetch-depth: 2
 
       - name: The corrections
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -91,7 +93,7 @@ jobs:
           set -euo pipefail
           if [[ $(git rev-parse HEAD) == "$CORRECTED" ]]; then
             # RuboCop's files alone, edited in place: nothing else the bumped gems could write
-            ruby_files='^(([^/]+/)*[^/]+\.(rb|gemspec)|Gemfile|Rakefile|Steepfile|(bin|exe)/[^/]+)$'
+            ruby_files='^([^/]+/)*([^/]+\.(rb|gemspec)|Gemfile|Rakefile|Steepfile|(bin|exe)/[^/]+)$'
             if [[ -n $(git apply --summary "$PATCH") ]] ||
               git apply --numstat "$PATCH" | cut -f 3 | grep -Ev "$ruby_files"; then
               echo "::error::the corrections change more than RuboCop's files, in place: not committed"
@@ -102,6 +104,10 @@ jobs:
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
               commit --all --quiet --message "$MESSAGE"
             if ! git push origin "HEAD:$BRANCH"; then
+              # refused because Dependabot pushed meanwhile, whose own run corrects its commit;
+              # refused otherwise, a failure
+              remote=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f 1)
+              if [[ $remote == "$CORRECTED" ]]; then exit 1; fi
               echo "$BRANCH moved on: its own run corrects it"
               exit 0
             fi

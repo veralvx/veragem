@@ -170,6 +170,6 @@ dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`.
 brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
 A bump the new cops fail gets RuboCop's safe corrections as a commit on its branch
 (`rubocop-autocorrect.yml`), and the required checks run again: corrected, it merges as any bump
--- its "workflows awaiting approval" are the commit's other workflows, which nothing waits on. What
-safe corrections leave is yours, a pull request of yours too: a failed run's summary holds the
-corrections as a patch, to `git apply`.
+-- its "workflows awaiting approval" are the commit's own pull request runs, whose checks the
+dispatched ones give: nothing waits on them. What safe corrections leave is yours, a pull
+request of yours too: a failed run's summary holds the corrections as a patch, to `git apply`.
