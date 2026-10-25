@@ -8,19 +8,34 @@ require_relative "../<%= File.basename(path) %>"
   module CLI
     # Runs the command line with +argv+; returns the exit status.
     def self.run(argv)
-      options = { version: false }
+      options = { help: false, version: false }
       names = parser.parse(argv, into: options)
-      puts(options[:version] ? parser.ver : #{modules.last}.greeting(names.first || ""))
+      puts output(options, names.first || "")
       0
-    rescue OptionParser::ParseError => e
+    rescue ::OptionParser::ParseError => e
       warn e.message, parser.help
       2
     end
 
+    # What +options+ ask for, the help or the version, else the greeting for +name+.
+    def self.output(options, name)
+      if options[:help]
+        parser.help
+      elsif options[:version]
+        parser.ver
+      else
+        #{modules.last}.greeting(name)
+      end
+    end
+    private_class_method :output
+
+    # --help as an option of its own: OptionParser's built-in one exits the process. `::`: a module of
+    # the gem's could be named OptionParser
     def self.parser
-      OptionParser.new("Usage: #{name} [options] [NAME]") do |opts|
+      ::OptionParser.new("Usage: #{name} [options] [NAME]") do |opts|
         opts.program_name = "#{name}"
         opts.version = VERSION
+        opts.on("-h", "--help", "Print this help")
         opts.on("--version", "Print the version")
       end
     end

@@ -7,10 +7,16 @@ module Veragem
   # Writes a Project's gem from template/: each `.erb` file rendered, every other copied, each with
   # its mode; then a git repository, its files added, as `bundle gem` leaves one.
   module Generator
+    # __dir__ is nil only in code evaluated from a string, never in a required file
     TEMPLATE = File.expand_path("../../template", __dir__) # steep:ignore ArgumentTypeMismatch
     # The files a command line alone needs: its code, its test, its OCI image's workflow.
     EXE = %w[exe/%name%.erb lib/%path%/cli.rb.erb test/test_cli.rb.erb .github/workflows/image.yml
              .github/image-registries.sh].freeze
+    # git's variables that point it at another repository (`git rev-parse --local-env-vars`, but the
+    # configuration given with `git -c`), which a git hook sets: unset, the repository is the gem's.
+    GIT_LOCAL = %w[GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_CONFIG GIT_OBJECT_DIRECTORY GIT_DIR GIT_WORK_TREE
+                   GIT_IMPLICIT_WORK_TREE GIT_GRAFT_FILE GIT_INDEX_FILE GIT_NO_REPLACE_OBJECTS GIT_REPLACE_REF_BASE
+                   GIT_PREFIX GIT_SHALLOW_FILE GIT_COMMON_DIR].to_h { [it, nil] }.freeze
     # Each LICENSE-* file's SPDX identifier.
     LICENSE_FILES = { "LICENSE-MIT.erb" => "MIT", "LICENSE-APACHE.erb" => "Apache-2.0" }.freeze
 
@@ -20,6 +26,7 @@ module Veragem
       files = Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).sort.to_h { [it, path_of(it, project)] }
       files.reject! { |file, _| skipped.include?(file) || File.directory?(File.join(TEMPLATE, file)) }
       check(project, files.values)
+      check_command(project)
       files
     end
 
@@ -30,6 +37,16 @@ module Veragem
 
       clash = paths.tally.find { |_, count| count > 1 }
       raise Error, "invalid gem name #{project.name}: it would write #{clash[0]} twice" if clash
+    end
+
+    # A command line names the gem's module from within it, <Gem>::CLI, whose constant lookup finds
+    # CLI and VERSION first: the gem's module cannot be named either.
+    def self.check_command(project)
+      innermost = project.modules.last
+      return unless project.exe && %w[CLI VERSION].include?(innermost)
+
+      raise Error, "invalid gem name #{project.name}: its command line would find another #{innermost} " \
+                   "before its module"
     end
 
     # The gems template/Gemfile names.
@@ -86,7 +103,7 @@ module Veragem
     end
 
     def self.git(dir, *args)
-      system("git", *args, chdir: dir) or raise Error, "git #{args.join(" ")} failed in #{dir}"
+      system(GIT_LOCAL, "git", *args, chdir: dir) or raise Error, "git #{args.join(" ")} failed in #{dir}"
     end
   end
 end

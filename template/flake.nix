@@ -23,7 +23,7 @@
     { self, nixpkgs }:
     let
       inherit (nixpkgs) lib;
-      # nixpkgs-unstable's platforms: it dropped x86_64-darwin in 26.11
+      # nixpkgs-unstable's platforms: 26.05 was the last release to support x86_64-darwin
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -44,18 +44,20 @@
         lib.findFirst (groups: groups != null) null (
           map (builtins.match pattern) (lib.splitString "\n" (builtins.readFile file))
         );
-      # a Ruby string literal's value: its escapes read
+      # a double-quoted Ruby string's value, its escapes \\, \" and \# read: those veragem writes
       unquote = lib.replaceStrings [ "\\\\" "\\\"" "\\#" ] [ "\\" "\"" "#" ];
+      # a line's end after its value: `.freeze`, a comment, a carriage return
+      rest = ''(\.freeze)?[[:space:]]*(#.*)?'';
       # the gemspec's `spec.<attribute> = "<value>"`, its value; "" if no line sets it so
       field =
         attribute:
         let
-          found = line ''[[:space:]]*spec\.${attribute} *= *"((\\.|[^"\\])*)" *'' ./${name}.gemspec;
+          found = line ''[[:space:]]*spec\.${attribute}[[:space:]]*=[[:space:]]*"((\\.|[^"\\])*)"${rest}'' ./${name}.gemspec;
         in
         if found == null then "" else unquote (lib.head found);
       version =
         let
-          found = line ''[[:space:]]*VERSION *= *"([^"]+)"( *\.freeze)? *'' ./lib/${path}/version.rb;
+          found = line ''[[:space:]]*VERSION[[:space:]]*=[[:space:]]*"([^"]+)"${rest}'' ./lib/${path}/version.rb;
         in
         if found == null then
           throw "flake.nix: no VERSION = \"...\" line in version.rb"
@@ -64,7 +66,7 @@
       # the SPDX identifiers of `spec.licenses = [...]` or `spec.license = "..."`
       licences =
         let
-          found = line ''[[:space:]]*spec\.licenses? *= *(.*)'' ./${name}.gemspec;
+          found = line ''[[:space:]]*spec\.licenses?[[:space:]]*=[[:space:]]*(\[[^]]*]|"[^"]*")${rest}'' ./${name}.gemspec;
         in
         if found == null then
           [ ]
@@ -93,12 +95,12 @@
             inherit version ruby;
             src = self;
             gemPath = dependencies;
+            # no meta.license: nixpkgs refuses to evaluate a package whose licence is unfree or unknown
+            # to it, and the gemspec's is the author's to choose
             meta = {
               description = field "summary";
               homepage = field "homepage";
-              license = map lib.getLicenseFromSpdxId licences;
-            }
-            // lib.optionalAttrs command { mainProgram = name; };
+            };
           };
           # the command as an OCI image: its closure alone -- no base image, no /bin/sh -- run as
           # nobody. `.#image.stream` streams the archive uncompressed (image.yml's: no second copy
@@ -152,14 +154,18 @@
             ] "actionlint .github/workflows/*.yml";
             inherit package;
             # the library as a user loads it: the gem activated -- its dependencies with it -- then
-            # required, in an environment of nothing else (env -i)
+            # required, in an environment of nothing else (env -i). Ruby's setup hook puts each gem of
+            # buildInputs on GEM_PATH, those it propagates too: the dependencies' own dependencies
             library =
               pkgs.runCommand "library"
                 {
-                  gemPath = lib.concatMapStringsSep ":" (gem: "${gem}/${ruby.gemPath}") ([ package ] ++ dependencies);
+                  buildInputs = [
+                    ruby
+                    package
+                  ];
                 }
                 ''
-                  env -i GEM_PATH="$gemPath" ${lib.getExe ruby} -e 'gem "${name}"; require "${path}"'
+                  env -i GEM_PATH="$GEM_PATH" ${lib.getExe ruby} -e 'gem "${name}"; require "${path}"'
                   touch $out
                 '';
           }

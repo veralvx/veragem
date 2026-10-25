@@ -26,13 +26,14 @@ name: Dependabot Auto-Merge
 on:
   pull_request:
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   dependabot:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     # Use user.login (always the account that opened the PR), not
     # github.actor (whoever caused the event: a person pushing to
     # Dependabot's branch too).

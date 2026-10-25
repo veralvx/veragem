@@ -58,8 +58,8 @@ updates:
 
   # the flake's inputs, monthly, in one pull request (Dependabot's `nix` ecosystem: each input to
   # its branch's newest commit). A person merges it: dependabot-automerge.yml takes patch and minor
-  # bumps alone, and a commit's move is neither. A private repository's are not moved (the `nix`
-  # ecosystem is public repositories' alone): `nix flake update` by hand there
+  # bumps alone, and a commit's move is neither. An input in a private repository is not moved
+  # (docs.github.com, "Supported ecosystems and repositories"): `nix flake update` by hand for it
   - package-ecosystem: "nix"
     directory: "/"
     schedule:
@@ -67,7 +67,8 @@ updates:
       time: "06:00"
       timezone: "UTC"
     open-pull-requests-limit: 1
-    # `chore(deps): ...` -- the flake is the development shell and the checks, nothing the gem ships
+    # `chore(deps): ...` -- the flake is the development shell, the checks and the Nix package,
+    # nothing RubyGems ships: a command's image takes the new inputs at its next release
     commit-message:
       prefix: "chore"
       include: "scope"

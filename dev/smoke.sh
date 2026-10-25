@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The plugin as a user meets it: installed from this checkout (`bundle plugin install --path`), it
 # generates a gem of each kind and licence, and each passes its own `rake checks` and builds, and
-# the command's OCI image runs where Docker is -- its gems from rubygems.org, its tools the dev
-# shell's: run it in `nix develop`. smoke.yml's.
+# the command's OCI image runs, on Linux where Docker runs -- its gems from rubygems.org, its tools
+# the dev shell's: run it in `nix develop`. smoke.yml's.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -33,7 +33,11 @@ for gem in smoke_lib smoke-omniauth-google_oauth2 smoke_apache; do
     if [ -e exe/"$gem" ] && [ "$(uname -s)" = Linux ] && docker info > /dev/null 2>&1; then
       "$(nix build --no-link --print-out-paths .#image.stream)" | docker load
       version="$(nix eval --raw .#image.imageTag)"
-      [ "$(docker run --rm --pull never "$gem:$version" --version)" = "$gem $version" ]
+      actual="$(docker run --rm --pull never "$gem:$version" --version)"
+      if [ "$actual" != "$gem $version" ]; then
+        echo "the image's --version gave '$actual', expected '$gem $version'" >&2
+        exit 1
+      fi
     fi
   )
 done

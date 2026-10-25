@@ -54,7 +54,7 @@ user-facing text; `chore`, `ci` and `style` commits stay out of it, and `!` or a
 footer lists a commit first:
 
 ```
-feat: generate a gem with a C extension (--ext)
+feat(template): the gem as a Nix package, and a command's OCI image
 fix(template): keep exe/NAME executable
 docs: explain the template's ERB values
 ```

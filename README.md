@@ -37,17 +37,18 @@ bundle plugin install veragem
 ```
 
 Run outside a project, it installs for your user, and `bundle veragem` then works anywhere. From
-a clone instead: `bundle plugin install veragem --git https://github.com/veralvx/veragem` (or
-`--path` a local checkout).
+its repository instead: `bundle plugin install veragem --git https://github.com/veralvx/veragem`
+(or `--path` a local checkout).
 
 ## Usage
 
 ```sh
-bundle veragem my_gem
+bundle veragem my_gem   # and --author, --github where git config has no user.name, github.user
 cd my_gem
-bin/setup
+bin/setup               # the gems, and Gemfile.lock written
+git add .
 git commit -m "chore: initial commit from veragem"
-bundle exec rake checks
+bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix develop`'s
 ```
 
 | Option              | Default                             | Goes into                                       |
@@ -61,11 +62,14 @@ bundle exec rake checks
 | `--summary=TEXT`    | `A Ruby gem.`                       | the gemspec, the README, the module's comment   |
 
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
-is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined -- by Ruby or by Bundler, or
-by its top-level library where this Ruby has one (`set`, `logger`, `date-holidays`: Date is a class)
--- or that `bundle gem` would mangle (`1gem`, `my--gem`), one of the Gemfile's own tools
-(`rubocop-rake`), or one longer than 40 characters or 4 modules deep (the generated code's lines fit
-RuboCop's), is refused before anything is written. The summary is plain text: written into the
+is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined -- by Ruby, Bundler, Rake
+or Minitest, or by its top-level library where this Ruby has one (`set`, `option_parser`,
+`date-holidays`: Date is a class) --, whose file would shadow a library this Ruby has (`json`:
+lib/json.rb), whose module its tests or `gem build` would take for Minitest's or RubyGems' own
+(`lifecycle_hooks`, `date_like`), that `bundle gem` would refuse or mangle (`1gem`, `my--gem`), one of the Gemfile's own tools (`rubocop-rake`),
+one longer than 40 characters or deeper than 4 modules (the generated code's lines fit RuboCop's),
+or, with `--exe`, one whose module is CLI or VERSION (`my-c_l_i`: its command line would find
+another first), is refused before anything is written. The summary is plain text: written into the
 README as given, Markdown in it is dprint's to check. As `bundle gem` does, it makes the git
 repository and adds the files, and runs no `bundle install`: `bin/setup` writes the lock, to commit.
 The generated `CONTRIBUTING.md` lists the first steps: the repository's settings, RubyGems' pending
@@ -104,7 +108,8 @@ Ruby and the other tools, not the gems: those are Bundler's, from the lock CI in
   the gemspec read back, the values written as given whatever the locale.
 - The harness here is the template's: this repository's Gemfile, Rakefile, workflows, hooks, flake
   and tools' configuration are the template's own files, byte for byte (`test/test_sync.rb`), so
-  the template's are checked in place by this repository's checks.
+  the template's are checked in place by this repository's checks -- and a command line's own
+  (`image.yml`), by the smoke test's command gem.
 - The smoke test (`dev/smoke.sh`, `smoke.yml`, weekly too): the plugin installed from this checkout
   generates a gem of each kind and licence, and each passes its own `rake checks` and builds.
 
@@ -125,3 +130,9 @@ Licensed under either of
 at your option.
 
 The generated gems are yours: their licence is the one you choose at generation.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in
+the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without
+any additional terms or conditions.

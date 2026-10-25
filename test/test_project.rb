@@ -15,13 +15,13 @@ class TestProject < Minitest::Test
   end
 
   def test_a_text_is_one_line_of_utf8_rubygems_takes
-    ["", " ", "two\nlines", "tab\there", "TODO: write", " FIXME", "\xFF".b, "x" * 99].each do |summary|
+    ["", " ", "\u3000", "two\nlines", "two\u2028lines", "tab\there", "TODO: write", " FIXME", "\xFF".b,
+     "x" * 99].each do |summary|
       assert_raises(Veragem::Error, summary.inspect) { project(summary:) }
     end
   end
 
   # ARGV under the C locale is binary: the bytes are taken as UTF-8.
-
   def test_a_text_is_taken_as_utf8
     author = project(author: "Jos\xC3\xA9".b).author
 
@@ -29,7 +29,7 @@ class TestProject < Minitest::Test
   end
 
   def test_a_text_is_stripped
-    assert_equal "Greets.", project(summary: " Greets.  ").summary
+    assert_equal "Greets.", project(summary: " Greets.\u00A0 ").summary
     assert_equal "x" * 98, project(summary: "x" * 98).summary
   end
 

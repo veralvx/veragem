@@ -44,7 +44,8 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           TITLE: ${{ github.event.pull_request.title }} # through the environment, never the script
-        run: cog verify "$TITLE"
+        # after `--`: a title is the message, never an option (`--file=...`)
+        run: cog verify -- "$TITLE"
 
       - name: Check Push Commits
         if: github.event_name == 'push'

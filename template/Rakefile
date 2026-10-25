@@ -116,7 +116,7 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
     sh(*cliff, "--tag", "v#{version}", "--output", "CHANGELOG.md")
     sh "git", "add", file, "Gemfile.lock", "CHANGELOG.md"
     sh "git", "commit", "--message", "chore(release): v#{version}"
-  rescue StandardError
+  rescue StandardError, Interrupt
     # The tracked files were committed (release:guard_clean): put back what this changed.
     sh "git", "reset", "--hard", "--quiet"
     rm_f "CHANGELOG.md" if first

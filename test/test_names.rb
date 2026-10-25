@@ -31,13 +31,36 @@ class TestNames < Minitest::Test
   end
 
   def test_a_name_whose_module_is_already_defined_is_refused
-    { "set" => "Set", "logger" => "Logger", "bundler" => "Bundler", "bundler-plugin" => "Bundler::Plugin",
-      "bundler-thor" => "Bundler::Thor" }
+    { "set" => "Set", "comparable" => "Comparable",
+      "bundler-thor" => "Bundler::Thor", "option_parser" => "OptionParser" }
       .each do |name, defined|
         error = assert_raises(Veragem::Error) { project(name) }
 
         assert_equal "invalid gem name #{name}: #{defined} is already defined", error.message
       end
+  end
+
+  # lib/json.rb, first on the load path, would be every tool's `require "json"`
+  def test_a_name_whose_library_would_shadow_another_is_refused
+    %w[json logger bundler bundler-plugin].each do |name|
+      error = assert_raises(Veragem::Error) { project(name) }
+
+      path = name.tr("-", "/")
+
+      assert_match %r{\Ainvalid gem name #{name}: its lib/#{path}\.rb would shadow /.*/#{path}\.rb\z}, error.message
+    end
+  end
+
+  # a test's class body, and the gemspec as `gem build` evaluates it, find a constant of Minitest::Test's
+  # or Gem::Specification's ancestors before the gem's module
+  def test_a_name_its_tests_or_gem_build_would_take_for_their_own_is_refused
+    { "lifecycle_hooks" => "its tests would find Minitest::Test::LifecycleHooks",
+      "u_n_d_e_f_i_n_e_d" => "its tests would find Minitest::Assertions::UNDEFINED",
+      "date_like" => "gem build would find Gem::Specification::DateLike" }.each do |name, found|
+      error = assert_raises(Veragem::Error) { project(name) }
+
+      assert_equal "invalid gem name #{name}: #{found} for its module", error.message
+    end
   end
 
   # `module Set` cannot reopen the class Set; nor `module Date`, once a tool requires date
@@ -49,19 +72,22 @@ class TestNames < Minitest::Test
     end
   end
 
-  # in a Ruby of its own: nothing the library prints is taken for an answer
+  # in a Ruby of its own: nothing the library prints is taken for an answer, and it loads with no
+  # arguments, in an empty directory
   def test_the_probe_requires_the_top_level_library_alone
-    assert_equal %w[Module Class], project.send(:probe, "date", %w[Comparable Date])
+    assert_equal ["", "", "Module", "Class"], Veragem::Name.probe("date", "my_gem", %w[Comparable Date])
     in_tmpdir do |dir|
       noisy = File.join(dir, "noisy.rb")
-      File.write(noisy, "puts 'Class'\nwarn 'Class'\nNoisy = 1\n")
+      File.write(noisy, "puts 'Class'\nwarn 'Class'\nNoisy = 1\nCleared = 1 if ARGV.empty?\n" \
+                        "Scratch = 1 if Dir.empty?('.')\n")
 
-      assert_equal ["Integer", ""], project.send(:probe, noisy, %w[Noisy Quiet])
+      assert_equal ["", "", "Integer", "", "Integer", "Integer"],
+                   Veragem::Name.probe(noisy, "my_gem", %w[Noisy Quiet Cleared Scratch])
     end
   end
 
   def test_a_failing_probe_refuses
-    error = assert_raises(Veragem::Error) { project.send(:probe, "set", ["not a constant"]) }
+    error = assert_raises(Veragem::Error) { Veragem::Name.probe("set", "my_gem", ["not a constant"]) }
 
     assert_equal "could not check set's modules", error.message
   end
@@ -86,7 +112,7 @@ class TestNames < Minitest::Test
     Pbt.assert do
       Pbt.property(Pbt.array(Pbt.one_of("a", "b", "0", "_", "-"), min: 1, max: 8)) do |chars|
         name = chars.join
-        next unless Veragem::Project::NAME.match?(name)
+        next unless Veragem::Name::PATTERN.match?(name)
 
         gem = project(name)
 
