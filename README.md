@@ -64,8 +64,8 @@ The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/m
 is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined -- by Ruby or by Bundler, or
 by its top-level library where this Ruby has one (`set`, `logger`, `date-holidays`: Date is a class)
 -- or that `bundle gem` would mangle (`1gem`, `my--gem`), one of the Gemfile's own tools
-(`rubocop-rake`), or one longer than 40 characters or 4 modules deep (the generated code's lines fit
-RuboCop's), is refused before anything is written. The summary is plain text: written into the
+(`rubocop-rake`), or one longer than 40 characters or deeper than 4 modules (the generated code's
+lines fit RuboCop's), is refused before anything is written. The summary is plain text: written into the
 README as given, Markdown in it is dprint's to check. As `bundle gem` does, it makes the git
 repository and adds the files, and runs no `bundle install`: `bin/setup` writes the lock, to commit.
 The generated `CONTRIBUTING.md` lists the first steps: the repository's settings, RubyGems' pending

@@ -40,7 +40,7 @@ module Veragem
     def library_of: (String name) -> String
     def nestings_of: (String name) -> Array[String]
     def probe: (String library, Array[String] nestings) -> Array[String]
-    def valid: (String field, untyped value) { (untyped) -> bool } -> untyped
+    def valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     def modules_of: (String name) -> Array[String]
     def text: (String field, String value) -> String
   end

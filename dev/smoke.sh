@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The plugin as a user meets it: installed from this checkout (`bundle plugin install --path`), it
 # generates a gem of each kind and licence, and each passes its own `rake checks` and builds, and
-# the command's OCI image runs where Docker is -- its gems from rubygems.org, its tools the dev
-# shell's: run it in `nix develop`. smoke.yml's.
+# the command's OCI image runs, on Linux where Docker runs -- its gems from rubygems.org, its tools
+# the dev shell's: run it in `nix develop`. smoke.yml's.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
