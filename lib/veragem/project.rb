@@ -55,17 +55,25 @@ module Veragem
     def indent(code) = code.gsub(/^(?=.)/, "  ")
 
     def check_name(name)
-      raise Error, "invalid gem name #{name.inspect}: #{NAME.source} (as my_gem or my-gem)" unless NAME.match?(name)
-
-      # a module already defined here, as Set or Bundler, is one the gem would reopen
-      defined = modules_of(name).inject(Object) do |scope, mod|
-        break unless scope.is_a?(Module) && scope.const_defined?(mod, false)
-
-        scope.const_get(mod, false)
+      unless NAME.match?(name)
+        raise Error, "invalid gem name #{name.inspect}: lower-case words of letters and digits, each a " \
+                     "letter first after a dash, joined by _ or - (my_gem, my-gem)"
       end
-      raise Error, "invalid gem name #{name}: #{modules_of(name).join("::")} is already defined" if defined
+      # lib/test_helper.rb would shadow the tests' own (Minitest's -Ilib:test)
+      raise Error, "invalid gem name #{name}: its lib/test_helper.rb would shadow the tests'" if name == "test_helper"
 
+      check_modules(modules_of(name))
       name
+    end
+
+    # The gem writes `module` for each of its modules: one defined here already, as Set or Bundler,
+    # it would reopen -- and an outer one that is a class, it could not.
+    def check_modules(modules)
+      defined = (1..modules.size).map { modules.first(it).join("::") }.take_while { Object.const_defined?(it, false) }
+      raise Error, "invalid gem name: #{defined.last} is already defined" if defined.size == modules.size
+
+      outer = defined.find { !Object.const_get(it, false).instance_of?(Module) }
+      raise Error, "invalid gem name: #{outer} is defined, not as a module" if outer
     end
 
     def valid(field, value)
@@ -76,17 +84,19 @@ module Veragem
 
     def modules_of(name) = name.split("-").map { |word| word.split("_").map(&:capitalize).join }
 
-    # A value a file quotes: one line of valid UTF-8, which RubyGems does not refuse as unfinished.
+    # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped, short enough
+    # for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as unfinished.
     def text(field, value)
       value = value.dup.force_encoding(Encoding::UTF_8)
-      unless value.valid_encoding? && !value.strip.empty? && !value.match?(/[[:cntrl:]]/)
-        raise Error, "invalid #{field} #{value.inspect}: one line of text"
-      end
-      if value.match?(/\A(TODO|FIXME)/)
-        raise Error, "invalid #{field} #{value.inspect}: RubyGems refuses one starting TODO or FIXME"
+      line = value.valid_encoding? && !value.match?(/[[:cntrl:]]/) ? value.strip : ""
+      raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
+      raise Error, "invalid #{field}: at most 100 characters, quoted" if quote(line).length > 100
+      if line.match?(/\A(TODO|FIXME)/)
+        raise Error,
+              "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
       end
 
-      value
+      line
     end
   end
 end

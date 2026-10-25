@@ -3,6 +3,8 @@
 require "test_helper"
 
 class TestOptions < Minitest::Test
+  include Veragem::TestSupport
+
   CONFIG = { "user.name" => "Jane Doe", "user.email" => "jane@example.com", "github.user" => "jane" }.freeze
 
   def parse(*argv, config: CONFIG) = Veragem::Options.parse(argv, config: config.method(:[]))
@@ -39,7 +41,7 @@ class TestOptions < Minitest::Test
     [[], %w[one two]].each do |argv|
       error = assert_raises(Veragem::Error) { parse(*argv) }
 
-      assert_match(/one gem name, not #{argv.size}\nUsage: bundle veragem NAME/, error.message)
+      assert_equal "one gem name, not #{argv.size} (bundle veragem --help)", error.message
     end
   end
 
@@ -47,29 +49,34 @@ class TestOptions < Minitest::Test
     [["--nope"], ["--license=gpl"], ["--author"]].each do |argv|
       error = assert_raises(Veragem::Error) { parse("my_gem", *argv) }
 
-      assert_match(/\A(invalid option|invalid argument|missing argument).*\nUsage: bundle veragem NAME/, error.message)
+      assert_match(/\A(invalid option|invalid argument|missing argument): .* \(bundle veragem --help\)\z/,
+                   error.message)
     end
+  end
+
+  def test_options_may_come_first_whatever_posixly_correct
+    with_env("POSIXLY_CORRECT" => "1") { assert parse("--exe", "my_gem").exe }
+    with_env("POSIXLY_CORRECT" => "1") { assert parse("my_gem", "--exe").exe }
+  end
+
+  def test_version
+    assert_output("bundle veragem #{Veragem::VERSION}\n") { assert_raises(SystemExit) { parse("--version") } }
   end
 
   def test_git_config_reads_gits_config
     Dir.mktmpdir do |home|
       with_env("HOME" => home, "XDG_CONFIG_HOME" => home, "GIT_CONFIG_NOSYSTEM" => "1") do
         system("git", "config", "--global", "github.user", "ada", exception: true)
+        system("git", "config", "--global", "user.name", "Jos\u00E9", exception: true)
 
-        assert_equal ["ada", nil], [Veragem::Options.git_config("github.user"), Veragem::Options.git_config("user.name")]
+        assert_equal ["ada", nil], [Veragem::Options.git_config("github.user"), Veragem::Options.git_config("user.email")]
+        # its bytes, whatever the locale: Project reads them as UTF-8
+        assert_equal "José", parse("my_gem", config: ->(key) { Veragem::Options.git_config(key) || "x" }).author
       end
     end
   end
 
   def test_without_git_no_value
     with_env("PATH" => "") { assert_nil Veragem::Options.git_config("user.name") }
-  end
-
-  def with_env(values)
-    saved = ENV.to_h
-    ENV.update(values)
-    yield
-  ensure
-    ENV.replace(saved)
   end
 end

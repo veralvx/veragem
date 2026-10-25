@@ -30,11 +30,29 @@ class TestProject < Minitest::Test
   end
 
   def test_a_name_whose_module_is_already_defined_is_refused
-    %w[set bundler veragem].each do |name|
+    { "set" => "Set", "bundler" => "Bundler", "veragem" => "Veragem", "bundler-plugin" => "Bundler::Plugin" }
+      .each do |name, defined|
+        error = assert_raises(Veragem::Error) { project(name) }
+
+        assert_equal "invalid gem name: #{defined} is already defined", error.message
+      end
+  end
+
+  # `module Set` cannot reopen the class Set
+  def test_a_name_nested_in_a_class_is_refused
+    %w[set-extras string-utils].each do |name|
       error = assert_raises(Veragem::Error) { project(name) }
 
-      assert_match(/already defined/, error.message)
+      assert_match(/is defined, not as a module/, error.message)
     end
+  end
+
+  def test_a_name_nested_in_a_module_reopens_it
+    assert_equal "Bundler::Extras", project("bundler-extras").constant
+  end
+
+  def test_test_helper_would_shadow_the_tests_helper
+    assert_raises(Veragem::Error) { project("test_helper") }
   end
 
   # Over names of a few letters, digits, underscores and dashes: one accepted is bundle gem's
@@ -60,7 +78,7 @@ class TestProject < Minitest::Test
   end
 
   def test_a_text_is_one_line_of_utf8_rubygems_takes
-    ["", " ", "two\nlines", "tab\there", "TODO: write", "FIXME", "\xFF".b].each do |summary|
+    ["", " ", "two\nlines", "tab\there", "TODO: write", " FIXME", "\xFF".b, "x" * 99].each do |summary|
       assert_raises(Veragem::Error, summary.inspect) { project(summary:) }
     end
   end
@@ -70,6 +88,11 @@ class TestProject < Minitest::Test
     author = project(author: "Jos\xC3\xA9".b).author
 
     assert_equal ["José", Encoding::UTF_8], [author, author.encoding]
+  end
+
+  def test_a_text_is_stripped
+    assert_equal "Greets.", project(summary: " Greets.  ").summary
+    assert_equal "x" * 98, project(summary: "x" * 98).summary
   end
 
   def test_the_email_is_optional

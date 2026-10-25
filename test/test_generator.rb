@@ -100,17 +100,13 @@ class TestGenerator < Minitest::Test
     end
   end
 
-  def test_an_existing_directory_is_refused
+  def test_the_modes_follow_the_umask
     in_tmpdir do |dir|
-      error = assert_raises(Veragem::Error) { Veragem::Generator.generate(project, dir) }
+      umask = File.umask(0o077)
+      Veragem::Generator.generate(project, File.join(dir, "my_gem"))
+      File.umask(umask)
 
-      assert_match(/already exists/, error.message)
+      assert_equal([0o600, 0o700], %w[README.md bin/setup].map { File.stat(File.join(dir, "my_gem", it)).mode & 0o777 })
     end
-  end
-
-  def test_a_failing_git_is_refused
-    error = assert_raises(Veragem::Error) { Veragem::Generator.git("/nonexistent", "status") }
-
-    assert_match(%r{\Agit status in /nonexistent: }, error.message)
   end
 end

@@ -24,6 +24,14 @@ module Veragem
     def project(name = "my_gem", **values) = Project.new(name, VALUES.merge(values))
 
     def in_tmpdir(&) = Dir.mktmpdir("veragem-test", &)
+
+    def with_env(values)
+      saved = ENV.to_h
+      ENV.update(values)
+      yield
+    ensure
+      ENV.replace(saved)
+    end
   end
 
   # What the generator's tests share: each kind generated, and what it holds.

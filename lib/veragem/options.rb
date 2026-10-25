@@ -10,12 +10,12 @@ module Veragem
 
     def self.parse(argv, config: ->(key) { git_config(key) })
       values = GIT_CONFIG.transform_values { config.call(it) }
-      names = parser.parse(argv, into: values)
-      raise Error, "one gem name, not #{names.size}\n#{parser}" unless names.size == 1
+      names = parser.permute(argv, into: values)
+      raise Error, "one gem name, not #{names.size} (bundle veragem --help)" unless names.size == 1
 
       Project.new(names.fetch(0), { summary: "A Ruby gem.", license: "dual", **given(values) })
     rescue OptionParser::ParseError => e
-      raise Error, "#{e.message}\n#{parser}"
+      raise Error, "#{e.message} (bundle veragem --help)"
     end
 
     # The values set, the author and the GitHub user required.
@@ -26,6 +26,8 @@ module Veragem
 
     def self.parser
       OptionParser.new("Usage: bundle veragem NAME [options]") do |opts|
+        opts.program_name = "bundle veragem"
+        opts.version = VERSION
         opts.on("--exe", "Add a command line, exe/NAME")
         opts.on("--license=LICENSE", Project::LICENSES.keys, "mit, apache or dual (MIT OR Apache-2.0, the default)")
         opts.on("--author=NAME", "The author (default: git config user.name)")
@@ -35,9 +37,11 @@ module Veragem
       end
     end
 
-    # A git config value, nil when unset or git is missing.
+    # A git config value, nil when unset or git is missing: its bytes, which Project reads as UTF-8
+    # whatever the locale.
     def self.git_config(key)
-      value = IO.popen(["git", "config", "--get", key], err: File::NULL, &:read).strip
+      command = ["git", "config", "--get", key]
+      value = IO.popen(command, err: File::NULL, external_encoding: Encoding::BINARY, &:read).strip
       value unless value.empty?
     rescue SystemCallError
       nil
