@@ -6,8 +6,8 @@ Thank you for considering contributing to `veragem`!
 
 Either **Nix** -- `nix develop` gives Ruby and every tool below at the versions `flake.lock` pins
 -- or, installed yourself: **Ruby 4.0** or later (with Bundler, Ruby's own), **ShellCheck**,
-**shfmt**, **actionlint**, **dprint**, **cocogitto** (`cog`), **git-cliff**, and **Nix** for the
-last of `rake checks`. `bin/setup` installs the gems `Gemfile.lock` pins.
+**shfmt**, **actionlint**, **zizmor**, **dprint**, **cocogitto** (`cog`), **git-cliff**, and
+**Nix** for the last of `rake checks`. `bin/setup` installs the gems `Gemfile.lock` pins.
 
 ## Setup
 
@@ -53,7 +53,7 @@ takes, a GitHub user GitHub takes.
 
 ```sh
 bundle exec rake          # RuboCop, Steep, the tests: ruby-ci.yml
-bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, actionlint, the flake's checks
+bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the flake's checks
 nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
 ```
 

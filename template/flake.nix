@@ -2,14 +2,14 @@
 #
 #   nix develop      Ruby 4.0 and every tool `rake checks` runs besides the gems (Bundler's, from
 #                    Gemfile.lock: `bin/setup`): cocogitto, git-cliff, dprint, shellcheck, shfmt,
-#                    actionlint, nixfmt
+#                    actionlint, zizmor, nixfmt
 #   nix build        the gem, built from its gemspec and installed (nixpkgs' buildRubyGem);
 #                    with a command (exe/<name>): `nix run` runs it, and on Linux `nix build
 #                    .#image` builds it as an OCI image (image.yml publishes it)
 #   nix fmt          the Nix, by nixfmt
 #   nix flake check  the Nix format, the shell scripts (shellcheck, shfmt), the workflows
-#                    (actionlint), the package and its library loaded -- and the command run, and
-#                    its image -- offline in the sandbox: git's files alone
+#                    (actionlint, zizmor), the package and its library loaded -- and the command
+#                    run, and its image -- offline in the sandbox: git's files alone
 #
 # Nothing here names the gem: its name is the gemspec's file; its version, lib/<path>/version.rb's
 # VERSION; its summary, homepage and licences, the gemspec's lines that set them.
@@ -147,11 +147,12 @@
               shfmt --find . | xargs shellcheck
               shfmt --diff .
             '';
-            # actionlint runs shellcheck on each `run:` script too
-            workflows = check pkgs "workflows" [
-              pkgs.actionlint
-              pkgs.shellcheck
-            ] "actionlint .github/workflows/*.yml";
+            # actionlint runs shellcheck on each `run:` script too; zizmor audits Dependabot's
+            # configuration as well
+            workflows = check pkgs "workflows" [ pkgs.actionlint pkgs.shellcheck pkgs.zizmor ] ''
+              actionlint .github/workflows/*.yml
+              zizmor --offline --quiet --strict-collection .
+            '';
             inherit package;
             # the library as a user loads it: the gem activated -- its dependencies with it -- then
             # required, in an environment of nothing else (env -i). Ruby's setup hook puts each gem of
@@ -197,6 +198,7 @@
               pkgs.shellcheck
               pkgs.shfmt
               pkgs.actionlint
+              pkgs.zizmor
               pkgs.nixfmt
             ];
           };

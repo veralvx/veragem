@@ -19,7 +19,8 @@ Rust templates.
   `strict` profile: every line, branch and method of `lib/` covered.
 - **Security**: bundler-audit over `Gemfile.lock`, daily in CI; a pull request's new gems and
   actions reviewed for their licences and advisories, advisory (`dependency-review.yml`, as the
-  templates' Python and Rust ones are); Dependabot for the gems, the actions and the flake.
+  templates' Python and Rust ones are); the workflows and Dependabot's configuration audited by
+  zizmor; Dependabot for the gems, the actions and the flake, a release proposed once a week old.
 - **Commits and releases**: Conventional Commits (cocogitto, CI and opt-in git hooks), a changelog
   written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own `rake release`; the
   tag publishes to RubyGems by Trusted Publishing -- no API key stored -- and makes the GitHub

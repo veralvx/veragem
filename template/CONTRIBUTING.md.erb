@@ -17,6 +17,8 @@ Either **Nix** -- `nix develop` gives Ruby and every tool below at the versions 
   the shell's linter and formatter (its style is `.editorconfig`'s).
 - **[actionlint](https://github.com/rhysd/actionlint)** -- lints the workflows (and, through
   ShellCheck, their `run:` scripts).
+- **[zizmor](https://docs.zizmor.sh/)** -- audits the workflows' security, and Dependabot's
+  configuration.
 - **[dprint](https://dprint.dev/)** -- formats the Markdown and TOML.
 - **[cocogitto](https://docs.cog.tools/)** (`cog`) -- enforces Conventional Commits.
 - **[git-cliff](https://git-cliff.org/)** -- writes the changelog at a release.
@@ -63,7 +65,7 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
 
 ```sh
 bundle exec rake          # RuboCop, Steep, the tests: ruby-ci.yml
-bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, actionlint, the flake's checks
+bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the flake's checks
 bundle exec rake format   # RuboCop's corrections, dprint and nixfmt, in place
 bundle exec rake typeprof # the signatures TypeProf infers from lib/, to start sig/ from
 nix build                 # the gem, built and installed by Nix (flake.nix)
