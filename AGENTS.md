@@ -66,11 +66,11 @@ them with `--no-verify`. `git revert` writes `Revert "..."`, which CI refuses: r
 
 ## 6. Before you claim a change is done
 
-Run `bundle exec rake checks`, and for a change to the template the smoke test too (`nix develop
---command dev/smoke.sh`). `rake checks` is what CI runs: RuboCop, Steep, the tests with every line,
-branch and method covered, bundler-audit, dprint, the commit messages, the shell, the workflows,
-and the flake's checks. Reporting "done" on a change that has not passed it is the one thing that
-wastes the most time here.
+Run `bundle exec rake checks`, and for a change to the template the smoke test too
+(`nix develop --command dev/smoke.sh`). `rake checks` is what CI runs: RuboCop, Steep, the tests
+with every line, branch and method covered, bundler-audit, dprint, the commit messages, the shell,
+the workflows, and the flake's checks. Reporting "done" on a change that has not passed it is the
+one thing that wastes the most time here.
 
 If a check fails for reasons unrelated to your change, say so explicitly rather than working
 around it -- a broken check that everyone routes around stops protecting anything.

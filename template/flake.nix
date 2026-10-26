@@ -4,8 +4,8 @@
 #                    Gemfile.lock: `bin/setup`): cocogitto, git-cliff, dprint, shellcheck, shfmt,
 #                    actionlint, zizmor, nixfmt
 #   nix build        the gem, built from its gemspec and installed (nixpkgs' buildRubyGem);
-#                    with a command (exe/<name>): `nix run` runs it, and on Linux `nix build
-#                    .#image` builds it as an OCI image (image.yml publishes it)
+#                    with a command (exe/<name>): `nix run` runs it, and on Linux
+#                    `nix build .#image` builds it as an OCI image (image.yml publishes it)
 #   nix fmt          the Nix, by nixfmt
 #   nix flake check  the Nix format, the shell scripts (shellcheck, shfmt), the workflows
 #                    (actionlint, zizmor), the package and its library loaded -- and the command
@@ -74,7 +74,6 @@
           lib.concatLists (lib.filter lib.isList (builtins.split ''"([^"]*)"'' (lib.head found)));
       command = builtins.pathExists ./exe/${name};
 
-      # a check: its command run in the repository's files, its tools on PATH
       check =
         pkgs: checkName: tools: script:
         pkgs.runCommand checkName { nativeBuildInputs = tools; } ''
