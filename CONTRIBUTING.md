@@ -59,8 +59,8 @@ nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
 
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
 left unrendered, each file parsing, the executables' modes, the gemspec, the git repository. The
-smoke test installs the plugin from this checkout, generates each kind, and runs each one's `rake
-checks` and build, its tools the dev shell's -- the template's: a change to the template is
+smoke test installs the plugin from this checkout, generates each kind, and runs each one's
+`rake checks` and build, its tools the dev shell's (the template's): a change to the template is
 finished when it passes. It needs the network: rubygems.org for the gems, GitHub and Nix's cache
 for the flake.
 
@@ -68,17 +68,18 @@ for the flake.
 
 [Conventional Commits](https://www.conventionalcommits.org/), enforced by `cog check` locally and
 in CI; a commit's subject is its changelog entry. Read [AGENTS.md](AGENTS.md) before writing code.
-Open a pull request against `main`, titled as a conventional commit, once `bundle exec rake
-checks` and the smoke test pass.
+Open a pull request against `main`, titled as a conventional commit, once
+`bundle exec rake checks` and the smoke test pass.
 
 ## Maintainers
 
 ### Going live
 
 - Enable the repository settings the auto-merge workflow needs, listed at the top of
-  `.github/workflows/dependabot-automerge.yml`, with every job of `ruby-ci.yml`, `nix.yml`, `smoke.yml`
-  and the style checks required.
-- Enable private vulnerability reporting (Settings → Advanced Security; a public repository's alone).
+  `.github/workflows/dependabot-automerge.yml`, with every job of `ruby-ci.yml`, `nix.yml`,
+  `smoke.yml` and the style checks required.
+- Enable private vulnerability reporting (Settings → Advanced Security; a public repository's
+  alone).
 - Enable the dependency graph there too, if it is off: `dependency-review.yml` fails without it.
 - Add a pending trusted publisher on
   [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers) for the gem `veragem`:

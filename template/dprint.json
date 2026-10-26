@@ -1,5 +1,5 @@
-// Markdown and TOML (`rake dprint`, style-check-dprint.yml). The plugins pinned: `dprint config
-// update` moves them to their latest.
+// Markdown and TOML (`rake dprint`, style-check-dprint.yml). The plugins pinned:
+// `dprint config update` moves them to their latest.
 {
   "markdown": {
     "textWrap": "maintain",

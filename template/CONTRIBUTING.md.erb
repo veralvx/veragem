@@ -7,8 +7,8 @@ A project just generated: start at [First steps](#first-steps), under Maintainer
 ## Prerequisites
 
 Either **Nix** -- `nix develop` gives Ruby and every tool below at the versions `flake.lock` pins
--- or, installed yourself. The gems are Bundler's in both: `bin/setup` installs them from
-`Gemfile.lock`, the lock CI installs from too (nixpkgs packages few of them, and older).
+-- or the tools installed yourself. The gems are Bundler's either way, from `Gemfile.lock`, as in
+CI (nixpkgs packages few of them, and older).
 
 - **[Ruby](https://www.ruby-lang.org) 4.0** or later, with Bundler (Ruby's own). `bin/setup`
   installs the gems `Gemfile.lock` pins: Rake, RuboCop, its extensions and rubydex (its project
@@ -36,9 +36,9 @@ bin/setup
 ```
 
 3. Optionally, `bundle exec rake hooks`: `.githooks/` then runs RuboCop, the shell, the workflows
-   and dprint before each commit, checks the message as a Conventional Commit, and every pushed
-   commit's message before a push -- what CI would refuse, minutes earlier. `git config --unset
-   core.hooksPath` turns them off.
+   and dprint before each commit, checks its message as a Conventional Commit, and every pushed
+   commit's message before a push: what CI would refuse, minutes earlier.
+   `git config --unset core.hooksPath` turns them off.
 
 ## Guidelines
 
@@ -58,9 +58,9 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
 
 ## Development Workflow
 
-1. The [Conventional Commits](https://www.conventionalcommits.org/) specification is enforced on
-   every commit. A commit's subject is its changelog entry -- git-cliff writes the changelog from
-   them at each release -- so write it for the gem's users.
+1. Every commit must be a [Conventional Commit](https://www.conventionalcommits.org/) (`cog check`
+   enforces it), and its subject is its changelog entry (git-cliff writes the changelog at each
+   release): write it for the gem's users.
 2. Run the checks. The Rakefile runs the workflows' commands:
 
 ```sh
@@ -79,15 +79,15 @@ its nixpkgs package in flake.nix's `dependencies` (`pkgs.rubyPackages_4_0.<gem>`
 the gemspec's requirement excludes -- one nixpkgs lacks is built there by `pkgs.buildRubyGem`. A
 new tool goes in the Gemfile, which the built gem never holds: its dependencies are the gemspec's
 alone. `bundle install` then updates the lock. Steep reads the standard library's signatures
-when the Steepfile names the library (`library "json"`); a gem's, through an RBS collection (`rbs
-collection init`, then `rbs collection install`, as rbs's `docs/collection.md` describes).
+when the Steepfile names the library (`library "json"`); a gem's, through an RBS collection
+(`rbs collection init`, then `rbs collection install`, as rbs's `docs/collection.md` describes).
 
 ## Creating a Pull Request
 
 1. Make sure `bundle exec rake checks` passes.
 2. Open a pull request against `main`, titled as a conventional commit: a squash merge of two or
-   more commits makes the title its commit, and so a changelog entry (CI checks it). Describe the problem it solves, and
-   link its issue (`Fixes #123`), if any.
+   more commits makes the title its commit, and so a changelog entry (CI checks it). Describe the
+   problem it solves, and link its issue (`Fixes #123`), if any.
 3. Wait for a maintainer's review.
 
 ## Maintainers
@@ -110,8 +110,8 @@ pins. A flake sees git's files only, so they are added already.
 Then, in whichever order suits you:
 
 - Push to `https://github.com/<%= github %>/<%= name %>`.
-- Enable the repository settings the auto-merge workflow needs -- they are listed at the top of
-  `.github/workflows/dependabot-automerge.yml`. Without required status checks, it merges bumps
+- Enable the repository settings the auto-merge workflow needs, listed at the top of
+  `.github/workflows/dependabot-automerge.yml`: without required status checks, it merges bumps
   that CI never gated.
 - Enable private vulnerability reporting (Settings → Advanced Security; a public repository's
   alone): it is off by default, and [SECURITY.md](SECURITY.md) and the issue form point to it.
@@ -158,7 +158,11 @@ declared, whatever the level), updates the lock, writes the changelog (git-cliff
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
 tag; it pushes no gem. The tag runs `release.yml`: the checks and the build, the push to RubyGems
 by Trusted Publishing, then the GitHub release of the same gem, its notes the changelog's new
-section<%= exe ? "; `image.yml` too, beside it -- not after: it waits for no RubyGems push -- the command's OCI image to GHCR (`nix build .#image` builds it here)" : "" %>.
+section.
+<%- if exe -%>
+Beside `release.yml`, waiting for no RubyGems push, `image.yml` publishes the command's OCI image
+to GHCR (`nix build .#image` builds it here).
+<%- end -%>
 
 `rake release` pushes to `main` directly: with "Require a pull request before merging" on, the
 maintainer cutting it needs the rule's bypass. A refused push leaves the release commit and
@@ -171,7 +175,8 @@ monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the ch
 dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
 brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
 A bump the new cops fail gets RuboCop's safe corrections as a commit on its branch
-(`rubocop-autocorrect.yml`): approve its workflows (the pull request's "Approve workflows to
-run"), which GitHub holds for a commit of a workflow's token, and corrected, it merges as any
-bump. What safe corrections leave is yours, a pull request of yours too: a failed run's summary
+(`rubocop-autocorrect.yml`). GitHub holds the workflows of a commit a workflow's token pushes
+until you approve them (the pull request's "Approve workflows to run"); corrected, the bump then
+merges as any bump. What safe corrections leave is yours to fix, in a pull request of yours too: a
+failed run's summary
 holds the corrections as a patch, to `git apply`.

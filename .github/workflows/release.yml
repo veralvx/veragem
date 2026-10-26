@@ -1,11 +1,13 @@
 # A release tag, v<version> (`rake bump`, then `rake release`), publishes the gem: checked and built
-# once, pushed to RubyGems through Trusted Publishing -- no API key stored; once, on rubygems.org, a
-# (pending) trusted publisher naming this repository, this workflow (release.yml) and the `release`
-# environment -- then its GitHub release of the same file, its notes the release's section of
-# CHANGELOG.md (release-notes.sh). Least privilege, as RubyGems' Trusted Publishing advises, after
-# PyPI's security model: the build, which runs the checks and the gemspec, writes nothing but its
-# artifacts and mints no key; only the RubyGems job can mint one -- with nothing checked out and no
-# Gemfile or Rakefile loaded -- and only the release job can write the repository.
+# once, pushed to RubyGems through Trusted Publishing (no API key stored), then its GitHub release
+# of the same file, its notes the release's section of CHANGELOG.md (release-notes.sh). Trusted
+# Publishing needs, once, a (pending) trusted publisher on rubygems.org naming this repository,
+# this workflow (release.yml) and the `release` environment.
+#
+# Least privilege, as RubyGems' Trusted Publishing advises, after PyPI's security model: the
+# build, which runs the checks and the gemspec, writes nothing but its artifacts and mints no key;
+# only the RubyGems job can mint one, with nothing checked out and no Gemfile or Rakefile loaded;
+# only the release job can write the repository.
 name: Release
 
 on:

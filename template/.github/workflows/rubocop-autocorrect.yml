@@ -1,10 +1,10 @@
-# A Dependabot pull request that moves Gemfile.lock gets RuboCop's safe corrections (`rake
-# rubocop:autocorrect`), when the bumped RuboCop finds any, as a commit of their own on its branch,
-# then merges as any bump once its checks pass. No token is stored: the job's GITHUB_TOKEN pushes,
-# and GitHub may hold the checks of that token's commit until a maintainer approves them (the pull
-# request's "Approve workflows to run"); no workflow can start them sooner -- dispatched, theirs
-# are not the pull request's required checks. `[dependabot skip]`: Dependabot rebases the bump
-# still, over the commit, and this workflow corrects the new one.
+# A Dependabot pull request that moves Gemfile.lock gets RuboCop's safe corrections
+# (`rake rubocop:autocorrect`), when the bumped RuboCop finds any, as a commit of their own on its
+# branch, then merges as any bump once its checks pass. No token is stored: the job's GITHUB_TOKEN
+# pushes, and GitHub may hold the checks of that token's commit until a maintainer approves them
+# (the pull request's "Approve workflows to run"); no workflow can start them sooner -- dispatched,
+# theirs are not the pull request's required checks. `[dependabot skip]`: Dependabot rebases the
+# bump still, over the commit, and this workflow corrects the new one.
 name: RuboCop Autocorrect
 
 on:

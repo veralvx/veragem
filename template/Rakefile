@@ -96,8 +96,7 @@ def next_version(current, level)
   parts.fill(0, level + 1).join(".")
 end
 
-# The release commit: the version, the lock, the changelog. `rake release` then tags and pushes
-# it, and release.yml publishes the tag.
+# The release commit: the version, the lock, the changelog.
 desc "Bump the version (major, minor or patch), write the changelog and commit"
 task :bump, [:level] => "release:guard_clean" do |_, args|
   level = %w[major minor patch].index(args[:level]) or abort 'usage: rake "bump[major|minor|patch]"'
@@ -126,8 +125,8 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
   puts "v#{version} committed: `rake release` tags and pushes it, then release.yml publishes the tag."
 end
 
-# The gem is published by release.yml, on the tag, through RubyGems' Trusted Publishing: `rake
-# release` builds it, tags v<version> and pushes the branch and the tag, and pushes no gem.
+# The gem is published by release.yml, on the tag, through RubyGems' Trusted Publishing:
+# `rake release` builds it, tags v<version> and pushes the branch and the tag, and pushes no gem.
 Rake::Task["release"].clear_comments
 Rake::Task["release"].add_description("Tag v#{gemspec.version}, push the branch and the tag: release.yml publishes it")
 Rake::Task["release:rubygem_push"].clear_actions

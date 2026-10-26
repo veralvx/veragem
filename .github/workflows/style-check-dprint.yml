@@ -6,13 +6,10 @@ on:
   push:
     branches: [main]
     paths:
-      # These must match the plugins configured in dprint.json, which
-      # are markdown and toml. Listing extensions no plugin handles
-      # (yaml, json, Dockerfile) only schedules runs that check nothing.
-      # Add a plugin there and an extension here together.
-      #
-      # GitHub Actions path filters do not support brace expansion {a,b}:
-      # each extension is its own entry.
+      # dprint.json's plugins' extensions, markdown and toml, no more: one
+      # no plugin handles (yaml, json, Dockerfile) only schedules runs that
+      # check nothing. Add a plugin there and its extensions here together,
+      # each its own entry: path filters have no brace expansion {a,b}.
       - "**/*.md"
       - "**/*.markdown"
       - "**/*.toml"
