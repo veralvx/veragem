@@ -26,26 +26,33 @@ module Veragem
       files = Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).sort.to_h { [it, path_of(it, project)] }
       files.reject! { |file, _| skipped.include?(file) || File.directory?(File.join(TEMPLATE, file)) }
       check(project, files.values)
-      check_command(project)
+      check_command(project.name, project.exe)
       files
     end
 
-    # A name can be a tool's, which the Gemfile would name twice, or a template file's: `helper`'s
-    # test would be test/test_helper.rb.
+    # A name can be a tool's, or a template file's: `helper`'s test would be test/test_helper.rb.
     def self.check(project, paths)
-      raise Error, "invalid gem name #{project.name}: the Gemfile's own tool" if tools.include?(project.name)
-
+      check_tool(project.name)
       clash = paths.tally.find { |_, count| count > 1 }
       raise Error, "invalid gem name #{project.name}: it would write #{clash[0]} twice" if clash
     end
 
+    # The Gemfile would name it twice.
+    def self.check_tool(name)
+      raise Error, "invalid gem name #{name}: the Gemfile's own tool" if tools.include?(name)
+    end
+
+    def self.check_target(target)
+      raise Error, "#{target} already exists" if File.exist?(target) || File.symlink?(target)
+    end
+
     # A command line names the gem's module from within it, <Gem>::CLI, whose constant lookup finds
     # CLI and VERSION first: the gem's module cannot be named either.
-    def self.check_command(project)
-      innermost = project.modules.last
-      return unless project.exe && %w[CLI VERSION].include?(innermost)
+    def self.check_command(name, exe)
+      innermost = Name.modules(name).last
+      return unless exe && %w[CLI VERSION].include?(innermost)
 
-      raise Error, "invalid gem name #{project.name}: its command line would find another #{innermost} " \
+      raise Error, "invalid gem name #{name}: its command line would find another #{innermost} " \
                    "before its module"
     end
 
@@ -65,8 +72,7 @@ module Veragem
 
     # Into +target+, a new directory: a failure, an interrupt included, leaves none behind.
     def self.generate(project, target)
-      raise Error, "#{target} already exists" if File.exist?(target) || File.symlink?(target)
-
+      check_target(target)
       files = files(project)
       Dir.mkdir(target)
       removed_unless_done(target) do

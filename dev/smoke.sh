@@ -13,8 +13,9 @@ export BUNDLE_USER_HOME="$work/bundle"
 cd "$work"
 bundle plugin install veragem --path "$root"
 
+# no terminal for input: nothing asked, the defaults taken
 generate() {
-  bundle veragem "$@" --author "Smoke Test" --email smoke@example.com --github veragem-smoke
+  bundle veragem "$@" --author "Smoke Test" --email smoke@example.com --github veragem-smoke < /dev/null
 }
 generate smoke_lib
 generate smoke-omniauth-google_oauth2 --exe --license mit

@@ -20,6 +20,10 @@ AllCops:
   # method defined twice in two files, a constant reassigned in another
   UseProjectIndex: true
 
+# Steep's inline annotations, `#: Type`, which have no space after the `#`
+Layout/LeadingCommentSpace:
+  AllowSteepAnnotation: true
+
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 

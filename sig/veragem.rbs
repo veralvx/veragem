@@ -4,7 +4,7 @@ module Veragem
   class Error < Bundler::PluginError
   end
 
-  def self.run: (Array[String] argv, ?dir: String) -> String
+  def self.run: (Array[String] argv, ?dir: String, ?input: Questions::_Input) -> String
 
   module Name
     PATTERN: Regexp
@@ -41,19 +41,64 @@ module Veragem
     def year: () -> Integer
     def quote: (String value) -> String
     def nest: (String body, ?doc: String?) -> String
+    def self.quote: (String value) -> String
+    def self.github: (String value) -> String
+    def self.license: (String value) -> String
+    def self.text: (String field, String value) -> String
 
     private
 
+    def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     def indent: (String code) -> String
-    def valid: [T < Object] (String field, T value) { (T) -> bool } -> T
-    def text: (String field, String value) -> String
+  end
+
+  class Questions
+    # what is read from: a line at a time, and whether a person types it
+    interface _Input
+      def gets: () -> String?
+      def tty?: () -> bool
+    end
+
+    interface _Output
+      def print: (String) -> void
+      def puts: (String) -> void
+      def flush: () -> void
+    end
+
+    QUESTIONS: Hash[Symbol, String]
+
+    @input: _Input
+    @output: _Output
+    @dir: String
+
+    def initialize: (_Input input, _Output output, String dir) -> void
+    def check: (Hash[Symbol, String | bool] given) -> void
+    def name: (String? given, exe: bool) -> String
+    def values: (String name, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults)
+              -> Hash[Symbol, String | bool | nil]
+
+    private
+
+    def check_name: (String name, bool exe) -> String
+    def checks: () -> Hash[Symbol, ^(String) -> String]
+    def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?optional: bool) -> (String | bool | nil)
+    def read: (String question, String? default) -> String?
+    def checked: (String answer, ^(String) -> (String | bool) check) -> (String | bool | nil)
+    def yes?: (String answer) -> bool
+    def completed: (String answer) -> String
   end
 
   module Options
     GIT_CONFIG: Hash[Symbol, String]
+    DEFAULTS: Hash[Symbol, String]
+    BANNER: String
 
-    def self.parse: (Array[String] argv, ?config: ^(String) -> String?) -> Project
-    def self.given: (Hash[Symbol, untyped] values) -> Hash[Symbol, untyped]
+    def self.parse: (Array[String] argv, ?dir: String, ?config: ^(String) -> String?, ?input: Questions::_Input,
+                     ?output: Questions::_Output) -> Project
+    def self.ask: (Array[String] names, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults,
+                   Questions questions) -> Project
+    def self.name_of: (Array[String] names) -> String
+    def self.required: (Hash[Symbol, String | bool | nil] values) -> Hash[Symbol, String | bool]
     def self.parser: () -> OptionParser
     def self.git_config: (String key) -> String?
   end
@@ -68,7 +113,9 @@ module Veragem
     def self.skipped: (Project project) -> Array[String]
     def self.tools: () -> Array[String]
     def self.check: (Project project, Array[String] paths) -> void
-    def self.check_command: (Project project) -> void
+    def self.check_tool: (String name) -> void
+    def self.check_target: (String target) -> void
+    def self.check_command: (String name, bool exe) -> void
     def self.path_of: (String file, Project project) -> String
     def self.generate: (Project project, String target) -> void
     def self.removed_unless_done: (String target) { () -> void } -> void

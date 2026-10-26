@@ -4,31 +4,49 @@ require "optparse"
 
 module Veragem
   # The command line, read into a Project; git's config gives the author, the email and the GitHub
-  # user, as `bundle gem` reads them.
+  # user, as `bundle gem` reads them. With a terminal for input, what no option gives is asked for.
   module Options
     GIT_CONFIG = { author: "user.name", email: "user.email", github: "github.user" }.freeze
+    DEFAULTS = { summary: "A Ruby gem.", license: "dual" }.freeze
+    BANNER = "Usage: bundle veragem NAME [options]\n" \
+             "With a terminal for input, what no option gives (the name too) is asked for."
 
-    def self.parse(argv, config: ->(key) { git_config(key) })
-      values = GIT_CONFIG.transform_values { config.call(it) }
+    # +dir+, where the gem is to be generated; the questions on +output+, as a prompt is.
+    def self.parse(argv, dir: Dir.pwd, config: ->(key) { git_config(key) }, input: $stdin, output: $stderr)
+      given = {} #: Hash[Symbol, String | bool]
       # an argument of invalid UTF-8 as bytes, as git's values are: OptionParser's matching raises on
       # it, Project refuses it
-      names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: values)
-      raise Error, "one gem name, not #{names.size} (bundle veragem --help)" unless names.size == 1
-
+      names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: given)
+      defaults = { **DEFAULTS, **GIT_CONFIG.transform_values(&config).compact }
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
-      Project.new(names.fetch(0), { summary: "A Ruby gem.", license: "dual", **given(values) })
+      return Project.new(name_of(names), required(defaults.merge(given))) unless input.tty?
+
+      ask(names, given, defaults, Questions.new(input, output, dir))
     rescue OptionParser::ParseError => e
       raise Error, "#{e.message} (bundle veragem --help)"
     end
 
+    def self.ask(names, given, defaults, questions)
+      questions.check(given)
+      name = questions.name(names.empty? ? nil : name_of(names), exe: given[:exe] == true)
+      # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
+      Project.new(name, required(questions.values(name, given, defaults)))
+    end
+
+    def self.name_of(names)
+      return names.fetch(0) if names.size == 1
+
+      raise Error, "one gem name, not #{names.size} (bundle veragem --help)"
+    end
+
     # The values set, the author and the GitHub user required.
-    def self.given(values)
+    def self.required(values)
       %i[author github].each { raise Error, "no #{it}: --#{it}, or git config #{GIT_CONFIG[it]}" unless values[it] }
       values.compact
     end
 
     def self.parser
-      OptionParser.new("Usage: bundle veragem NAME [options]") do |opts|
+      OptionParser.new(BANNER) do |opts|
         opts.program_name = "bundle veragem"
         opts.version = VERSION
         opts.on("--exe", "Add a command line, exe/NAME")

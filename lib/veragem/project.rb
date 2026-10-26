@@ -10,15 +10,15 @@ module Veragem
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe
 
-    # +name+, and +values+: the author, email, github, summary and license (strings), exe (true or
-    # absent), as Options reads them.
+    # +name+, and +values+: the author, email, github, summary and license (strings), exe (true for a
+    # command line), as Options reads them.
     def initialize(name, values)
       @name = Name.check(name)
-      @author = text("author", values[:author])
-      @email = values[:email] && text("email", values[:email])
-      @github = valid("GitHub user", values[:github]) { GITHUB.match?(it) }
-      @summary = text("summary", values[:summary])
-      @license = valid("license (mit, apache or dual)", values[:license]) { LICENSES.key?(it) }
+      @author = Project.text("author", values[:author])
+      @email = values[:email] && Project.text("email", values[:email])
+      @github = Project.github(values[:github])
+      @summary = Project.text("summary", values[:summary])
+      @license = Project.license(values[:license])
       @exe = values[:exe] == true
     end
 
@@ -36,9 +36,7 @@ module Veragem
 
     def year = Time.now.year
 
-    # +value+ as a Ruby string literal, as written whatever the locale (String#inspect escapes
-    # what the locale cannot show): a quote, a backslash and an interpolation escaped.
-    def quote(value) = %("#{value.gsub(/["\\]|#(?=[{$@])/) { "\\#{it}" }}")
+    def quote(value) = Project.quote(value)
 
     # +body+ inside the gem's modules, each nested and indented, +doc+ a comment on the innermost.
     def nest(body, doc: nil)
@@ -47,20 +45,26 @@ module Veragem
       outer.reverse.reduce(code) { |nested, mod| "module #{mod}\n#{indent(nested)}end\n" }
     end
 
-    private
+    # +value+ as a Ruby string literal, as written whatever the locale (String#inspect escapes
+    # what the locale cannot show): a quote, a backslash and an interpolation escaped.
+    def self.quote(value) = %("#{value.gsub(/["\\]|#(?=[{$@])/) { "\\#{it}" }}")
 
-    def indent(code) = code.gsub(/^(?=.)/, "  ")
+    # Each value's check, a question's too: the value a project takes, or an Error saying why not.
+    def self.github(value) = valid("GitHub user", value) { GITHUB.match?(it) }
 
-    def valid(field, value)
+    def self.license(value) = valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
+
+    def self.valid(field, value)
       raise Error, "invalid #{field} #{value.inspect}" unless yield value
 
       value
     end
+    private_class_method :valid
 
     # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped (Unicode's too),
     # short enough for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as
     # unfinished.
-    def text(field, value)
+    def self.text(field, value)
       value = value.dup.force_encoding(Encoding::UTF_8)
       one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029]/)
       line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
@@ -73,5 +77,9 @@ module Veragem
 
       line
     end
+
+    private
+
+    def indent(code) = code.gsub(/^(?=.)/, "  ")
   end
 end

@@ -48,7 +48,7 @@ the repository instead: `bundle plugin install veragem --git https://github.com/
 ## Usage
 
 ```sh
-bundle veragem my_gem   # and --author, --github where git config has no user.name, github.user
+bundle veragem my_gem   # with a terminal for input, it asks for what no option gives
 cd my_gem
 bin/setup               # the gems, and Gemfile.lock written
 git add .
@@ -65,6 +65,12 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 | `--email=EMAIL`     | `git config user.email` (optional)  | the gemspec, the code of conduct                |
 | `--github=USER`     | `git config github.user` (required) | the homepage, the repository's links            |
 | `--summary=TEXT`    | `A Ruby gem.`                       | the gemspec, the README, the module's comment   |
+
+With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
+once the options are checked: a question offers its default, which Enter takes, and is asked again
+while veragem refuses the answer (but a name whose files would collide, `helper`, is refused once
+all is answered). With other input (CI, a pipe, `< /dev/null` to skip the questions) nothing is
+asked: the defaults apply, and a missing name, author or GitHub user is refused.
 
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
 is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:

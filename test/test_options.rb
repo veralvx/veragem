@@ -7,7 +7,8 @@ class TestOptions < Minitest::Test
 
   CONFIG = { "user.name" => "Jane Doe", "user.email" => "jane@example.com", "github.user" => "jane" }.freeze
 
-  def parse(*argv, config: CONFIG) = Veragem::Options.parse(argv, config: config.method(:[]))
+  # not a terminal: nothing asked
+  def parse(*argv, config: CONFIG) = Veragem::Options.parse(argv, config: config.method(:[]), input: StringIO.new)
 
   def test_git_config_gives_the_defaults
     gem = parse("my_gem")
