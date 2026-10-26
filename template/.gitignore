@@ -10,3 +10,5 @@
 # Nix's build links, direnv's cache
 /result*
 /.direnv
+# the editor's Ruby LSP
+/.ruby-lsp/
