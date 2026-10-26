@@ -12,6 +12,11 @@ module Veragem
     # Its modules, as `bundle gem` names them: `my-gem_tools`' My, GemTools.
     def self.modules(name) = name.split("-").map { |word| word.split("_").map(&:capitalize).join }
 
+    # The file the gem requires: `my-gem`'s is my/gem.
+    def self.path(name) = name.tr("-", "/")
+
+    def self.underscored(name) = name.tr("-", "_")
+
     # +name+, or an Error saying why a gem cannot have it.
     def self.check(name)
       unless PATTERN.match?(name)
@@ -32,7 +37,7 @@ module Veragem
     # The gem writes lib/<path>.rb, `module` for each of its modules, and tests that name the first.
     def self.check_modules(name)
       nestings = nestings_of(name)
-      shadowed, found, *kinds = probe(library_of(name), name.tr("-", "/"), nestings)
+      shadowed, found, *kinds = probe(library_of(name), path(name), nestings)
       check_shadowing(name, shadowed.to_s, found.to_s)
       check_defined(name, nestings.zip(kinds).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
     end
@@ -42,9 +47,7 @@ module Veragem
     # evaluates in Gem::Specification, must find its module, not one of theirs (`lifecycle_hooks`:
     # Minitest::Test::LifecycleHooks).
     def self.check_shadowing(name, shadowed, found)
-      unless shadowed.empty?
-        raise Error, "invalid gem name #{name}: its lib/#{name.tr("-", "/")}.rb would shadow #{shadowed}"
-      end
+      raise Error, "invalid gem name #{name}: its lib/#{path(name)}.rb would shadow #{shadowed}" unless shadowed.empty?
       raise Error, "invalid gem name #{name}: #{found} for its module" unless found.empty?
     end
 

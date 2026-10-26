@@ -7,7 +7,8 @@ class TestOptions < Minitest::Test
 
   CONFIG = { "user.name" => "Jane Doe", "user.email" => "jane@example.com", "github.user" => "jane" }.freeze
 
-  def parse(*argv, config: CONFIG) = Veragem::Options.parse(argv, config: config.method(:[]))
+  # not a terminal: nothing asked
+  def parse(*argv, config: CONFIG) = Veragem::Options.parse(argv, config: config.method(:[]), input: StringIO.new)
 
   def test_git_config_gives_the_defaults
     gem = parse("my_gem")
@@ -45,6 +46,12 @@ class TestOptions < Minitest::Test
     end
   end
 
+  def test_an_option_is_refused_before_the_name
+    error = assert_raises(Veragem::Error) { parse("1gem", "--github=-x") }
+
+    assert_equal 'invalid GitHub user "-x"', error.message
+  end
+
   def test_a_bad_option_is_refused_with_the_usage
     [["--nope"], ["--license=gpl"], ["--author"]].each do |argv|
       error = assert_raises(Veragem::Error) { parse("my_gem", *argv) }
@@ -67,6 +74,7 @@ class TestOptions < Minitest::Test
   def test_options_may_come_first_whatever_posixly_correct
     with_env("POSIXLY_CORRECT" => "1") { assert parse("--exe", "my_gem").exe }
     with_env("POSIXLY_CORRECT" => "1") { assert parse("my_gem", "--exe").exe }
+    refute parse("my_gem", "--no-exe").exe
   end
 
   def test_version

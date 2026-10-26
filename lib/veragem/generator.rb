@@ -22,51 +22,47 @@ module Veragem
 
     # Each template file the project takes, and its path in the gem.
     def self.files(project)
-      skipped = skipped(project)
-      files = Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).sort.to_h { [it, path_of(it, project)] }
-      files.reject! { |file, _| skipped.include?(file) || File.directory?(File.join(TEMPLATE, file)) }
-      check(project, files.values)
-      check_command(project)
-      files
+      check_name(project.name, project.exe)
+      licenses = LICENSE_FILES.reject { |_, spdx| project.licenses.include?(spdx) }.keys
+      (templates(project.exe) - licenses).to_h { [it, path_of(it, project.name)] }
     end
 
-    # A name can be a tool's, which the Gemfile would name twice, or a template file's: `helper`'s
-    # test would be test/test_helper.rb.
-    def self.check(project, paths)
-      raise Error, "invalid gem name #{project.name}: the Gemfile's own tool" if tools.include?(project.name)
-
-      clash = paths.tally.find { |_, count| count > 1 }
-      raise Error, "invalid gem name #{project.name}: it would write #{clash[0]} twice" if clash
+    # The template's files a kind takes (+exe+, a command line's too), each licence's included.
+    def self.templates(exe)
+      files = Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).sort
+      files.reject { File.directory?(File.join(TEMPLATE, it)) || (!exe && EXE.include?(it)) }
     end
 
-    # A command line names the gem's module from within it, <Gem>::CLI, whose constant lookup finds
-    # CLI and VERSION first: the gem's module cannot be named either.
-    def self.check_command(project)
-      innermost = project.modules.last
-      return unless project.exe && %w[CLI VERSION].include?(innermost)
+    # What a name and its kind decide. A tool's, the Gemfile would name twice. A command line names
+    # the gem's module from within it, <Gem>::CLI, whose constant lookup finds CLI and VERSION first:
+    # neither can be its module. Two files at one path: `helper`'s test would be test/test_helper.rb.
+    def self.check_name(name, exe)
+      raise Error, "invalid gem name #{name}: the Gemfile's own tool" if tools.include?(name)
 
-      raise Error, "invalid gem name #{project.name}: its command line would find another #{innermost} " \
-                   "before its module"
+      innermost = Name.modules(name).last
+      if exe && %w[CLI VERSION].include?(innermost)
+        raise Error, "invalid gem name #{name}: its command line would find another #{innermost} before its module"
+      end
+
+      clash = templates(exe).map { path_of(it, name) }.tally.find { |_, count| count > 1 }
+      raise Error, "invalid gem name #{name}: it would write #{clash[0]} twice" if clash
+    end
+
+    def self.check_target(target)
+      raise Error, "#{target} already exists" if File.exist?(target) || File.symlink?(target)
     end
 
     # The gems template/Gemfile names.
     def self.tools = File.read(File.join(TEMPLATE, "Gemfile")).scan(/^gem "([^"]+)"/).flatten
 
-    # The files another kind or licence takes.
-    def self.skipped(project)
-      licenses = LICENSE_FILES.reject { |_, spdx| project.licenses.include?(spdx) }.keys
-      project.exe ? licenses : licenses + EXE
-    end
-
-    def self.path_of(file, project)
-      file.delete_suffix(".erb").gsub("%name%", project.name).gsub("%path%", project.path)
-          .gsub("%underscored%", project.underscored)
+    def self.path_of(file, name)
+      file.delete_suffix(".erb").gsub("%name%", name).gsub("%path%", Name.path(name))
+          .gsub("%underscored%", Name.underscored(name))
     end
 
     # Into +target+, a new directory: a failure, an interrupt included, leaves none behind.
     def self.generate(project, target)
-      raise Error, "#{target} already exists" if File.exist?(target) || File.symlink?(target)
-
+      check_target(target)
       files = files(project)
       Dir.mkdir(target)
       removed_unless_done(target) do

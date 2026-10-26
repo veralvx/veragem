@@ -23,6 +23,7 @@ bundle exec rake hooks   # optional: the quick checks before a commit, Conventio
 plugins.rb              what Bundler loads: the `bundle veragem` command
 lib/veragem.rb          Veragem.run: the command line, the project, the generation
 lib/veragem/options.rb  OptionParser, git config's defaults
+lib/veragem/questions.rb  a terminal's questions for what no option gives
 lib/veragem/name.rb     the gem's name, checked: bundle gem's rules, what its files and tools meet
 lib/veragem/project.rb  the values, checked, and what follows from them
 lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, modes kept; git
@@ -46,7 +47,7 @@ different (Dependabot's configuration, which moves both), and the command line's
 change both: edit the template's, then copy it here (or the other way round).
 
 A value written into a Ruby string goes through `quote`, which writes it as given whatever the
-locale. Each value is checked first: one line of UTF-8 (`Project#text`), a gem name `bundle gem`
+locale. Each value is checked first: one line of UTF-8 (`Project.check`), a gem name `bundle gem`
 takes, a GitHub user GitHub takes.
 
 ## Checks
