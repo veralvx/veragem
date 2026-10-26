@@ -18,7 +18,8 @@ locally and in CI.
 `.rubocop.yml` (or the Steepfile) with a comment saying why it is wrong for this codebase.
 
 The shell is held as the code is: shfmt formats it (`.editorconfig` holds its style) and it passes
-ShellCheck. The Nix is nixfmt's. The workflows pass actionlint.
+ShellCheck. The Nix is nixfmt's. The workflows pass actionlint and, with Dependabot's
+configuration, zizmor's security audit.
 
 ## 2. Types: signatures by hand, TypeProf to start them
 

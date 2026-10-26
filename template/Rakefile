@@ -50,9 +50,10 @@ task :shell do
   sh "shfmt", "--diff", *scripts
 end
 
-desc "Lint the workflows (actionlint)"
-task :actionlint do
+desc "Lint the workflows and audit their security (actionlint, zizmor)"
+task :workflows do
   sh "actionlint"
+  sh "zizmor", "--offline", "--quiet", "--strict-collection", "."
 end
 
 desc "Run the flake's checks: the Nix format, the shell, the workflows, the package (git's files alone)"
@@ -61,7 +62,7 @@ task :nix do
 end
 
 desc "Run every check CI runs"
-task checks: %i[default audit dprint cog shell actionlint nix]
+task checks: %i[default audit dprint cog shell workflows nix]
 
 desc "Format the Ruby, the Markdown and TOML, and the Nix (modifies files)"
 task format: "rubocop:autocorrect" do
