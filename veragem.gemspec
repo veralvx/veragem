@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.version = Veragem::VERSION
   spec.authors = ["veralvx"]
 
-  spec.summary = "bundle veragem NAME: a new Ruby gem, its toolchain wired up"
+  spec.summary = "Bundler plugin: bundle veragem NAME generates a Ruby gem with its toolchain wired up"
   spec.description = "A Bundler plugin that generates a Ruby 4.0+ gem with what `bundle gem` gives and " \
                      "the rest: Steep and TypeProf, RuboCop and its extensions, Minitest with a 100% " \
                      "coverage gate and property tests, bundler-audit, Conventional Commits, a " \
