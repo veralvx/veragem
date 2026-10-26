@@ -59,35 +59,45 @@ module Veragem
     # The answer, or the default, through +check+; asked again when there is neither, or the check
     # fails, but an +optional+ one is nil.
     def ask(question, default = nil, check:, optional: false)
-      default = offered(default, check)
+      default = offered(question, default, check)
       loop do
         answer = read(question, default) || default
         return if optional && answer.nil?
 
-        value = answer && checked(answer, check)
+        value = answer && checked(question, answer, check)
         return value unless value.nil?
       end
     end
 
     # +default+ if it passes +check+: one refused, said why, is not offered.
-    def offered(default, check) = (default unless default.nil? || checked(default, check).nil?)
+    def offered(question, default, check) = (default unless default.nil? || checked(question, default, check).nil?)
 
-    # A line's text, nil when empty; one of invalid UTF-8 as bytes, as an argument's.
+    # A line's text, nil when empty; one its encoding cannot read as bytes, as an argument's.
     def read(question, default)
-      @output.print "#{question}#{" [#{default}]" if default}: "
-      line = @input.gets or raise Error, "no answer to #{question}"
+      line = terminal(question) do
+        @output.print "#{question}#{" [#{default}]" if default}: "
+        @input.gets.tap { @output.puts unless it }
+      end
+      raise Error, "no answer to #{question}" unless line
+
       answer = (line.valid_encoding? ? line : line.b).strip
       answer unless answer.empty?
-    rescue SystemCallError, IOError => e
-      raise Error, "cannot ask #{question}: #{e.message}"
     end
 
     # What +check+ makes of +answer+; nil, said why, when it refuses it.
-    def checked(answer, check)
+    def checked(question, answer, check)
       check.call(answer)
     rescue Error => e
-      @output.puts e.message
+      terminal(question) { @output.puts e.message }
       nil
+    end
+
+    # The block's reading or writing of the terminal: one that fails cannot ask +question+, unlike a
+    # check's own failure.
+    def terminal(question)
+      yield
+    rescue SystemCallError, IOError => e
+      raise Error, "cannot ask #{question}: #{e.message}"
     end
 
     def yes?(answer)

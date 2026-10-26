@@ -62,7 +62,7 @@ module Veragem
 
     interface _Output
       def print: (String) -> void
-      def puts: (String) -> void
+      def puts: (?String) -> void
     end
 
     QUESTIONS: Hash[Symbol, String]
@@ -81,9 +81,10 @@ module Veragem
     def check_name: (String name, bool exe) -> String
     def answer: (Symbol key, String text, String name) -> (String | bool)
     def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?optional: bool) -> (String | bool | nil)
-    def offered: (String? default, ^(String) -> (String | bool) check) -> String?
+    def offered: (String question, String? default, ^(String) -> (String | bool) check) -> String?
     def read: (String question, String? default) -> String?
-    def checked: (String answer, ^(String) -> (String | bool) check) -> (String | bool | nil)
+    def checked: (String question, String answer, ^(String) -> (String | bool) check) -> (String | bool | nil)
+    def terminal: [T] (String question) { () -> T } -> T
     def yes?: (String answer) -> bool
     def completed: (String answer) -> String
   end
@@ -95,6 +96,7 @@ module Veragem
 
     def self.parse: (Array[String] argv, ?dir: String, ?config: ^(String) -> String?, ?input: Questions::_Input,
                      ?output: Questions::_Output) -> Project
+    def self.arguments: (Array[String] argv) -> [Array[String], Hash[Symbol, String | bool]]
     def self.ask: (Array[String] names, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults,
                    Questions questions) -> Project
     def self.name_of: (Array[String] names) -> String

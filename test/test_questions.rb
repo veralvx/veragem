@@ -38,7 +38,7 @@ class TestQuestions < Minitest::Test
   end
 
   def test_a_refused_answer_is_asked_again_saying_why
-    gem, shown = ask(answers: ["1gem", "my_gem", "maybe", "Y", "MIT", "apache", "TODO", "Greets.",
+    gem, shown = ask(answers: ["1gem", "my_gem", "maybe", "YES", "MIT", "apache", "TODO", "Greets.",
                                " ", "Ada", "a\tb", "ada@example.com", "-ada", "ada"])
 
     assert_equal ["my_gem", true, "apache", "Greets.", "Ada", "ada@example.com", "ada"],
@@ -87,7 +87,7 @@ class TestQuestions < Minitest::Test
     in_tmpdir do |dir|
       Dir.mkdir(File.join(dir, "taken"))
 
-      gem, shown = ask(answers: ["rubocop-rake", "taken", "helper", "cli", "y", "n", "", "", "", "", ""], dir:)
+      gem, shown = ask(answers: ["rubocop-rake", "taken", "helper", "cli", "y", "no", "", "", "", "", ""], dir:)
 
       assert_equal ["cli", false], [gem.name, gem.exe]
       ["the Gemfile's own tool", "#{File.join(dir, "taken")} already exists",

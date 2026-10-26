@@ -13,10 +13,7 @@ module Veragem
 
     # +dir+, where the gem is to be generated; the questions on +output+, as a prompt is.
     def self.parse(argv, dir: Dir.pwd, config: ->(key) { git_config(key) }, input: $stdin, output: $stderr)
-      given = {} #: Hash[Symbol, String | bool]
-      # an argument of invalid UTF-8 as bytes, as git's values are: OptionParser's matching raises on
-      # it, Project refuses it
-      names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: given)
+      names, given = arguments(argv)
       defaults = { **DEFAULTS, **GIT_CONFIG.transform_values(&config).compact }
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
       return Project.new(name_of(names), required(defaults.merge(given))) unless input.tty?
@@ -26,11 +23,20 @@ module Veragem
       raise Error, "#{e.message} (bundle veragem --help)"
     end
 
-    # From a terminal: the names counted, as without one, then the options checked before any question.
-    def self.ask(names, given, defaults, questions)
-      name = (name_of(names) unless names.empty?)
+    # The names and the options given, each option refused as OptionParser refuses a licence: before
+    # the name, and any question.
+    def self.arguments(argv)
+      given = {} #: Hash[Symbol, String | bool]
+      # an argument of invalid UTF-8 as bytes, as git's values are: OptionParser's matching raises on
+      # it, Project refuses it
+      names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: given)
       given.each { |key, value| Project.check(key, value) if value.is_a?(String) }
-      name = questions.name(name, exe: given[:exe] == true)
+      [names, given]
+    end
+
+    # From a terminal: the names counted, as without one, then the name checked before any question.
+    def self.ask(names, given, defaults, questions)
+      name = questions.name((name_of(names) unless names.empty?), exe: given[:exe] == true)
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
       Project.new(name, questions.values(name, given, defaults))
     end

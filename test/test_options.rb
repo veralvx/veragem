@@ -46,6 +46,12 @@ class TestOptions < Minitest::Test
     end
   end
 
+  def test_an_option_is_refused_before_the_name
+    error = assert_raises(Veragem::Error) { parse("1gem", "--github=-x") }
+
+    assert_equal 'invalid GitHub user "-x"', error.message
+  end
+
   def test_a_bad_option_is_refused_with_the_usage
     [["--nope"], ["--license=gpl"], ["--author"]].each do |argv|
       error = assert_raises(Veragem::Error) { parse("my_gem", *argv) }

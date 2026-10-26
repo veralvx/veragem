@@ -16,7 +16,8 @@ class TestQuestionsRefused < Minitest::Test
     %w[my_gem --github=-x] => /\Ainvalid GitHub user "-x"\z/,
     %w[--github=-x] => /\Ainvalid GitHub user "-x"\z/,
     %w[--author=TODO] => /\Ainvalid author "TODO"/,
-    %w[one two --github=-x] => /\Aone gem name, not 2/
+    %w[1gem --github=-x] => /\Ainvalid GitHub user "-x"\z/,
+    %w[one two] => /\Aone gem name, not 2/
   }.freeze
 
   def test_a_name_or_an_option_given_is_refused_before_any_question
@@ -34,7 +35,7 @@ class TestQuestionsRefused < Minitest::Test
   end
 
   def test_no_answer_stops_it
-    assert_equal ["no answer to Gem name", "Gem name: "], refused
+    assert_equal ["no answer to Gem name", "Gem name: \n"], refused
   end
 
   def test_the_questions_are_on_stderr
@@ -42,17 +43,26 @@ class TestQuestionsRefused < Minitest::Test
       assert_raises(Veragem::Error) { Veragem::Options.parse([], config: CONFIG.method(:[]), input: terminal) }
     end
 
-    assert_equal ["", "Gem name: "], [out, err]
+    assert_equal ["", "Gem name: \n"], [out, err]
   end
 
   def test_a_terminal_that_cannot_be_asked_stops_it
-    closed = terminal.tap(&:close_read)
-    shut = StringIO.new.tap { |io| def io.print(*) = raise(Errno::EPIPE) }
-
-    [{ input: closed, output: StringIO.new }, { input: terminal, output: shut }].each do |io|
+    # input closed, then a prompt and a refusal that cannot be shown
+    [{ input: terminal.tap(&:close_read), output: StringIO.new }, { input: terminal, output: broken(:print) },
+     { input: terminal("1gem"), output: broken(:puts) }].each do |io|
       error = assert_raises(Veragem::Error) { Veragem::Options.parse([], config: CONFIG.method(:[]), **io) }
 
       assert_match(/\Acannot ask Gem name: /, error.message)
     end
   end
+
+  def test_a_check_that_fails_is_not_a_terminal_that_cannot_be_asked
+    questions = Veragem::Questions.new(terminal("x"), StringIO.new, Dir.pwd)
+
+    assert_raises(Errno::ENOSPC) { questions.send(:ask, "Gem name", check: ->(_) { raise Errno::ENOSPC }) }
+  end
+
+  private
+
+  def broken(write) = StringIO.new.tap { it.define_singleton_method(write) { |*| raise Errno::EPIPE } }
 end
