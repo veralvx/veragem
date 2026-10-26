@@ -68,6 +68,7 @@ class TestOptions < Minitest::Test
   def test_options_may_come_first_whatever_posixly_correct
     with_env("POSIXLY_CORRECT" => "1") { assert parse("--exe", "my_gem").exe }
     with_env("POSIXLY_CORRECT" => "1") { assert parse("my_gem", "--exe").exe }
+    refute parse("my_gem", "--no-exe").exe
   end
 
   def test_version

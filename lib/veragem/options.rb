@@ -26,11 +26,13 @@ module Veragem
       raise Error, "#{e.message} (bundle veragem --help)"
     end
 
+    # From a terminal: the names counted, as without one, then the options checked before any question.
     def self.ask(names, given, defaults, questions)
-      questions.check(given)
-      name = questions.name(names.empty? ? nil : name_of(names), exe: given[:exe] == true)
+      name = (name_of(names) unless names.empty?)
+      given.each { |key, value| Project.check(key, value) if value.is_a?(String) }
+      name = questions.name(name, exe: given[:exe] == true)
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
-      Project.new(name, required(questions.values(name, given, defaults)))
+      Project.new(name, questions.values(name, given, defaults))
     end
 
     def self.name_of(names)
@@ -49,7 +51,7 @@ module Veragem
       OptionParser.new(BANNER) do |opts|
         opts.program_name = "bundle veragem"
         opts.version = VERSION
-        opts.on("--exe", "Add a command line, exe/NAME")
+        opts.on("--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)")
         opts.on("--license=LICENSE", Project::LICENSES.keys, "mit, apache or dual (MIT OR Apache-2.0, the default)")
         opts.on("--author=NAME", "The author (default: git config user.name)")
         opts.on("--email=EMAIL", "The author's email (default: git config user.email)")

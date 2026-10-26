@@ -11,6 +11,8 @@ module Veragem
     PROBE: String
 
     def self.modules: (String name) -> Array[String]
+    def self.path: (String name) -> String
+    def self.underscored: (String name) -> String
     def self.check: (String name) -> String
     def self.check_modules: (String name) -> void
     def self.check_shadowing: (String name, String shadowed, String found) -> void
@@ -42,13 +44,12 @@ module Veragem
     def quote: (String value) -> String
     def nest: (String body, ?doc: String?) -> String
     def self.quote: (String value) -> String
-    def self.github: (String value) -> String
-    def self.license: (String value) -> String
-    def self.text: (String field, String value) -> String
+    def self.check: (Symbol key, String value) -> String
+    private def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
+    private def self.text: (String field, String value) -> String
 
     private
 
-    def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     def indent: (String code) -> String
   end
 
@@ -62,7 +63,6 @@ module Veragem
     interface _Output
       def print: (String) -> void
       def puts: (String) -> void
-      def flush: () -> void
     end
 
     QUESTIONS: Hash[Symbol, String]
@@ -72,7 +72,6 @@ module Veragem
     @dir: String
 
     def initialize: (_Input input, _Output output, String dir) -> void
-    def check: (Hash[Symbol, String | bool] given) -> void
     def name: (String? given, exe: bool) -> String
     def values: (String name, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults)
               -> Hash[Symbol, String | bool | nil]
@@ -80,8 +79,9 @@ module Veragem
     private
 
     def check_name: (String name, bool exe) -> String
-    def checks: () -> Hash[Symbol, ^(String) -> String]
+    def answer: (Symbol key, String text, String name) -> (String | bool)
     def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?optional: bool) -> (String | bool | nil)
+    def offered: (String? default, ^(String) -> (String | bool) check) -> String?
     def read: (String question, String? default) -> String?
     def checked: (String answer, ^(String) -> (String | bool) check) -> (String | bool | nil)
     def yes?: (String answer) -> bool
@@ -110,13 +110,11 @@ module Veragem
     LICENSE_FILES: Hash[String, String]
 
     def self.files: (Project project) -> Hash[String, String]
-    def self.skipped: (Project project) -> Array[String]
+    def self.templates: (bool exe) -> Array[String]
     def self.tools: () -> Array[String]
-    def self.check: (Project project, Array[String] paths) -> void
-    def self.check_tool: (String name) -> void
+    def self.check_name: (String name, bool exe) -> void
     def self.check_target: (String target) -> void
-    def self.check_command: (String name, bool exe) -> void
-    def self.path_of: (String file, Project project) -> String
+    def self.path_of: (String file, String name) -> String
     def self.generate: (Project project, String target) -> void
     def self.removed_unless_done: (String target) { () -> void } -> void
     def self.write: (String source, String destination, Project project) -> void

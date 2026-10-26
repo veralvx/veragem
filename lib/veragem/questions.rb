@@ -7,23 +7,19 @@ module Veragem
     # Each value's question, in the order asked; the name's comes first.
     QUESTIONS = {
       exe: "A command line, exe/%<name>s (y/n)",
-      license: "License (#{Project::LICENSES.keys.join(", ")})",
+      license: "License (mit, apache or dual)",
       summary: "Summary",
       author: "Author",
       email: "Email",
       github: "GitHub user"
     }.freeze
+    private_constant :QUESTIONS
 
     # Generating into +dir+.
     def initialize(input, output, dir)
       @input = input
       @output = output
       @dir = dir
-    end
-
-    # The options' values, but --exe's (the name's to check): refused before any question.
-    def check(given)
-      given.each { |key, value| checks.fetch(key).call(value.to_s) unless key == :exe }
     end
 
     # The name, +given+ or else asked for: checked as far as it and +exe+ decide, before the rest.
@@ -35,10 +31,9 @@ module Veragem
 
     # +given+ (the options) and the answers to the rest, +defaults+ offered.
     def values(name, given, defaults)
-      all = { exe: -> { yes?(it).tap { |exe| Generator.check_command(name, exe) } }, **checks }
       defaults = { exe: "n", **defaults }
       asked = QUESTIONS.except(*given.keys).to_h do |key, question|
-        [key, ask(format(question, name:), defaults[key], optional: key == :email, check: all.fetch(key))]
+        [key, ask(format(question, name:), defaults[key], optional: key == :email, check: -> { answer(key, it, name) })]
       end
       asked.merge(given)
     end
@@ -47,45 +42,44 @@ module Veragem
 
     def check_name(name, exe)
       Name.check(name).tap do |checked|
-        Generator.check_tool(checked)
+        Generator.check_name(checked, exe)
         Generator.check_target(File.join(@dir, checked))
-        Generator.check_command(checked, exe)
       end
     end
 
-    # Each value's check but the command line's: what an answer gives, or an Error saying why not.
-    def checks
-      {
-        license: -> { Project.license(completed(it)) },
-        summary: -> { Project.text("summary", it) },
-        author: -> { Project.text("author", it) },
-        email: -> { Project.text("email", it) },
-        github: -> { Project.github(it) }
-      }
+    # What +text+ answers for +key+, or an Error saying why not.
+    def answer(key, text, name)
+      case key
+      when :exe then yes?(text).tap { Generator.check_name(name, it) }
+      when :license then Project.check(key, completed(text))
+      else Project.check(key, text)
+      end
     end
 
     # The answer, or the default, through +check+; asked again when there is neither, or the check
-    # fails, but an +optional+ one is nil. A default refused is offered no more.
+    # fails, but an +optional+ one is nil.
     def ask(question, default = nil, check:, optional: false)
+      default = offered(default, check)
       loop do
         answer = read(question, default) || default
-        return answer if answer.nil? && optional
+        return if optional && answer.nil?
 
         value = answer && checked(answer, check)
         return value unless value.nil?
-
-        default = nil if answer == default
       end
     end
 
-    # A line's text, nil when empty; one of invalid UTF-8 as bytes, as an argument's. The question
-    # flushed: shown when the output is a pipe too.
+    # +default+ if it passes +check+: one refused, said why, is not offered.
+    def offered(default, check) = (default unless default.nil? || checked(default, check).nil?)
+
+    # A line's text, nil when empty; one of invalid UTF-8 as bytes, as an argument's.
     def read(question, default)
       @output.print "#{question}#{" [#{default}]" if default}: "
-      @output.flush
       line = @input.gets or raise Error, "no answer to #{question}"
       answer = (line.valid_encoding? ? line : line.b).strip
       answer unless answer.empty?
+    rescue SystemCallError, IOError => e
+      raise Error, "cannot ask #{question}: #{e.message}"
     end
 
     # What +check+ makes of +answer+; nil, said why, when it refuses it.
@@ -97,16 +91,19 @@ module Veragem
     end
 
     def yes?(answer)
-      return true if %w[y yes].include?(answer.downcase)
-      return false if %w[n no].include?(answer.downcase)
-
-      raise Error, "y or n"
+      case answer.downcase
+      in "y" | "yes" then true
+      in "n" | "no" then false
+      else raise Error, "y or n"
+      end
     end
 
-    # A licence abbreviated, completed as the option's is: while one licence starts so.
+    # A licence abbreviated, completed as the option's is: when one licence alone starts so.
     def completed(answer)
-      matches = Project::LICENSES.keys.select { it.start_with?(answer) }
-      matches.one? ? matches.fetch(0) : answer
+      case Project::LICENSES.keys.select { it.start_with?(answer) }
+      in [licence] then licence
+      else answer
+      end
     end
   end
 end

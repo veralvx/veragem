@@ -35,6 +35,36 @@ module Veragem
     end
   end
 
+  # What the questions' tests share: a terminal, and what it was asked.
+  module TerminalSupport
+    include TestSupport
+
+    CONFIG = { "user.name" => "Jane Doe", "user.email" => "jane@example.com", "github.user" => "jane" }.freeze
+
+    # +answers+ typed at a terminal, one a line
+    def terminal(*answers) = StringIO.new(answers.map { "#{it}\n" }.join).tap { |io| def io.tty? = true }
+
+    # the project, and what the terminal showed
+    def ask(*argv, answers: [], config: CONFIG, dir: nil)
+      output = StringIO.new
+      [at_terminal(argv, answers:, config:, dir:, output:), output.string]
+    end
+
+    # the refusal, and what the terminal showed by then
+    def refused(*argv, answers: [], config: CONFIG, dir: nil)
+      output = StringIO.new
+      error = assert_raises(Error) { at_terminal(argv, answers:, config:, dir:, output:) }
+      [error.message, output.string]
+    end
+
+    # +argv+ at a terminal, generating into +dir+, or else a directory of its own
+    def at_terminal(argv, answers:, config:, dir:, output:)
+      input = terminal(*answers)
+      into = ->(target) { Options.parse(argv, dir: target, config: config.method(:[]), input:, output:) }
+      dir ? into.call(dir) : in_tmpdir(&into)
+    end
+  end
+
   # What the generator's tests share: each kind generated, and what it holds.
   module GeneratedSupport
     # Each kind and license, generated: its project, its directory and its files.

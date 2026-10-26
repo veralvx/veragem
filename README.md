@@ -59,7 +59,7 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 | Option              | Default                             | Goes into                                       |
 | ------------------- | ----------------------------------- | ----------------------------------------------- |
 | `NAME`              | --                                  | the gem, its module, its files: as `bundle gem` |
-| `--exe`             | a library alone                     | a command line: `exe/NAME`, `lib/NAME/cli.rb`   |
+| `--[no-]exe`        | `--no-exe`: a library alone         | a command line: `exe/NAME`, `lib/NAME/cli.rb`   |
 | `--license=LICENSE` | `dual` (MIT OR Apache-2.0)          | `mit`, `apache` or `dual`: the gemspec, LICENSE |
 | `--author=NAME`     | `git config user.name` (required)   | the gemspec, the licence's copyright line       |
 | `--email=EMAIL`     | `git config user.email` (optional)  | the gemspec, the code of conduct                |
@@ -67,10 +67,10 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 | `--summary=TEXT`    | `A Ruby gem.`                       | the gemspec, the README, the module's comment   |
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
-once the options are checked: a question offers its default, which Enter takes, and is asked again
-while veragem refuses the answer (but a name whose files would collide, `helper`, is refused once
-all is answered). With other input (CI, a pipe, `< /dev/null` to skip the questions) nothing is
-asked: the defaults apply, and a missing name, author or GitHub user is refused.
+once the options are checked. A question offers its default unless veragem refuses it, Enter takes
+it, and a refused answer is asked again. With other input (CI, a pipe, `< /dev/null` to skip the
+questions) nothing is asked: the defaults apply, and a missing name, author or GitHub user is
+refused.
 
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
 is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:

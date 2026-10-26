@@ -14,18 +14,17 @@ module Veragem
     # command line), as Options reads them.
     def initialize(name, values)
       @name = Name.check(name)
-      @author = Project.text("author", values[:author])
-      @email = values[:email] && Project.text("email", values[:email])
-      @github = Project.github(values[:github])
-      @summary = Project.text("summary", values[:summary])
-      @license = Project.license(values[:license])
+      @author = Project.check(:author, values[:author])
+      @email = values[:email] && Project.check(:email, values[:email])
+      @github = Project.check(:github, values[:github])
+      @summary = Project.check(:summary, values[:summary])
+      @license = Project.check(:license, values[:license])
       @exe = values[:exe] == true
     end
 
-    # The file the gem requires: `my-gem`'s is my/gem.
-    def path = name.tr("-", "/")
+    def path = Name.path(name)
 
-    def underscored = name.tr("-", "_")
+    def underscored = Name.underscored(name)
 
     # Its module, as `bundle gem` names it.
     def constant = modules.join("::")
@@ -49,10 +48,14 @@ module Veragem
     # what the locale cannot show): a quote, a backslash and an interpolation escaped.
     def self.quote(value) = %("#{value.gsub(/["\\]|#(?=[{$@])/) { "\\#{it}" }}")
 
-    # Each value's check, a question's too: the value a project takes, or an Error saying why not.
-    def self.github(value) = valid("GitHub user", value) { GITHUB.match?(it) }
-
-    def self.license(value) = valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
+    # The value +key+ takes, an option's or an answer's: checked, or an Error saying why not.
+    def self.check(key, value)
+      case key
+      when :github then valid("GitHub user", value) { GITHUB.match?(it) }
+      when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
+      else text(key.name, value)
+      end
+    end
 
     def self.valid(field, value)
       raise Error, "invalid #{field} #{value.inspect}" unless yield value
@@ -77,6 +80,7 @@ module Veragem
 
       line
     end
+    private_class_method :text
 
     private
 

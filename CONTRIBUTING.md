@@ -47,7 +47,7 @@ different (Dependabot's configuration, which moves both), and the command line's
 change both: edit the template's, then copy it here (or the other way round).
 
 A value written into a Ruby string goes through `quote`, which writes it as given whatever the
-locale. Each value is checked first: one line of UTF-8 (`Project#text`), a gem name `bundle gem`
+locale. Each value is checked first: one line of UTF-8 (`Project.check`), a gem name `bundle gem`
 takes, a GitHub user GitHub takes.
 
 ## Checks
