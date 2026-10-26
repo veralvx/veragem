@@ -1,48 +1,48 @@
 # veragem
 
-`bundle veragem NAME`: a new Ruby gem with its whole toolchain wired up. A Bundler plugin, the
-Ruby counterpart of the [templates](https://github.com/veralvx/templates) repository's Python and
-Rust templates.
-
-`bundle gem` gives a gemspec, a Rakefile, Minitest and RuboCop. veragem gives that and the rest:
+A Bundler plugin that generates a Ruby gem with its toolchain wired up: the Ruby counterpart of
+the [templates](https://github.com/veralvx/templates) repository's Python and Rust templates.
+`bundle gem` gives a gemspec, a Rakefile, Minitest and RuboCop; `bundle veragem NAME` gives that
+and the rest:
 
 - **Ruby 4.0** or later, `required_ruby_version` and CI alike.
 - **Types**: Steep checks `lib/` against the signatures in `sig/`, its strictest diagnostics on;
   TypeProf infers signatures to start them from, and its editor support is configured.
-- **Lint and format**: RuboCop, every new cop on, with rubocop-minitest, rubocop-packaging,
-  rubocop-performance and rubocop-rake, and the whole project indexed first (rubydex), so the cops
-  that can see across files do; in CI, its offences are annotated on the pull request, a failed
-  run's summary holds its safe corrections as a patch, and a Dependabot bump the new cops fail gets
-  them as a commit, then merges as any bump once you approve its runs (`rubocop-autocorrect.yml`,
-  no token to set).
+- **Lint and format**: RuboCop with every new cop, rubocop-minitest, rubocop-packaging,
+  rubocop-performance and rubocop-rake; the project is indexed first (rubydex), so the cops that see
+  across files do. In CI, offences are annotated on the pull request and a failed run's summary
+  holds the safe corrections as a patch; a Dependabot bump the new cops fail gets them as a commit,
+  then merges as any bump once you approve its runs (`rubocop-autocorrect.yml`, no token to set).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered.
 - **Security**: bundler-audit over `Gemfile.lock`, daily in CI; a pull request's new gems and
-  actions reviewed for their licences and advisories, advisory (`dependency-review.yml`, as the
-  templates' Python and Rust ones are); the workflows and Dependabot's configuration audited by
-  zizmor; Dependabot for the gems, the actions and the flake, a release proposed once a week old.
-- **Commits and releases**: Conventional Commits (cocogitto, CI and opt-in git hooks), a changelog
-  written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own `rake release`; the
-  tag publishes to RubyGems by Trusted Publishing -- no API key stored -- and makes the GitHub
-  release.
+  actions reviewed for their licences and advisories (`dependency-review.yml`, advisory, as in the
+  Python and Rust templates); zizmor over the workflows and Dependabot's configuration; Dependabot
+  for the gems, the actions and the flake, a release proposed once a week old.
+- **Commits and releases**: Conventional Commits (cocogitto, in CI and opt-in git hooks), a
+  changelog written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own
+  `rake release`; the tag publishes to RubyGems by Trusted Publishing, no API key stored, and makes
+  the GitHub release.
 - **Nix**: a flake with the development shell (Ruby and every tool the checks run), the gem as a
   package (`nix build`), `nix fmt`, and checks for the Nix, the shell scripts, the workflows and
   the package. With `--exe`, `nix run` runs the command, and its OCI image (`nix build .#image`)
-  is published to GHCR at each release (`image.yml`), as the templates' Python and Rust ones are.
+  is published to GHCR at each release (`image.yml`), as in the Python and Rust templates.
 - dprint for the Markdown and TOML, an `.editorconfig`, the community documents (`CONTRIBUTING.md`,
   `AGENTS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`), issue and pull request templates.
 
-`bundle exec rake` runs the Ruby checks, as CI does; `bundle exec rake checks` runs everything CI
-runs.
+In the generated gem, `bundle exec rake` runs the Ruby checks, as CI does;
+`bundle exec rake checks` runs everything CI runs.
 
 ## Install
+
+Ruby 4.0 or later, then:
 
 ```sh
 bundle plugin install veragem
 ```
 
 Run outside a project, it installs for your user, and `bundle veragem` then works anywhere. From
-its repository instead: `bundle plugin install veragem --git https://github.com/veralvx/veragem`
+the repository instead: `bundle plugin install veragem --git https://github.com/veralvx/veragem`
 (or `--path` a local checkout).
 
 ## Usage
@@ -67,18 +67,25 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 | `--summary=TEXT`    | `A Ruby gem.`                       | the gemspec, the README, the module's comment   |
 
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
-is `My::Gem` in `lib/my/gem.rb`. A name whose module is already defined -- by Ruby, Bundler, Rake
-or Minitest, or by its top-level library where this Ruby has one (`set`, `option_parser`,
-`date-holidays`: Date is a class) --, whose file would shadow a library this Ruby has (`json`:
-lib/json.rb), whose module its tests or `gem build` would take for Minitest's or RubyGems' own
-(`lifecycle_hooks`, `date_like`), that `bundle gem` would refuse or mangle (`1gem`, `my--gem`), one of the Gemfile's own tools (`rubocop-rake`),
-one longer than 40 characters or deeper than 4 modules (the generated code's lines fit RuboCop's),
-or, with `--exe`, one whose module is CLI or VERSION (`my-c_l_i`: its command line would find
-another first), is refused before anything is written. The summary is plain text: written into the
-README as given, Markdown in it is dprint's to check. As `bundle gem` does, it makes the git
-repository and adds the files, and runs no `bundle install`: `bin/setup` writes the lock, to commit.
-The generated `CONTRIBUTING.md` lists the first steps: the repository's settings, RubyGems' pending
-trusted publisher.
+is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
+
+- whose module is already defined, by Ruby, Bundler, Rake or Minitest, or by its top-level library
+  where this Ruby has one (`set`, `option_parser`, `date-holidays`: Date is a class);
+- whose file would shadow a library this Ruby has (`json`: lib/json.rb);
+- whose module its tests or `gem build` would take for Minitest's or RubyGems' own
+  (`lifecycle_hooks`, `date_like`);
+- that `bundle gem` would refuse or mangle (`1gem`, `my--gem`);
+- one of the Gemfile's own tools (`rubocop-rake`);
+- `test_helper`, whose lib/test_helper.rb would shadow the tests', or one that would write a
+  template file twice (`helper`: test/test_helper.rb);
+- longer than 40 characters or deeper than 4 modules (the generated code's lines fit RuboCop's);
+- with `--exe`, whose module is CLI or VERSION (`my-c_l_i`: its command line would find another
+  first).
+
+The summary is plain text: written into the README as given, Markdown in it is dprint's to check.
+As `bundle gem` does, veragem makes the git repository and adds the files, and runs no
+`bundle install`: `bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists
+the first steps: the repository's settings, RubyGems' pending trusted publisher.
 
 ## What you get
 
@@ -101,11 +108,11 @@ dprint.json, .editorconfig
 README, CONTRIBUTING, AGENTS, SECURITY, CODE_OF_CONDUCT, LICENSE-MIT / LICENSE-APACHE
 ```
 
-The development tools are unconstrained in the Gemfile: the lock pins them, at the versions current
+The Gemfile leaves the development tools unconstrained: the lock pins them at the versions current
 when `bin/setup` first runs, and Dependabot moves it. They need no development group: the built gem
 holds neither the Gemfile nor the lock, its dependencies the gemspec's alone. The dev shell gives
-Ruby and the other tools, not the gems: those are Bundler's, from the lock CI installs from too
-(nixpkgs packages few of them, and older).
+Ruby and the other tools; the gems are Bundler's, from the lock CI installs from too (nixpkgs
+packages few of them, and older).
 
 ## How it is verified
 
@@ -114,8 +121,8 @@ Ruby and the other tools, not the gems: those are Bundler's, from the lock CI in
   the gemspec read back, the values written as given whatever the locale.
 - The harness here is the template's: this repository's Gemfile, Rakefile, workflows, hooks, flake
   and tools' configuration are the template's own files, byte for byte (`test/test_sync.rb`), so
-  the template's are checked in place by this repository's checks -- and a command line's own
-  (`image.yml`), by the smoke test's command gem.
+  the template's are checked in place by this repository's checks, and a command line's own
+  (`image.yml`) by the smoke test's command gem.
 - The smoke test (`dev/smoke.sh`, `smoke.yml`, weekly too): the plugin installed from this checkout
   generates a gem of each kind and licence, and each passes its own `rake checks` and builds.
 

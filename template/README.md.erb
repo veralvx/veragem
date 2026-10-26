@@ -28,7 +28,7 @@ docker run --rm ghcr.io/<%= github.downcase %>/<%= name %> --version
 <%- if exe -%>
 
 ```sh
-<%= name %> Ada
+<%= name %> Ada # => Hello, Ada!
 ```
 
 or, as a library:
@@ -42,8 +42,8 @@ require "<%= path %>"
 
 ## Development
 
-`bin/setup` installs the gems at `Gemfile.lock`'s versions (the first run writes the lock), then
-`bundle exec rake` runs the Ruby checks -- RuboCop, Steep and the tests with their coverage gate --
+`bin/setup` installs the gems at `Gemfile.lock`'s versions (its first run writes the lock); then
+`bundle exec rake` runs the Ruby checks (RuboCop, Steep and the tests with their coverage gate)
 and `bundle exec rake checks` everything CI runs:
 
 ```sh
