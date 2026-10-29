@@ -27,6 +27,7 @@ class TestOptions < Minitest::Test
 
   def test_the_email_may_be_unset
     assert_nil parse("my_gem", config: CONFIG.except("user.email")).email
+    assert_nil parse("my_gem", "--no-email").email
   end
 
   def test_the_author_and_the_github_user_are_required

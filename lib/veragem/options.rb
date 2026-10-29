@@ -60,7 +60,7 @@ module Veragem
         opts.on("--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)")
         opts.on("--license=LICENSE", Project::LICENSES.keys, "mit, apache or dual (MIT OR Apache-2.0, the default)")
         opts.on("--author=NAME", "The author (default: git config user.name)")
-        opts.on("--email=EMAIL", "The author's email (default: git config user.email)")
+        opts.on("--[no-]email=EMAIL", "The author's email (default: git config user.email; --no-email, none)")
         opts.on("--github=USER", "The GitHub user or organization (default: git config github.user)")
         opts.on("--summary=TEXT", "The gem's summary (default: A Ruby gem.)")
       end
