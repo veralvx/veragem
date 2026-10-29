@@ -9,7 +9,7 @@ class TestNames < Minitest::Test
   # bundle gem's own constant (Bundler's cli/gem.rb)
   def bundle_gem_constant(name)
     namespaced = name.gsub(/-[_-]*(?![_-]|$)/) { "::" }
-    namespaced.gsub(/([_-]+|(::)|^)(.|$)/) { ::Regexp.last_match(2).to_s + ::Regexp.last_match(3).upcase }
+    namespaced.gsub(/([_-]+|(::)|^)(.|$)/) { Regexp.last_match(2).to_s + Regexp.last_match(3).upcase }
   end
 
   def test_an_underscore_joins_words_into_one_constant

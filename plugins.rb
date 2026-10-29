@@ -8,6 +8,10 @@ module Veragem
   class Command < Bundler::Plugin::API
     command "veragem"
 
+    # Runs `bundle veragem ARGS`.
+    # @param _command [String] "veragem"
+    # @param args [Array<String>] the command's arguments
+    # @return [String] the gem's directory
     def exec(_command, args)
       Veragem.run(args)
     end

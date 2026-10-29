@@ -53,7 +53,7 @@ takes, a GitHub user GitHub takes.
 ## Checks
 
 ```sh
-bundle exec rake          # RuboCop, Steep, the tests: ruby-ci.yml
+bundle exec rake          # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
 bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the flake's checks
 nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
 ```

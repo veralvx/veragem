@@ -16,12 +16,9 @@ RuboCop::RakeTask.new
 Steep::RakeTask.new
 Bundler::Audit::Task.new
 
-YARD::Rake::YardocTask.new do |t|
-  t.files   = ['lib/**/*.rb',]   # optional
-  # t.options = ['--any', '--extra', '--opts'] # optional
-  # t.stats_options = ['--list-undoc']         # optional
-end
-
+# `rake yard`: lib/'s documentation, in doc/. Not sig/'s: YARD's RBS reader refuses a signature
+# over several lines.
+YARD::Rake::YardocTask.new { it.files = ["lib/**/*.rb"] }
 
 task default: %i[rubocop steep test yard_lint]
 
@@ -32,11 +29,10 @@ task :typeprof do
   sh "typeprof", "--show-errors", "lib"
 end
 
-desc "Lint YARD documentation"
+desc "Lint the YARD documentation of lib/ (yard-lint, .yard-lint.yml)"
 task :yard_lint do
-  sh "bundle exec yard-lint lib/ --stats"
+  sh "yard-lint", "lib", "--stats"
 end
-
 
 desc "Update the advisory database, then check Gemfile.lock against it (bundler-audit)"
 task audit: %w[bundle:audit:update bundle:audit:check]
@@ -138,9 +134,6 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
   end
   puts "v#{version} committed: `rake release` tags and pushes it, then release.yml publishes the tag."
 end
-
-
-
 
 # The gem is published by release.yml, on the tag, through RubyGems' Trusted Publishing:
 # `rake release` builds it, tags v<version> and pushes the branch and the tag, and pushes no gem.

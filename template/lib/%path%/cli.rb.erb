@@ -6,7 +6,9 @@ require_relative "../<%= File.basename(path) %>"
 <%= nest(<<~RUBY)
   # The command line: `#{name} [NAME]` prints the greeting.
   module CLI
-    # Runs the command line with +argv+; returns the exit status.
+    # Runs the command line with +argv+.
+    # @param argv [Array<String>] the command's arguments
+    # @return [Integer] the exit status: 0, or 2 for an option refused
     def self.run(argv)
       options = { help: false, version: false }
       names = parser.parse(argv, into: options)
@@ -18,6 +20,11 @@ require_relative "../<%= File.basename(path) %>"
     end
 
     # What +options+ ask for, the help or the version, else the greeting for +name+.
+    # @param options [Hash{Symbol => Boolean}] the options given
+    # @param name [String] who to greet, "" for nobody
+    # @option options [Boolean] :help --help's
+    # @option options [Boolean] :version --version's
+    # @return [String]
     def self.output(options, name)
       if options[:help]
         parser.help
@@ -31,6 +38,7 @@ require_relative "../<%= File.basename(path) %>"
 
     # --help as an option of its own: OptionParser's built-in one exits the process. `::`: a module of
     # the gem's could be named OptionParser
+    # @return [OptionParser]
     def self.parser
       ::OptionParser.new("Usage: #{name} [options] [NAME]") do |opts|
         opts.program_name = "#{name}"

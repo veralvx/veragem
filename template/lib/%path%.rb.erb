@@ -4,6 +4,8 @@ require_relative "<%= File.basename(path) %>/version"
 
 <%= nest(<<~RUBY, doc: summary)
   # A greeting for +name+, its surrounding whitespace stripped; nobody named, the world.
+  # @param name [String] who to greet, "" for nobody
+  # @return [String]
   def self.greeting(name)
     who = name.strip
     who = "world" if who.empty?
