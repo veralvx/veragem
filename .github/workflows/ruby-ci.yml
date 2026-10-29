@@ -6,8 +6,6 @@ name: Ruby CI
 on:
   push:
     branches: [main]
-  # every pull request, whatever it touches: a path-filtered workflow never reports, and a
-  # required check that never reports blocks the merge
   pull_request:
   workflow_dispatch:
 
@@ -31,19 +29,18 @@ jobs:
         ruby: ["4.0"]
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
 
       - name: Set up Ruby
         # bundler-cache: `bundle install`, frozen to Gemfile.lock, cached
-        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f #
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - name: RuboCop, Steep, the tests
-        # RuboCop's offences as annotations too, on a pull request's lines (its github formatter)
+      - name: RuboCop, Steep, the tests, Yard
         env:
           RUBOCOP_OPTS: --format progress --format github
         run: bundle exec rake
