@@ -9,13 +9,21 @@ require "json"
 require "minitest/test_task"
 require "rubocop/rake_task"
 require "steep/rake_task"
+require "yard"
 
 Minitest::TestTask.create
 RuboCop::RakeTask.new
 Steep::RakeTask.new
 Bundler::Audit::Task.new
 
-task default: %i[rubocop steep test]
+YARD::Rake::YardocTask.new do |t|
+  t.files   = ['lib/**/*.rb',]   # optional
+  # t.options = ['--any', '--extra', '--opts'] # optional
+  # t.stats_options = ['--list-undoc']         # optional
+end
+
+
+task default: %i[rubocop steep test yard_lint]
 
 # TypeProf infers; Steep, against sig/, is the gate. TypeProf reads Ruby's core signatures alone,
 # not the standard library's.
@@ -23,6 +31,12 @@ desc "Print the signatures TypeProf infers from lib/, to start sig/ from, and wh
 task :typeprof do
   sh "typeprof", "--show-errors", "lib"
 end
+
+desc "Lint YARD documentation"
+task :yard_lint do
+  sh "bundle exec yard-lint lib/ --stats"
+end
+
 
 desc "Update the advisory database, then check Gemfile.lock against it (bundler-audit)"
 task audit: %w[bundle:audit:update bundle:audit:check]
@@ -124,6 +138,9 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
   end
   puts "v#{version} committed: `rake release` tags and pushes it, then release.yml publishes the tag."
 end
+
+
+
 
 # The gem is published by release.yml, on the tag, through RubyGems' Trusted Publishing:
 # `rake release` builds it, tags v<version> and pushes the branch and the tag, and pushes no gem.
