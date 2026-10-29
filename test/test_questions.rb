@@ -37,6 +37,13 @@ class TestQuestions < Minitest::Test
     assert_empty shown
   end
 
+  def test_with_no_email_none_is_asked
+    gem, shown = ask("my_gem", "--no-email", answers: ["", "", "", "", ""])
+
+    assert_nil gem.email
+    assert_match(/Author \[Jane Doe\]: GitHub user \[jane\]: \z/, shown)
+  end
+
   def test_a_refused_answer_is_asked_again_saying_why
     gem, shown = ask(answers: ["1gem", "my_gem", "maybe", "YES", "MIT", "apache", "TODO", "Greets.",
                                " ", "Ada", "a\tb", "ada@example.com", "-ada", "ada"])

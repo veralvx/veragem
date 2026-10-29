@@ -56,15 +56,15 @@ git commit -m "chore: initial commit from veragem"
 bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix develop`'s
 ```
 
-| Option              | Default                             | Goes into                                       |
-| ------------------- | ----------------------------------- | ----------------------------------------------- |
-| `NAME`              | --                                  | the gem, its module, its files: as `bundle gem` |
-| `--[no-]exe`        | `--no-exe`: a library alone         | a command line: `exe/NAME`, `lib/NAME/cli.rb`   |
-| `--license=LICENSE` | `dual` (MIT OR Apache-2.0)          | `mit`, `apache` or `dual`: the gemspec, LICENSE |
-| `--author=NAME`     | `git config user.name` (required)   | the gemspec, the licence's copyright line       |
-| `--email=EMAIL`     | `git config user.email` (optional)  | the gemspec, the code of conduct                |
-| `--github=USER`     | `git config github.user` (required) | the homepage, the repository's links            |
-| `--summary=TEXT`    | `A Ruby gem.`                       | the gemspec, the README, the module's comment   |
+| Option               | Default                                     | Goes into                                       |
+| -------------------- | ------------------------------------------- | ----------------------------------------------- |
+| `NAME`               | --                                          | the gem, its module, its files: as `bundle gem` |
+| `--[no-]exe`         | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/NAME/cli.rb`   |
+| `--license=LICENSE`  | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE |
+| `--author=NAME`      | `git config user.name` (required)           | the gemspec, the licence's copyright line       |
+| `--[no-]email=EMAIL` | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                |
+| `--github=USER`      | `git config github.user` (required)         | the homepage, the repository's links            |
+| `--summary=TEXT`     | `A Ruby gem.`                               | the gemspec, the README, the module's comment   |
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes

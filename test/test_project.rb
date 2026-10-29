@@ -35,6 +35,7 @@ class TestProject < Minitest::Test
 
   def test_the_email_is_optional
     assert_nil project.email
+    assert_nil project(email: false).email
     assert_equal "jane@example.com", project(email: "jane@example.com").email
   end
 

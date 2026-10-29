@@ -10,12 +10,12 @@ module Veragem
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe
 
-    # +name+, and +values+: the author, email, github, summary and license (strings), exe (true for a
-    # command line), as Options reads them.
+    # +name+, and +values+: the author, email, github, summary and license (strings, but an email false,
+    # --no-email's, or nil for none), exe (true for a command line), as Options reads them.
     def initialize(name, values)
       @name = Name.check(name)
       @author = Project.check(:author, values[:author])
-      @email = values[:email] && Project.check(:email, values[:email])
+      @email = (Project.check(:email, values[:email]) if values[:email])
       @github = Project.check(:github, values[:github])
       @summary = Project.check(:summary, values[:summary])
       @license = Project.check(:license, values[:license])
