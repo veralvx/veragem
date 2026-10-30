@@ -105,7 +105,7 @@ From a clean `main`, CI green on it:
 
 ```sh
 bundle exec rake changelog          # the changes the next release will list
-bundle exec rake "bump[minor]"      # or major, or patch; the first keeps the version declared
+bundle exec rake "bump[minor]"      # or major, or patch; a first release keeps the declared version
 bundle exec rake release
 ```
 
