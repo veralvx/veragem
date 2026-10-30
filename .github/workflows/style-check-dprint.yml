@@ -1,22 +1,21 @@
-# dprint as flake.lock's nixpkgs has it, the dev shell's version, fetched
-# alone; the formatting is the plugins', pinned in dprint.json.
+# dprint as flake.lock's nixpkgs has it (the dev shell's version), fetched alone; the formatting is
+# the plugins', pinned in dprint.json.
 name: Dprint Formatting Checks
 
 on:
   push:
     branches: [main]
     paths:
-      # dprint.json's plugins' extensions, markdown and toml, no more: one
-      # no plugin handles (yaml, json, Dockerfile) only schedules runs that
-      # check nothing. Add a plugin there and its extensions here together,
-      # each its own entry: path filters have no brace expansion {a,b}.
+      # dprint.json's plugins' extensions (markdown, toml), no more: one no plugin handles (yaml,
+      # json, Dockerfile) only schedules runs that check nothing. Add a plugin there and its
+      # extensions here together, each its own entry: path filters have no brace expansion {a,b}.
       - "**/*.md"
       - "**/*.markdown"
       - "**/*.toml"
       - ".github/workflows/style-check-dprint.yml"
       - "dprint.json"
-  # every pull request, whatever it touches: a path-filtered workflow never
-  # reports, and a required check that never reports blocks the merge
+  # every pull request, whatever it touches: a path-filtered workflow never reports, and a
+  # required check that never reports blocks the merge
   pull_request:
 
 # a pull request's newest run cancels its older ones; any other run, a group of its own: every

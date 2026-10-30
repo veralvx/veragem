@@ -1,6 +1,5 @@
 #!/bin/sh
-# What fails fastest, so a commit stays quick: RuboCop, the shell, the workflows, dprint; the
-# types, the tests and the rest are `bundle exec rake checks` and CI. Checks the working tree, not
-# just what is staged.
+# What fails fastest, so a commit stays quick; the types, the tests and the rest are
+# `bundle exec rake checks` and CI. Checks the working tree, not just what is staged.
 set -eu
 bundle exec rake rubocop shell workflows dprint

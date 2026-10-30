@@ -14,16 +14,14 @@ on:
 
 permissions: {}
 
-# NOTE: it needs the repository's dependency graph (Settings → Advanced
-# Security), and on a private repository GitHub Code Security too (an
-# organization's): without them, this job fails rather than skipping --
-# enable them, or delete the workflow.
+# NOTE: it needs the repository's dependency graph (Settings → Advanced Security), and on a
+# private repository an organization's GitHub Code Security too: without them the job fails, not
+# skips -- enable them, or delete the workflow.
 #
-# What it reads: Gemfile.lock has no scopes, so each of its gems counts as
-# runtime -- the gemspec's dependencies and the Gemfile's tools alike --;
-# the actions for licences in effect: advisories match actions by semantic
-# version alone, not the commits these are pinned to ("Dependency graph
-# supported package ecosystems").
+# Gemfile.lock has no scopes, so each of its gems counts as runtime, the gemspec's dependencies and
+# the Gemfile's tools alike. In effect, the actions are reviewed for licences alone: advisories
+# match an action by semantic version, not the commit it is pinned to ("Dependency graph supported
+# package ecosystems").
 jobs:
   dependency-review:
     name: License & Security Check
@@ -38,8 +36,8 @@ jobs:
           fail-on-severity: moderate
           # The licences are ClearlyDefined's, not the gemspecs'; a gem's:
           #   curl -s https://api.clearlydefined.io/definitions/gem/rubygems/-/NAME/VERSION
-          # (.licensed.declared). Add anything legitimate that is missing rather
-          # than deleting this list -- an empty allow-list allows everything.
+          # (.licensed.declared). Add what is legitimate and missing; never delete this list: an
+          # empty allow-list allows everything.
           # Ruby: Ruby's own licence, with MIT or BSD's (concurrent-ruby, reline)
           allow-licenses: >
             0BSD, Apache-2.0, BlueOak-1.0.0, BSD-2-Clause, BSD-3-Clause,

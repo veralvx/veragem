@@ -5,7 +5,10 @@ message: "If you use this software, please cite it using the metadata from this 
 title: "veragem"
 abstract: "Bundler plugin: bundle veragem NAME generates a Ruby gem with its toolchain wired up"
 authors:
-  - alias: "veralvx"
+  # family names: Zenodo's import reads no alias, and refuses an author without them ("Family name
+  # cannot be blank.")
+  - family-names: "VERALVX"
+    alias: "veralvx"
 version: "0.1.0"
 date-released: "2026-10-25"
 # no license: CFF writes MIT OR Apache-2.0 as a list, which Zenodo's import refuses

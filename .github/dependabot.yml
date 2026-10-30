@@ -14,8 +14,8 @@ updates:
       time: "07:00"
       timezone: "UTC"
     open-pull-requests-limit: 5
-    # `chore(deps): ...` -- no changelog entry: the lock is not in the gem, whose users resolve its
-    # gemspec's requirements themselves
+    # `chore(deps): ...` -- a Miscellaneous Task in the changelog, no feature or fix: the lock is not
+    # in the gem, whose users resolve its gemspec's requirements themselves
     commit-message:
       prefix: "chore"
       include: "scope"

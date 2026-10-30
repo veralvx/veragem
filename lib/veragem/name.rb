@@ -85,13 +85,12 @@ module Veragem
     @probed = {} #: Hash[[String, String, Array[String]], Array[String]]
 
     # The file +path+ already requires, what a Minitest::Test or Gem::Specification finds for the
-    # first of +nestings+, then each nesting's class -- Module, Class... --, each "" when none, where
-    # the gem meets them: in Bundler's CLI, which reads its gemspec (bin/setup's `bundle install`),
-    # in Rake and Minitest, and with its top-level +library+ (`date-holidays`: date), which its tools
-    # may require. Asked of a Ruby of its own, so the answer is the same however this one was
-    # started -- RUBYOPT too, whose options would print before the answers -- and once a process:
-    # the same question's answer does not change. Its answers come only once the libraries are
-    # loaded, then the child exits: one fewer is a failure.
+    # first of +nestings+, then each nesting's class (Module, Class...), each "" when none, where the
+    # gem meets them: in Bundler's CLI, which reads its gemspec (bin/setup's `bundle install`), in
+    # Rake and Minitest, and with its top-level +library+ (`date-holidays`: date), which its tools
+    # may require. Asked of a Ruby of its own, the same however this one was started (RUBYOPT's
+    # options would print before the answers), and once a process: the answer cannot change. The
+    # child answers once the libraries are loaded, then exits: fewer answers are a failure.
     # @param library [String] the gem's top-level library
     # @param path [String] the file the gem requires, lib/'s
     # @param nestings [Array<String>] its modules' full names, outermost first

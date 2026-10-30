@@ -1,9 +1,8 @@
 # git-cliff: CHANGELOG.md from the Conventional Commits, written by `rake bump` (never by hand).
-# Grouped by commit type, breaking changes first; what changes nothing a user meets (chores, CI,
-# formatting, the release commit itself) is left out.
 #
-# It names no project: the Rakefile passes the repository the headings' compare links need
-# (`--github-repo`, from the gemspec's source_code_uri). Run bare, the headings carry no link.
+# It names no project: the Rakefile passes the repository the links need (`--github-repo`, from
+# the gemspec's source_code_uri). Run bare, it takes the current branch's upstream remote where that
+# is GitHub's, and writes no link otherwise.
 
 [changelog]
 header = """
@@ -33,8 +32,11 @@ body = """
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim }}
     {% for commit in commits %}
+        {# the description as its author wrote it: a name keeps its case (RuboCop, v0.1.0) -#}
+        {% set short = commit.id | truncate(length=7, end="") -%}
         - {% if commit.scope %}{{ commit.scope }}: {% endif %}\
-          {{ commit.message | split(pat="\n") | first | upper_first | trim }}\
+          {{ commit.message | split(pat="\n") | first | trim }} \
+          ({% if url %}[{{ short }}]({{ url }}/commit/{{ commit.id }}){% else %}{{ short }}{% endif %})\
     {% endfor %}
 {% endfor %}\n
 """
@@ -55,24 +57,28 @@ commit_preprocessors = [
 # parse error
 require_conventional = true
 protect_breaking_commits = true # a breaking change is listed whatever its type, first
-# by type, in any case (cog takes `Feat:`), the HTML comments ordering the groups
+# every conventional commit, by type, in any case (cog takes `Feat:`); the HTML comments order the
+# groups, two digits as they sort as text
 commit_parsers = [
     # a merge, whatever its message: cog checks none (ignore_merge_commits)
     { field = "merge_commit", pattern = "true", skip = true },
     # what else cog lets through unconventional (ignore_fixup_commits)
     { message = "^(fixup|squash|amend)!", skip = true },
-    { message = "^[a-zA-Z]+(\\([^)]*\\))?!:", group = "<!-- 0 -->Breaking changes" },
-    { footer = "^BREAKING[ -]CHANGE", group = "<!-- 0 -->Breaking changes" },
-    { message = "(?i)^(chore|ci|style)", skip = true },
-    { message = "(?i)^feat", group = "<!-- 1 -->Features" },
-    { message = "(?i)^fix", group = "<!-- 2 -->Fixes" },
-    { message = "(?i)^perf", group = "<!-- 3 -->Performance" },
-    { message = "(?i)^refactor", group = "<!-- 4 -->Refactoring" },
-    { message = "(?i)^build", group = "<!-- 5 -->Build" },
-    { message = "(?i)^doc", group = "<!-- 6 -->Documentation" },
-    { message = "(?i)^test", group = "<!-- 7 -->Tests" },
-    { message = "(?i)^revert", group = "<!-- 8 -->Reverts" },
-    { message = ".*", skip = true },
+    { message = "^[a-zA-Z]+(\\([^)]*\\))?!:", group = "<!-- 00 -->Breaking changes" },
+    { footer = "^BREAKING[ -]CHANGE", group = "<!-- 00 -->Breaking changes" },
+    { message = "(?i)^feat", group = "<!-- 01 -->Features" },
+    { message = "(?i)^fix", group = "<!-- 02 -->Fixes" },
+    { message = "(?i)^perf", group = "<!-- 03 -->Performance" },
+    { message = "(?i)^refactor", group = "<!-- 04 -->Refactoring" },
+    { message = "(?i)^build", group = "<!-- 05 -->Build" },
+    { message = "(?i)^doc", group = "<!-- 06 -->Documentation" },
+    { message = "(?i)^test", group = "<!-- 07 -->Tests" },
+    { message = "(?i)^revert", group = "<!-- 08 -->Reverts" },
+    { message = "(?i)^style", group = "<!-- 09 -->Styling" },
+    # the release commit too, in the next version's section
+    { message = "(?i)^(chore|ci)", group = "<!-- 10 -->Miscellaneous Tasks" },
+    # any other type cog takes
+    { message = ".*", group = "<!-- 11 -->Other" },
 ]
 sort_commits = "oldest"
 # the release tags, `v0.1.0` on (Bundler's own form, `rake release`)
