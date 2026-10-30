@@ -89,8 +89,7 @@ terminal, the family names offer the author's last word, and the given names the
 family names, where the author ends with them. Its values need a citation: without one they are
 refused, and at a terminal its question takes y alone.
 
-What it holds is what GitHub and Zenodo read, written as Zenodo's import takes it, which is
-narrower than CFF:
+It holds what GitHub and Zenodo read, written as Zenodo's import takes it, narrower than CFF:
 
 - one licence as its SPDX identifier, and none for `dual`: CFF writes an OR as a list, and Zenodo
   refuses the whole file for one ([zenodo/zenodo#2515](https://github.com/zenodo/zenodo/issues/2515)),
@@ -129,6 +128,7 @@ It is the module's comment too, so one the gem's yard-lint or RuboCop would not 
 documentation is refused: a tag first, YARD's (`@param`, `(see`) or written informally (`Note:`,
 `See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic comment (`encoding:`), a
 backtick or `**` left open.
+
 As `bundle gem` does, veragem makes the git repository and adds the files, and runs no
 `bundle install`: `bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists
 the first steps: the repository's settings, RubyGems' pending trusted publisher.

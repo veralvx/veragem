@@ -15,7 +15,7 @@ class Test<%= constant.delete(":") %> < Minitest::Test
     assert_equal "Hello, world!", <%= constant %>.greeting(" \n")
   end
 
-  # A property, checked on many generated names (pbt): surrounding whitespace changes nothing.
+  # A property, checked on many generated names (pbt).
   def test_surrounding_whitespace_changes_nothing
     gem = <%= constant %>
     Pbt.assert do
