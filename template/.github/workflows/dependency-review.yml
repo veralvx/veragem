@@ -14,13 +14,13 @@ on:
 
 permissions: {}
 
-# NOTE: it needs the repository's dependency graph (Settings → Advanced Security), and on a private
-# repository an organization's GitHub Code Security too: without them the job fails, not skips --
-# enable them, or delete the workflow.
+# NOTE: it needs the repository's dependency graph (Settings → Advanced Security), and on a
+# private repository an organization's GitHub Code Security too: without them the job fails, not
+# skips -- enable them, or delete the workflow.
 #
 # Gemfile.lock has no scopes, so each of its gems counts as runtime, the gemspec's dependencies and
-# the Gemfile's tools alike. In effect, the actions are reviewed for licences alone: advisories match
-# an action by semantic version, not the commit it is pinned to ("Dependency graph supported
+# the Gemfile's tools alike. In effect, the actions are reviewed for licences alone: advisories
+# match an action by semantic version, not the commit it is pinned to ("Dependency graph supported
 # package ecosystems").
 jobs:
   dependency-review:
