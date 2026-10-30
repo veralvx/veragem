@@ -1,9 +1,8 @@
 name: Conventional Commits Check
 
-# On a push, the whole history rather than `--from-latest-tag`: with no tag
-# yet, cog stops "unable to get any tag" -- every new project's first push.
-# A pull request's title too: a squash merge of two or more commits makes the
-# title the commit, and so a changelog entry -- checked again when edited.
+# On a push, the whole history, not `--from-latest-tag`: with no tag yet (a new project's first
+# push), cog stops "unable to get any tag". A pull request's title too, checked again when edited:
+# a squash merge of two or more commits makes the title the commit, and so a changelog entry.
 
 on:
   push:
