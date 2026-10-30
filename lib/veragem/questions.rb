@@ -59,8 +59,8 @@ module Veragem
         next if Citation::KEYS.include?(key) && values[:citation] != true
 
         check = -> { answer(key, it, name, values) }
-        default = default(key, defaults, values)
-        values[key] = ask(format(question, name:), default, optional: OPTIONAL.include?(key), check:)
+        offer = default(key, defaults, values)
+        values[key] = ask(format(question, name:), offer, optional: OPTIONAL.include?(key), check:)
       end
       values
     end
@@ -80,7 +80,7 @@ module Veragem
       when :exe then yes?(text).tap { Generator.check_name(name, it) }
       when :citation
         yes?(text).tap do |cited|
-          Citation.check_values(cited, values)
+          Citation.check_values(values, cited)
           Citation.check_name(name, cited)
         end
       when :license then Project.check(key, completed(text))
@@ -139,7 +139,7 @@ module Veragem
       end
     end
 
-    def default(key, defaults, values) = Citation.offered(key, values) || { exe: "n", citation: "n", **defaults }[key]
+    def default(key, defaults, values) = Citation.default(key, values) || { exe: "n", **defaults }[key]
 
     # A licence abbreviated, completed as the option's is: when one licence alone starts so.
     def completed(answer)

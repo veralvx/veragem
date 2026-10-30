@@ -57,14 +57,14 @@ module Veragem
       given.transform_keys! { it.name.tr("-", "_").to_sym }
       # each value as checked, UTF-8 and stripped: the questions compare them with their answers
       checked = given.to_h { |key, value| [key, value.is_a?(String) ? Project.check(key, value) : value] }
-      Citation.check_values(checked[:citation] == true, checked) if checked.key?(:citation)
+      Citation.check_values(checked, checked[:citation] == true) if checked.key?(:citation)
       [names, checked]
     end
 
     # From a terminal: the names counted, as without one, then the name checked before any question.
     private_class_method def self.ask(names, given, defaults, questions)
       # a citation's values given, the citation's question takes y alone: the name is checked for one
-      citation = given[:citation] == true || given.values_at(*Citation::KEYS).any?
+      citation = given[:citation] == true || Citation.cited?(given)
       name = questions.name((name_of(names) unless names.empty?), exe: given[:exe] == true, citation:)
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
       Project.new(name, questions.values(name, given, defaults))

@@ -91,8 +91,10 @@ narrower than CFF:
 
 - one licence as its SPDX identifier, and none for `dual`: CFF writes an OR as a list, and Zenodo
   refuses the whole file for one ([zenodo/zenodo#2515](https://github.com/zenodo/zenodo/issues/2515)),
-  so it takes the licence GitHub detects instead, Apache-2.0 (MIT can be added on the record);
+  so it takes the licence GitHub detects instead -- Apache-2.0 for veragem's own two files today,
+  CC-BY-4.0 where GitHub detects none -- and the record's licences are yours to correct;
 - an ORCID iD Zenodo's check takes, its check digit and its block ORCID's, written as its URL;
+- names without a comma: Zenodo reads one as the end of the family names (`Smith, Jr.`);
 - a name of 3 characters or more, Zenodo's least title;
 - the repository, and RubyGems' page as its artifact; no email (CFF's pattern is stricter than
   veragem's), and no DOI: Zenodo gives it at the first release, to add then.

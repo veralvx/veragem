@@ -27,11 +27,14 @@ module Veragem
     ORCID: Regexp
     ORCID_BLOCKS: Array[Range[Integer]]
 
-    def self.check_values: (bool citation, Hash[Symbol, untyped] values) -> void
+    def self.cited?: (Hash[Symbol, String | bool | nil] values) -> bool
+    def self.check_values: (Hash[Symbol, String | bool | nil] values, bool citation) -> void
     def self.check_name: (String name, bool citation) -> void
-    def self.offered: (Symbol key, Hash[Symbol, String | bool | nil] values) -> String?
+    def self.default: (Symbol key, Hash[Symbol, String | bool | nil] values) -> String?
+    def self.names: (String field, String names) -> String
+    def self.keywords: (String value) { (String keyword) -> String } -> Array[String]
     def self.orcid: (String value) -> String
-    private def self.issued?: (String digits) -> bool
+    private def self.valid?: (String digits) -> bool
   end
 
   class Project
@@ -68,7 +71,6 @@ module Veragem
     private def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     private def self.text: (String field, String value) -> String
     private def self.line: (String field, String value) -> String
-    private def self.keywords: (String value) -> String
     private def self.documented: (String summary) -> String
 
     private

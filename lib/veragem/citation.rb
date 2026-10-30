@@ -2,7 +2,7 @@
 
 module Veragem
   # CITATION.cff's rules beyond its values' text: who may give them, the name it takes, the ORCID iD
-  # Zenodo's import takes.
+  # Zenodo's import takes, and the author's names guessed from the author.
   module Citation
     # The values CITATION.cff alone writes.
     KEYS = %i[given_names family_names orcid keywords].freeze
@@ -12,13 +12,18 @@ module Veragem
     ORCID_BLOCKS = [15_000_000..35_000_000, 900_000_000_000..900_100_000_000].freeze
     private_constant :ORCID, :ORCID_BLOCKS
 
+    # Whether a citation's values are given: --no-given-names' false is none.
+    # @param values [Hash{Symbol => String, Boolean, nil}]
+    # @return [Boolean]
+    def self.cited?(values) = values.values_at(*KEYS).any?
+
     # A citation's values, given only with a citation.
-    # @param citation [Boolean] whether the gem has CITATION.cff
     # @param values [Hash{Symbol => String, Boolean, nil}] a citation's among them
+    # @param citation [Boolean] whether the gem has CITATION.cff
     # @return [void]
     # @raise [Veragem::Error] one is given without a citation
-    def self.check_values(citation, values)
-      return if citation || values.values_at(*KEYS).none?
+    def self.check_values(values, citation)
+      return if citation || !cited?(values)
 
       raise Error, "--given-names, --family-names, --orcid and --keywords are CITATION.cff's: they need a citation"
     end
@@ -34,17 +39,47 @@ module Veragem
       raise Error, "invalid gem name #{name} with --citation: Zenodo takes a title of 3 characters or more"
     end
 
-    # The name +key+ offers, from the author's words: a guess, the last the family names, those before
-    # the family names the given names -- none where the author does not end with them.
+    # What a citation's question offers. The citation, y where its values are given, which need one.
+    # The names, guessed from the author's words, Unicode's spaces between them: the last the family
+    # names, those before the family names the given names -- none where the author does not end
+    # with them.
     # @param key [Symbol] the question's
-    # @param values [Hash{Symbol => String, Boolean, nil}] the author and family names among them
-    # @return [String, nil] nil for any other key
-    def self.offered(key, values)
-      author = values[:author].to_s.strip
+    # @param values [Hash{Symbol => String, Boolean, nil}] the answers so far, checked
+    # @return [String, nil] nil for none, and for any other question
+    def self.default(key, values)
+      author = values[:author].to_s
       case key
-      when :family_names then author.split.last
-      when :given_names then author[/\A(.+?)\s+#{Regexp.escape(values[:family_names].to_s.strip)}\z/, 1]
+      when :citation then cited?(values) ? "y" : "n"
+      when :family_names then author.split(/[[:space:]]+/).last
+      when :given_names then author[/\A(.+?)[[:space:]]+#{Regexp.escape(values[:family_names].to_s)}\z/, 1]
       end
+    end
+
+    # An author's names, as one line: no comma, which Zenodo reads as the family names' end
+    # ("family, given"), so "Smith, Jr." would lose its given names.
+    # @param field [String] "given names" or "family names", as a refusal names them
+    # @param names [String] one line of text
+    # @return [String] +names+
+    # @raise [Veragem::Error] they hold a comma
+    def self.names(field, names)
+      return names unless names.include?(",")
+
+      raise Error, "invalid #{field} #{names.inspect}: no comma, Zenodo's divide of family and given names"
+    end
+
+    # Keywords, comma-separated, as CFF's list takes them: blanks and repeats dropped. Split as bytes:
+    # one of invalid UTF-8 goes to the block, which refuses it.
+    # @param value [String] as given
+    # @yieldparam keyword [String] each keyword
+    # @yieldreturn [String] it checked, one line
+    # @return [Array<String>]
+    # @raise [Veragem::Error] none is left
+    def self.keywords(value, &)
+      words = value.b.split(",").map { it.force_encoding(Encoding::UTF_8) }
+                   .reject { it.valid_encoding? && it.match?(/\A[[:space:]]*\z/) }.map(&).uniq
+      return words unless words.empty?
+
+      raise Error, "invalid keywords #{value.inspect}: one or more, comma-separated"
     end
 
     # An ORCID iD as CFF writes it, its URL, checked as Zenodo's import checks it (idutils' is_orcid):
@@ -56,12 +91,12 @@ module Veragem
     def self.orcid(value)
       # as bytes: an answer of invalid UTF-8 is refused, not raised on
       id = value.b.strip[ORCID, 1]&.upcase
-      return "https://orcid.org/#{id}" if id && issued?(id.delete("-"))
+      return "https://orcid.org/#{id}" if id && valid?(id.delete("-"))
 
       raise Error, "invalid ORCID iD #{value.inspect}: 0000-0002-1825-0097, or its https://orcid.org/ URL"
     end
 
-    private_class_method def self.issued?(digits)
+    private_class_method def self.valid?(digits)
       *number, last = digits.chars
       sum = number.reduce(0) { |total, digit| (total + digit.to_i) * 2 }
       check = (12 - (sum % 11)) % 11

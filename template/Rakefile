@@ -114,11 +114,16 @@ def next_version(current, level)
   parts.fill(0, level + 1).join(".")
 end
 
-# CITATION.cff, where the gem has one (bundle veragem --citation): the release's version and date.
-def cite(version)
-  Dir["CITATION.cff"].each do |cff|
-    released = File.read(cff).sub(/^version: .*$/, %(version: "#{version}"))
-    File.write(cff, released.sub(/^date-released: .*$/, %(date-released: "#{Time.now.strftime("%F")}")))
+# CITATION.cff, where the gem has one (bundle veragem --citation): its text with the release's version
+# and date, or nil; read as UTF-8, as written, whatever the locale.
+def cited(version)
+  return unless File.exist?("CITATION.cff")
+
+  released = { "version" => version, "date-released" => Time.now.strftime("%F") }
+  released.reduce(File.read("CITATION.cff", encoding: Encoding::UTF_8)) do |cff, (key, value)|
+    abort "error: CITATION.cff has no #{key}: line" unless cff.match?(/^#{key}: /)
+
+    cff.sub(/^#{key}: .*$/, %(#{key}: "#{value}"))
   end
 end
 
@@ -135,13 +140,14 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
 
   file = "lib/#{gemspec.name.tr("-", "/")}/version.rb"
   abort "error: #{file} declares no \"#{current}\"" unless File.read(file).include?(%("#{current}"))
+  citation = cited(version)
   first = !File.exist?("CHANGELOG.md")
   begin
     File.write(file, File.read(file).sub(%("#{current}"), %("#{version}")))
-    cite(version)
+    File.write("CITATION.cff", citation) if citation
     sh "bundle", "lock"
     sh(*cliff, "--tag", "v#{version}", "--output", "CHANGELOG.md")
-    sh "git", "add", file, "Gemfile.lock", "CHANGELOG.md", *Dir["CITATION.cff"]
+    sh "git", "add", file, "Gemfile.lock", "CHANGELOG.md", *("CITATION.cff" if citation)
     sh "git", "commit", "--message", "chore(release): v#{version}"
   rescue StandardError, Interrupt
     # The tracked files were committed (release:guard_clean): put back what this changed.

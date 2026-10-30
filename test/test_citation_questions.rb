@@ -71,12 +71,20 @@ class TestCitationQuestions < Minitest::Test
     refute_match(/names|ORCID|Keywords/, shown)
   end
 
-  # its values given: the citation's question refuses no
+  # its values given: the citation's question offers y, and refuses n
   def test_at_a_terminal_a_citations_values_given_need_the_citation
-    gem, shown = ask("my_gem", "--family-names=Doe", answers: ["", "n", "y", "", "", "", "", "", "", "", ""])
+    gem, shown = ask("my_gem", "--family-names=Doe", answers: ["", "n", "", "", "", "", "", "", "", "", ""])
 
     assert_equal [true, "Doe"], [gem.citation, gem.family_names]
-    assert_includes shown, "#{NEEDED}\n"
+    assert_includes shown, "CITATION.cff (y/n) [y]: #{NEEDED}\nA citation file"
+  end
+
+  # Unicode's spaces divide the author's words too
+  def test_at_a_terminal_the_names_guessed_between_unicode_spaces
+    gem, shown = ask("my_gem", "--citation", "--author=Ana\u00A0Mar\u00EDa\u3000Souza", answers: [""] * 9)
+
+    assert_equal ["Ana\u00A0Mar\u00EDa", "Souza"], [gem.given_names, gem.family_names]
+    assert_includes shown, "Family names, CITATION.cff's [Souza]: "
   end
 
   # a name under 3 characters: --citation refuses it before any question, and y is refused for it

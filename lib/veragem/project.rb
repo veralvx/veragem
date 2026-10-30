@@ -30,13 +30,15 @@ module Veragem
     # @return [String] the value a file writes: an ORCID iD its URL, keywords joined by ", "
     # @raise [Veragem::Error] +key+ cannot take it
     def self.check(key, value)
+      field = key.name.tr("_", " ")
       case key
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
       when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
       when :summary then documented(text("summary", value))
+      when :given_names, :family_names then Citation.names(field, line(field, value))
       when :orcid then Citation.orcid(value)
-      when :keywords then keywords(value)
-      else text(key.name.tr("_", " "), value)
+      when :keywords then Citation.keywords(value) { line("keyword", it) }.join(", ")
+      else text(field, value)
       end
     end
 
@@ -139,14 +141,6 @@ module Veragem
       line
     end
 
-    # Keywords, comma-separated: each one line, blanks and repeats dropped, as CFF's list takes them.
-    private_class_method def self.keywords(value)
-      words = value.split(",").grep_v(/\A[[:space:]]*\z/).map { line("keyword", it) }.uniq
-      raise Error, "invalid keywords #{value.inspect}: one or more, comma-separated" if words.empty?
-
-      words.join(", ")
-    end
-
     # +summary+, which is the module's comment too: one the gem's own yard-lint takes, no informal tag
     # first and no backtick or bold left open -- a `**` outside code with a non-space beside it, as
     # yard-lint counts (`x ** 2` is no bold).
@@ -166,14 +160,14 @@ module Veragem
     # What the gem holds beyond the library: a command line, a citation.
     def extras(values)
       @exe, @citation = values.values_at(:exe, :citation).map { it == true }
-      Citation.check_values(citation, values)
+      Citation.check_values(values, citation)
       Citation.check_name(name, citation)
       cite(values) if citation
     end
 
     # CITATION.cff's author is a person: the family names it needs, the rest it may have.
     def cite(values)
-      given, family, orcid, keywords = values.values_at(*Citation::KEYS)
+      given, family, orcid, keywords = values.values_at(:given_names, :family_names, :orcid, :keywords)
       raise Error, "no family names: --family-names, CITATION.cff's author" unless family
 
       @given_names = (Project.check(:given_names, given) if given)

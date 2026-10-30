@@ -79,14 +79,24 @@ class TestCitation < Minitest::Test
     assert_equal [nil, "Doe"], [gem.given_names, gem.family_names]
   end
 
-  # U+FFFE and U+FFFF are outside YAML's printable characters: CITATION.cff would not parse
-  def test_a_name_is_checked_as_any_text
-    { "--family-names=TODO" => /\Ainvalid family names "TODO"/, "--given-names=a\tb" => /\Ainvalid given names/,
-      "--given-names=a\uFFFEb" => /\Ainvalid given names/, "--given-names=a\uFFFFb" => /\Ainvalid given names/ }
-      .each do |name, message|
+  # one line, U+FFFE and U+FFFF refused (outside YAML's printable characters: CITATION.cff would not
+  # parse), and no comma, which Zenodo reads as the family names' end; RubyGems' TODO is no rule here
+  def test_a_name_is_one_line_without_a_comma
+    { "--given-names=a\tb" => /\Ainvalid given names/, "--given-names=a\uFFFEb" => /\Ainvalid given names/,
+      "--given-names=a\uFFFFb" => /\Ainvalid given names/,
+      "--family-names=Smith, Jr." => /\Ainvalid family names "Smith, Jr\.": no comma/ }.each do |name, message|
       error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", name) }
 
       assert_match message, error.message
     end
+    assert_equal "TODO", parse("my_gem", "--citation", "--family-names=TODO").family_names
+  end
+
+  # as bytes, as a locale not UTF-8's gives them: a blank of Unicode's dropped, invalid UTF-8 refused
+  def test_keywords_as_bytes
+    assert_equal %w[a b], Veragem::Project.check(:keywords, "a,\u00A0,b".b).split(", ")
+    error = assert_raises(Veragem::Error) { Veragem::Project.check(:keywords, "a,\xFF".dup.force_encoding(Encoding::UTF_8)) }
+
+    assert_match(/\Ainvalid keyword /, error.message)
   end
 end
