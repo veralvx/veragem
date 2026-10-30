@@ -28,3 +28,16 @@ license: <%= licenses.first %>
 <%- end -%>
 repository-code: "https://github.com/<%= github %>/<%= name %>"
 repository-artifact: "https://rubygems.org/gems/<%= name %>"
+# the API documentation rubydoc.info serves for each gem on RubyGems: there from the first release
+url: "https://rubydoc.info/gems/<%= name %>"
+# Zenodo's DOIs, to uncomment once it has archived a release: the concept DOI, every version's
+# (Zenodo's "Cite all versions"), and a version's own -- minted after its release is tagged, so the
+# file can hold an earlier version's alone
+# doi: "10.5281/zenodo.0000000"
+# identifiers:
+#   - type: doi
+#     value: "10.5281/zenodo.0000000"
+#     description: "The concept DOI, of every version"
+#   - type: doi
+#     value: "10.5281/zenodo.0000001"
+#     description: "The DOI of version 0.1.0"

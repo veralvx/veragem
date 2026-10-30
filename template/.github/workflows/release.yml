@@ -121,11 +121,12 @@ jobs:
           bundler: none
 
       - name: Sign
-        # as rubygems/release-gem signs: its version of sigstore-cli
+        # as rubygems/release-gem signs, with sigstore-cli's latest release: unpinned, as nothing
+        # would bump a version here; a bad one can fail the push, not change the gem (its digest)
         run: |
           set -euo pipefail
           for gem in pkg/*.gem; do
-            gem exec sigstore-cli:0.2.3 sign "$gem" --bundle "$gem.sigstore.json"
+            gem exec sigstore-cli sign "$gem" --bundle "$gem.sigstore.json"
           done
 
       - name: Keep the attestation
