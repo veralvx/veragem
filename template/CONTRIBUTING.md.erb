@@ -136,6 +136,12 @@ Then, in whichever order suits you:
   and the variable `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`.
   A Docker Hub failure in the build (its login, its name, a push) holds GHCR's tag back too.
 <%- end -%>
+<%- if citation -%>
+- To archive each release with a DOI, enable the repository on [Zenodo](https://zenodo.org) (its
+  profile menu → GitHub, the repository's toggle): a GitHub release, `release.yml`'s, is then
+  archived, its metadata `CITATION.cff`'s. After the first, add the DOI that names every version
+  (Zenodo's "Cite all versions") as `doi:` in `CITATION.cff`: GitHub's citation then links it.
+<%- end -%>
 - Run `bundle exec rake checks` once to confirm your tools are complete: a step that stops on a
   missing command names it ([Prerequisites](#prerequisites) lists them; `nix develop` has them
   all).

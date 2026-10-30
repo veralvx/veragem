@@ -5,9 +5,7 @@ require "test_helper"
 # From a terminal: a citation's values, asked only for a citation.
 class TestCitationQuestions < Minitest::Test
   include Veragem::TerminalSupport
-
-  NEEDED = "--given-names, --family-names, --orcid and --keywords are CITATION.cff's: they need a citation"
-  ORCID = "https://orcid.org/0000-0002-1825-0097"
+  include Veragem::CitationSupport
 
   def test_at_a_terminal_the_names_are_asked_the_authors_words_offered
     config = CONFIG.merge("user.name" => "Ana María de Souza")
@@ -45,6 +43,16 @@ class TestCitationQuestions < Minitest::Test
   end
 
   # asked after the names, each may be none; an answer refused is asked again
+  # under a locale not UTF-8's, the arguments and the answers come as bytes: the family names given
+  # are compared with the author answered as the values Project takes, UTF-8's
+  def test_at_a_terminal_the_names_offered_whatever_the_locale
+    family = "de Souz\u00E1".b.force_encoding(Encoding::US_ASCII)
+    gem, = ask("my_gem", "--citation", "--family-names", family,
+               answers: ["", "", "", "Ana de Souz\u00E1".b, "", "", "", "", ""])
+
+    assert_equal ["Ana", "de Souz\u00E1"], [gem.given_names, gem.family_names]
+  end
+
   def test_at_a_terminal_the_orcid_id_and_the_keywords_are_asked
     answers = ["", "", "", "", "", "", "0000-0002-1825-0098", "0000-0002-1825-0097", ",", "ruby, gem", "", ""]
     gem, shown = ask("my_gem", "--citation", answers:)

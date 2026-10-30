@@ -23,8 +23,8 @@ date-released: "<%= today %>"
 <%- if licenses.one? -%>
 license: <%= licenses.first %>
 <%- else -%>
-# no license: CFF writes MIT OR Apache-2.0 as a list, which Zenodo's import refuses (its issue
-# 2515); Zenodo takes the licence GitHub detects
+# no license: CFF writes MIT OR Apache-2.0 as a list, which Zenodo's import refuses
+# (zenodo/zenodo#2515); Zenodo takes the licence GitHub detects
 <%- end -%>
 repository-code: "https://github.com/<%= github %>/<%= name %>"
 repository-artifact: "https://rubygems.org/gems/<%= name %>"

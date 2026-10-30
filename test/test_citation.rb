@@ -5,9 +5,7 @@ require "test_helper"
 # CITATION.cff's values, as options give them: a citation's alone, checked as Zenodo's import takes them.
 class TestCitation < Minitest::Test
   include Veragem::TerminalSupport
-
-  NEEDED = "--given-names, --family-names, --orcid and --keywords are CITATION.cff's: they need a citation"
-  ORCID = "https://orcid.org/0000-0002-1825-0097"
+  include Veragem::CitationSupport
 
   def parse(*argv) = Veragem::Options.parse(argv, config: CONFIG.method(:[]), input: StringIO.new)
 

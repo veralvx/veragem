@@ -7,8 +7,7 @@ require "yaml"
 class TestCitationFile < Minitest::Test
   include Veragem::TestSupport
   include Veragem::GeneratedSupport
-
-  ORCID = "https://orcid.org/0000-0002-1825-0097"
+  include Veragem::CitationSupport
 
   def test_the_file_is_a_citations_alone
     in_tmpdir do |dir|

@@ -20,10 +20,10 @@ module Veragem
       ["--github=USER", "The GitHub user or organization (default: git config github.user)"],
       ["--summary=TEXT", "The gem's summary (default: A Ruby gem.)"],
       ["--[no-]citation", "Add CITATION.cff, the citation GitHub and Zenodo read (default: --no-citation)"],
-      ["--family-names=NAMES", "With --citation: the author's family names, CITATION.cff's (required)"],
+      ["--family-names=NAMES", "With --citation: the author's family names (required)"],
       ["--[no-]given-names=NAMES", "With --citation: the author's given names (--no-given-names, none)"],
-      ["--orcid=ID", "With --citation: the author's ORCID iD, CITATION.cff's"],
-      ["--keywords=LIST", "With --citation: keywords, comma-separated, CITATION.cff's"]
+      ["--orcid=ID", "With --citation: the author's ORCID iD"],
+      ["--keywords=LIST", "With --citation: keywords, comma-separated"]
     ].freeze #: Array[[String, String]]
     private_constant :GIT_CONFIG, :DEFAULTS, :BANNER, :OPTIONS
 
@@ -55,9 +55,10 @@ module Veragem
       names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: given)
       # OptionParser keys --given-names as :"given-names"; Project's are :given_names
       given.transform_keys! { it.name.tr("-", "_").to_sym }
-      given.each { |key, value| Project.check(key, value) if value.is_a?(String) }
-      Citation.check_values(given[:citation] == true, given) if given.key?(:citation)
-      [names, given]
+      # each value as checked, UTF-8 and stripped: the questions compare them with their answers
+      checked = given.to_h { |key, value| [key, value.is_a?(String) ? Project.check(key, value) : value] }
+      Citation.check_values(checked[:citation] == true, checked) if checked.key?(:citation)
+      [names, checked]
     end
 
     # From a terminal: the names counted, as without one, then the name checked before any question.

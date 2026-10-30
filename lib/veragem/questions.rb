@@ -37,7 +37,7 @@ module Veragem
     # the rest.
     # @param given [String, nil] the name the arguments give
     # @param exe [Boolean] whether --exe is given
-    # @param citation [Boolean] whether --citation is given
+    # @param citation [Boolean] whether --citation, or a citation's value, is given
     # @return [String]
     # @raise [Veragem::Error] +given+ is refused, or nothing is answered
     def name(given, exe:, citation:)
