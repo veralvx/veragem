@@ -20,8 +20,8 @@ module Veragem
       ["--github=USER", "The GitHub user or organization (default: git config github.user)"],
       ["--summary=TEXT", "The gem's summary (default: A Ruby gem.)"],
       ["--[no-]citation", "Add CITATION.cff, the citation GitHub and Zenodo read (default: --no-citation)"],
-      ["--given-names=NAMES", "With --citation: the author's given names, CITATION.cff's"],
-      ["--family-names=NAMES", "With --citation: the author's family names, CITATION.cff's (required)"]
+      ["--family-names=NAMES", "With --citation: the author's family names, CITATION.cff's (required)"],
+      ["--[no-]given-names=NAMES", "With --citation: the author's given names, CITATION.cff's (--no-given-names, none)"]
     ].freeze #: Array[[String, String]]
     private_constant :GIT_CONFIG, :DEFAULTS, :BANNER, :OPTIONS
 

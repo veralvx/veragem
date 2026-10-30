@@ -11,8 +11,8 @@ module Veragem
       license: "License (mit, apache or dual)",
       summary: "Summary",
       author: "Author",
-      given_names: "Given names, CITATION.cff's",
       family_names: "Family names, CITATION.cff's",
+      given_names: "Given names, CITATION.cff's",
       email: "Email",
       github: "GitHub user"
     }.freeze
@@ -131,12 +131,15 @@ module Veragem
       end
     end
 
-    # A citation's names offer the author's words, a guess: the last the family names.
+    # A citation's names offer the author's words, a guess: the last the family names, those before
+    # the family names the given names -- none where the author does not end with them.
     def default(key, defaults, values)
       return { exe: "n", citation: "n", **defaults }[key] unless CITATION.include?(key)
 
-      *given, family = values[:author].to_s.split
-      key == :family_names ? family : (given.join(" ") unless given.empty?)
+      author = values[:author].to_s.strip
+      return author.split.last if key == :family_names
+
+      author[/\A(.+?)\s+#{Regexp.escape(values[:family_names].to_s.strip)}\z/, 1]
     end
 
     # A licence abbreviated, completed as the option's is: when one licence alone starts so.

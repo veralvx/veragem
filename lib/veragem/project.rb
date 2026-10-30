@@ -44,12 +44,12 @@ module Veragem
     def self.check_citation(citation, values)
       return if citation || !(values[:given_names] || values[:family_names])
 
-      raise Error, "--given-names and --family-names are CITATION.cff's: add --citation"
+      raise Error, "--given-names and --family-names are CITATION.cff's: they need a citation"
     end
 
     # +name+, and +values+: the author, email, github, summary, license and a citation's given and
-    # family names (strings, but an email false, --no-email's, or nil for none), exe and citation (true
-    # for a command line, for CITATION.cff), as Options reads them.
+    # family names (strings, but an email or given names false, --no-email's, --no-given-names', or
+    # nil for none), exe and citation (true for a command line, for CITATION.cff), as Options reads them.
     # @param name [String] the gem's name, as given
     # @param values [Hash{Symbol => String, Boolean, nil}] the rest, as given
     # @return [void]
@@ -123,10 +123,10 @@ module Veragem
 
     # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped (Unicode's too),
     # short enough for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as
-    # unfinished.
+    # unfinished. U+FFFE and U+FFFF are outside YAML's printable characters: CITATION.cff's.
     private_class_method def self.text(field, value)
       value = value.dup.force_encoding(Encoding::UTF_8)
-      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029]/)
+      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/)
       line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
       raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
       raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
