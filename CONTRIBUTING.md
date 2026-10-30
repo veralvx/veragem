@@ -111,5 +111,5 @@ bundle exec rake release
 
 `rake bump` sets the version, updates the lock, writes the changelog (git-cliff) and commits;
 `rake release`, Bundler's own, tags `v<version>` and pushes the branch and the tag. The tag runs
-`release.yml`: the Ruby checks (`rake`) and the build, the push to RubyGems by Trusted Publishing,
-then the GitHub release.
+`release.yml`: the Ruby checks (`rake`), then the build (`gem build`, no bundle loaded) and its
+Sigstore attestation, the push to RubyGems by Trusted Publishing, then the GitHub release.

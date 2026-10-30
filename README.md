@@ -23,8 +23,9 @@ and the rest:
   for the gems, the actions and the flake, a release proposed once a week old.
 - **Commits and releases**: Conventional Commits (cocogitto, in CI and opt-in git hooks), a
   changelog written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own
-  `rake release`; the tag publishes to RubyGems by Trusted Publishing, no API key stored, and makes
-  the GitHub release.
+  `rake release`; the tag publishes to RubyGems by Trusted Publishing, no API key stored, the gem
+  built apart from the tools' gems and signed (its Sigstore attestation, RubyGems' provenance), and
+  makes the GitHub release.
 - **Nix**: a flake with the development shell (Ruby and every tool the checks run), the gem as a
   package (`nix build`), `nix fmt`, and checks for the Nix, the shell scripts, the workflows and
   the package. With `--exe`, `nix run` runs the command, and its OCI image (`nix build .#image`)

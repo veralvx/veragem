@@ -176,9 +176,10 @@ declared, whatever the level), updates the lock, writes the changelog (git-cliff
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
 <%- end -%>
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
-tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`) and the build, the
-push to RubyGems by Trusted Publishing, then the GitHub release of the same gem, its notes the
-changelog's new section.
+tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`), then the build
+(`gem build`, no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted
+Publishing, which shows the gem's provenance, then the GitHub release of the same gem, its notes
+the changelog's new section.
 <%- if exe -%>
 Beside `release.yml`, waiting for no RubyGems push, `image.yml` publishes the command's OCI image
 to GHCR (`nix build .#image` builds it here).
