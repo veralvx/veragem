@@ -11,8 +11,8 @@ and the rest:
 - **Lint and format**: RuboCop with every new cop, rubocop-minitest, rubocop-packaging,
   rubocop-performance and rubocop-rake; the project is indexed first (rubydex), so the cops that see
   across files do. In CI, offences are annotated on the pull request and a failed run's summary
-  holds the safe corrections as a patch; a Dependabot bump the new cops fail gets them as a commit,
-  then merges as any bump once you approve its runs (`rubocop-autocorrect.yml`, no token to set).
+  holds the safe corrections as a patch, to `git apply`: a Dependabot bump the new cops fail stays
+  unmerged until you apply it, no workflow pushing code the bumped gems wrote.
 - **Documentation**: YARD, every object of `lib/` documented, held by yard-lint at 100% coverage
   (`rake yard` writes it to `doc/`).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
@@ -142,8 +142,8 @@ flake.nix, flake.lock the dev shell, the package (and the command's image), `nix
 cliff.toml, cog.toml  git-cliff's changelog, cocogitto's commit checks
 dprint.json, .editorconfig
 .github/              CI, the flake, bundler-audit, the dependency review, the release (and the
-                      image), the style checks, Dependabot, its auto-merge and its bumps'
-                      RuboCop corrections; issue and pull request templates
+                      image), the style checks, Dependabot and its auto-merge; issue and pull
+                      request templates
 README, CONTRIBUTING, AGENTS, SECURITY, CODE_OF_CONDUCT, LICENSE-MIT / LICENSE-APACHE
 CITATION.cff          with --citation: the citation, its version and date `rake bump`'s
 ```

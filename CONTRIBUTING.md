@@ -80,14 +80,16 @@ Open a pull request against `main`, titled as a conventional commit, once
 
 - Enable the repository settings the auto-merge workflow needs, listed at the top of
   `.github/workflows/dependabot-automerge.yml`, with every job of `ruby-ci.yml`, `nix.yml`,
-  `smoke.yml` and the style checks required.
+  `smoke.yml`, `security.yml` and the style checks required.
 - Enable private vulnerability reporting (Settings → Advanced Security; a public repository's
   alone).
 - Enable the dependency graph there too, if it is off: `dependency-review.yml` fails without it.
 - Add a pending trusted publisher on
   [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers) for the gem `veragem`:
-  this repository, the workflow `release.yml`, the environment `release`; if you limit that
-  environment's deployments, admit the tags `v*`.
+  this repository, the workflow `release.yml`, the environment `release` -- and limit that
+  environment's deployments to the tags `v*` (Settings → Environments, a rule of ref type Tag): a
+  trusted publisher names the environment, not a ref, so without the rule a workflow pushed to any
+  branch could publish.
 
 ### Releasing
 

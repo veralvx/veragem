@@ -125,16 +125,19 @@ Then, in whichever order suits you:
   for the gem `<%= name %>`: this repository, the workflow `release.yml`, the environment
   `release`. A release tag then publishes without a stored key, its first version too, and its
   GitHub release follows RubyGems': without the publisher, neither is made.
-- If you limit the `release` environment's deployments (Settings → Environments), admit the
-  release tags, a rule of ref type Tag, `v*`: the RubyGems job runs on the tag, and an environment
-  that refuses it publishes nothing.
+- Limit the `release` environment's deployments to the release tags (Settings → Environments, a
+  rule of ref type Tag, `v*`): a trusted publisher names the environment, not a ref, so without the
+  rule a workflow pushed to any branch could publish the gem.
 <%- if exe -%>
 - After the first release, make the image public: GHCR publishes a new package as private (its
   page, Package settings → Change visibility).
+- Limit the `image` environment's deployments to the release tags as well (a rule of ref type Tag,
+  `v*`): its jobs push the image.
 - To publish the image to Docker Hub too: create its repository there, then set the repository
-  variable `DOCKERHUB_USERNAME` and the secret `DOCKERHUB_TOKEN` (an access token that writes) --
-  and the variable `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`.
-  A Docker Hub failure in the build (its login, its name, a push) holds GHCR's tag back too.
+  variable `DOCKERHUB_USERNAME` and the `image` environment's secret `DOCKERHUB_TOKEN` (an access
+  token that writes; the environment's alone, no other workflow can read it) -- and the variable
+  `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`. A Docker Hub
+  failure in a push (its login, its name) holds GHCR's tag back too.
 <%- end -%>
 <%- if citation -%>
 - To archive each release with a DOI, enable the repository on [Zenodo](https://zenodo.org) (its
@@ -186,9 +189,6 @@ Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake
 monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass.
 dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
 brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
-A bump the new cops fail gets RuboCop's safe corrections as a commit on its branch
-(`rubocop-autocorrect.yml`). GitHub holds the workflows of a commit a workflow's token pushes
-until you approve them (the pull request's "Approve workflows to run"); corrected, the bump then
-merges as any bump. What safe corrections leave is yours to fix, in a pull request of yours too: a
-failed run's summary
-holds the corrections as a patch, to `git apply`.
+A bump the new cops fail stays unmerged: its failed run's summary holds RuboCop's safe corrections
+as a patch, to `git apply` on its branch (no workflow pushes code the bumped gems wrote); what
+they leave is yours to fix.
