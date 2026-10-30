@@ -143,7 +143,7 @@
 
           checks = {
             format = check pkgs "format" [ pkgs.nixfmt ] "find . -name '*.nix' -exec nixfmt --check {} +";
-            # shfmt finds the scripts, by extension or shebang, and formats them as .editorconfig says
+            # shfmt finds the scripts, by extension or shebang, and checks them per .editorconfig
             shell = check pkgs "shell" [ pkgs.shellcheck pkgs.shfmt ] ''
               shfmt --find . | xargs shellcheck
               shfmt --diff .
