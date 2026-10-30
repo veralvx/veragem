@@ -1,0 +1,27 @@
+# The citation GitHub's "Cite this repository" and Zenodo read (Citation File Format 1.2.0), as the
+# template writes a generated gem's; `rake bump` sets version and date-released at each release.
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+title: "veragem"
+abstract: "Bundler plugin: bundle veragem NAME generates a Ruby gem with its toolchain wired up"
+authors:
+  - alias: "veralvx"
+version: "0.1.0"
+date-released: "2026-10-25"
+# no license: CFF writes MIT OR Apache-2.0 as a list, which Zenodo's import refuses
+# (zenodo/zenodo#2515); Zenodo takes the licence GitHub detects
+repository-code: "https://github.com/veralvx/veragem"
+repository-artifact: "https://rubygems.org/gems/veragem"
+# the API documentation rubydoc.info serves for each gem on RubyGems
+url: "https://rubydoc.info/gems/veragem"
+# Zenodo's DOIs, to uncomment once it has archived a release: the concept DOI, every version's
+# (Zenodo's "Cite all versions"), and a version's own -- minted after its release is tagged, so the
+# file can hold an earlier version's alone
+# doi: "10.5281/zenodo.0000000"
+# identifiers:
+#   - type: doi
+#     value: "10.5281/zenodo.0000000"
+#     description: "The concept DOI, of every version"
+#   - type: doi
+#     value: "10.5281/zenodo.0000001"
+#     description: "The DOI of version 0.1.0"
