@@ -43,7 +43,9 @@ module Veragem
   class Project
     GITHUB: Regexp
     LICENSES: Hash[String, Array[String]]
-    INFORMAL_TAG: Regexp
+    TAG: Regexp
+    ANNOTATION: Regexp
+    MAGIC: Regexp
 
     attr_reader name: String
     attr_reader author: String
@@ -75,6 +77,7 @@ module Veragem
     private def self.text: (String field, String value) -> String
     private def self.line: (String field, String value) -> String
     private def self.documented: (String summary) -> String
+    private def self.annotation?: (String summary) -> bool
 
     private
 

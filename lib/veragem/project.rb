@@ -9,10 +9,16 @@ module Veragem
     GITHUB = /\A[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\z/i
     # Each choice's SPDX identifiers: the gemspec's licenses, the LICENSE-* files.
     LICENSES = { "mit" => ["MIT"], "apache" => ["Apache-2.0"], "dual" => ["MIT", "Apache-2.0"] }.freeze
-    # What yard-lint (.yard-lint.yml) takes for a tag written informally, first in a comment.
-    INFORMAL_TAG = /\A(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since|returns
-                     |raises|example):/xi
-    private_constant :GITHUB, :INFORMAL_TAG
+    # What YARD reads as a tag first in a comment: its own (`@param`, `(see`), and those yard-lint
+    # (.yard-lint.yml) takes for one written informally.
+    TAG = /\A(?:@|\(see\b|(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since
+            |returns|raises|example):)/xi
+    # RuboCop's annotation keywords, first in a comment: an annotation, no documentation, but where
+    # one is a sentence's capitalized first word, a space after it.
+    ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)\b/i
+    # A magic comment, as RuboCop reads one anywhere in a comment (an encoding's, Ruby's own rule).
+    MAGIC = /\b(?:en)?coding\s*[:=]|\Afrozen_string_literal\s*:/i
+    private_constant :GITHUB, :TAG, :ANNOTATION, :MAGIC
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
                 :orcid, :keywords
@@ -141,11 +147,14 @@ module Veragem
       line
     end
 
-    # +summary+, which is the module's comment too: one the gem's own yard-lint takes, no informal tag
-    # first and no backtick or bold left open -- a `**` outside code with a non-space beside it, as
-    # yard-lint counts (`x ** 2` is no bold).
+    # +summary+, which is the module's comment too: one the gem's own yard-lint and RuboCop take as its
+    # documentation, no tag, annotation or magic comment, and no backtick or bold left open -- a `**`
+    # outside code with a non-space beside it, as yard-lint counts (`x ** 2` is no bold).
     private_class_method def self.documented(summary)
-      raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(INFORMAL_TAG)
+      raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(TAG)
+      if annotation?(summary) || summary.match?(MAGIC)
+        raise Error, "invalid summary #{summary.inspect}: RuboCop would read an annotation or a magic comment"
+      end
 
       bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size
       if summary.count("`").odd? || bold.odd?
@@ -153,6 +162,11 @@ module Veragem
       end
 
       summary
+    end
+
+    private_class_method def self.annotation?(summary)
+      keyword = summary[ANNOTATION, 1] or return false
+      keyword != keyword.capitalize || summary[keyword.size] != " "
     end
 
     private

@@ -22,14 +22,18 @@ class TestProject < Minitest::Test
     end
   end
 
-  # the module's comment too, which the gem's yard-lint holds
-  def test_a_summary_is_a_comment_yard_lint_takes
-    ["Note: a fork.", "see also: foo.", "EXAMPLE: x", "Parses `foo files.", "Bold **text."].each do |summary|
-      assert_raises(Veragem::Error, summary.inspect) { project(summary:) }
+  # the module's comment too: each refused fails the generated gem's yard-lint or RuboCop as it, and
+  # each taken passes them (both checked so in a generated gem)
+  def test_a_summary_is_a_comment_yard_lint_and_rubocop_take
+    ["Note: a fork.", "see also: foo.", "EXAMPLE: x", "Parses `foo files.", "Bold **text.", "@param x",
+     "(see #foo)", "review the code", "Review: the code", "HACK: a fix", "todo later", "encoding: ascii",
+     "A gem: encoding: utf-8 inside", "A coding=utf-8 thing", "Frozen_string_literal: true"].each do |summary|
+      assert_raises(Veragem::Error, summary.inspect) { Veragem::Project.check(:summary, summary) }
     end
     ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.", "Squares: x ** 2.",
-     "Code `a **b` too."].each do |summary|
-      assert_equal summary, project(summary:).summary
+     "Code `a **b` too.", "Review the code", "Todo later", "Notebook support", "Decoding: utf-8 fast",
+     "see the docs"].each do |summary|
+      assert_equal summary, Veragem::Project.check(:summary, summary)
     end
   end
 
