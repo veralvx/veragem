@@ -36,7 +36,7 @@ module Veragem
 
     # The names and the options given, each option refused as OptionParser refuses a licence: before
     # the name, and any question.
-    def self.arguments(argv)
+    private_class_method def self.arguments(argv)
       given = {} #: Hash[Symbol, String | bool]
       # an argument of invalid UTF-8 as bytes, as git's values are: OptionParser's matching raises on
       # it, Project refuses it
@@ -44,30 +44,26 @@ module Veragem
       given.each { |key, value| Project.check(key, value) if value.is_a?(String) }
       [names, given]
     end
-    private_class_method :arguments
 
     # From a terminal: the names counted, as without one, then the name checked before any question.
-    def self.ask(names, given, defaults, questions)
+    private_class_method def self.ask(names, given, defaults, questions)
       name = questions.name((name_of(names) unless names.empty?), exe: given[:exe] == true)
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
       Project.new(name, questions.values(name, given, defaults))
     end
-    private_class_method :ask
 
-    def self.name_of(names)
+    private_class_method def self.name_of(names)
       return names.fetch(0) if names.size == 1
 
       raise Error, "one gem name, not #{names.size} (bundle veragem --help)"
     end
-    private_class_method :name_of
 
-    def self.required(values)
+    private_class_method def self.required(values)
       %i[author github].each { raise Error, "no #{it}: --#{it}, or git config #{GIT_CONFIG[it]}" unless values[it] }
       values.compact
     end
-    private_class_method :required
 
-    def self.parser
+    private_class_method def self.parser
       OptionParser.new(BANNER) do |opts|
         opts.program_name = "bundle veragem"
         opts.version = VERSION
@@ -79,17 +75,15 @@ module Veragem
         opts.on("--summary=TEXT", "The gem's summary (default: A Ruby gem.)")
       end
     end
-    private_class_method :parser
 
     # A git config value, nil when unset or git is missing: its bytes, which Project reads as UTF-8
     # whatever the locale.
-    def self.git_config(key)
+    private_class_method def self.git_config(key)
       command = ["git", "config", "--get", key]
       value = IO.popen(command, err: File::NULL, external_encoding: Encoding::BINARY, &:read).strip
       value unless value.empty?
     rescue SystemCallError
       nil
     end
-    private_class_method :git_config
   end
 end

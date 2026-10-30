@@ -67,30 +67,28 @@ module Veragem
       raise Error, "#{target} already exists" if File.exist?(target) || File.symlink?(target)
     end
 
-    def self.files(project)
+    private_class_method def self.files(project)
       check_name(project.name, project.exe)
       licenses = LICENSE_FILES.reject { |_, spdx| project.licenses.include?(spdx) }.keys
       (templates(project.exe) - licenses).to_h { [it, path_of(it, project.name)] }
     end
-    private_class_method :files
 
     # The template's files a kind takes (+exe+, a command line's too), each licence's included.
-    def self.templates(exe)
+    private_class_method def self.templates(exe)
       files = Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).sort
       files.reject { File.directory?(File.join(TEMPLATE, it)) || (!exe && EXE.include?(it)) }
     end
-    private_class_method :templates
 
-    def self.tools = File.read(File.join(TEMPLATE, "Gemfile")).scan(/^gem "([^"]+)"/).flatten
-    private_class_method :tools
+    private_class_method def self.tools
+      File.read(File.join(TEMPLATE, "Gemfile")).scan(/^gem "([^"]+)"/).flatten
+    end
 
-    def self.path_of(file, name)
+    private_class_method def self.path_of(file, name)
       file.delete_suffix(".erb").gsub("%name%", name).gsub("%path%", Name.path(name))
           .gsub("%underscored%", Name.underscored(name))
     end
-    private_class_method :path_of
 
-    def self.removed_unless_done(target)
+    private_class_method def self.removed_unless_done(target)
       done = false
       begin
         yield
@@ -99,9 +97,8 @@ module Veragem
         FileUtils.rm_rf(target) unless done
       end
     end
-    private_class_method :removed_unless_done
 
-    def self.write(source, destination, project)
+    private_class_method def self.write(source, destination, project)
       FileUtils.mkdir_p(File.dirname(destination))
       File.binwrite(destination, source.end_with?(".erb") ? render(source, project) : File.binread(source))
       return unless File.executable?(source)
@@ -110,17 +107,14 @@ module Veragem
       mode = File.stat(destination).mode
       File.chmod(mode | ((mode & 0o444) >> 2), destination)
     end
-    private_class_method :write
 
     # The ERB's values are +project+'s: its methods, called bare.
-    def self.render(source, project)
+    private_class_method def self.render(source, project)
       ERB.new(File.read(source, encoding: Encoding::UTF_8), trim_mode: "-").result(project.instance_eval { binding })
     end
-    private_class_method :render
 
-    def self.git(dir, *args)
+    private_class_method def self.git(dir, *args)
       system(GIT_LOCAL, "git", *args, chdir: dir) or raise Error, "git #{args.join(" ")} failed in #{dir}"
     end
-    private_class_method :git
   end
 end

@@ -94,41 +94,38 @@ module Veragem
     end
 
     # The gem writes lib/<path>.rb, `module` for each of its modules, and tests that name the first.
-    def self.check_modules(name)
+    private_class_method def self.check_modules(name)
       nestings = nestings_of(name)
       shadowed, found, *kinds = probe(library_of(name), path(name), nestings)
       check_shadowing(name, shadowed.to_s, found.to_s)
       check_defined(name, nestings.zip(kinds).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
     end
-    private_class_method :check_modules
 
     # Its lib/<path>.rb, first on the load path, must not shadow a library its tools require
     # (lib/json.rb, JSON's); its tests' classes, Minitest::Test's, and its gemspec, which `gem build`
     # evaluates in Gem::Specification, must find its module, not one of theirs (`lifecycle_hooks`:
     # Minitest::Test::LifecycleHooks).
-    def self.check_shadowing(name, shadowed, found)
+    private_class_method def self.check_shadowing(name, shadowed, found)
       raise Error, "invalid gem name #{name}: its lib/#{path(name)}.rb would shadow #{shadowed}" unless shadowed.empty?
       raise Error, "invalid gem name #{name}: #{found} for its module" unless found.empty?
     end
-    private_class_method :check_shadowing
 
     # The +defined+ nestings, outermost first, each with its class: the gem's own module, +innermost+,
     # one defined already (Comparable) would reopen; an outer one that is a class (Set, Logger), it
     # could not open.
-    def self.check_defined(name, defined, innermost)
+    private_class_method def self.check_defined(name, defined, innermost)
       raise Error, "invalid gem name #{name}: #{innermost} is already defined" if defined.last&.first == innermost
 
       outer = defined.find { |_, kind| kind != "Module" }
       raise Error, "invalid gem name #{name}: #{outer[0]} is a #{outer[1]}, not a module" if outer
     end
-    private_class_method :check_defined
 
     # The gem's top-level library: `date-holidays`' date
-    def self.library_of(name) = name.split("-").fetch(0)
-    private_class_method :library_of
+    private_class_method def self.library_of(name) = name.split("-").fetch(0)
 
     # Each of its modules' full names, outermost first: `my-gem`'s My, My::Gem.
-    def self.nestings_of(name) = modules(name).then { |modules| (1..modules.size).map { modules.first(it).join("::") } }
-    private_class_method :nestings_of
+    private_class_method def self.nestings_of(name)
+      modules(name).then { |modules| (1..modules.size).map { modules.first(it).join("::") } }
+    end
   end
 end
