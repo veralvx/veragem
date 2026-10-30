@@ -13,12 +13,14 @@ module Veragem
     # (.yard-lint.yml) takes for one written informally.
     TAG = /\A(?:@|\(see\b|(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since
             |returns|raises|example):)/xi
-    # RuboCop's annotation keywords, first in a comment and a colon or a space after: an annotation,
-    # no documentation, but where one is a sentence's capitalized first word, a space after it.
-    ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)(?=[:\s])/i
-    # A magic comment, as RuboCop reads one anywhere in a comment (an encoding's, Ruby's own rule),
-    # or a RuboCop directive, which would turn its cops off, or fail them.
-    MAGIC = /\b(?:en)?coding\s*[:=]|\Afrozen_string_literal\s*:|\brubocop\s*:/i
+    # A RuboCop annotation, no documentation, as its AnnotationComment reads one: a keyword first, then
+    # a colon, spaces before it or not, or a space -- but a sentence's capitalized first word, a word
+    # after it.
+    ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)\b(\s*:)?(\s+)?(\S+)?/i
+    # A magic comment as RuboCop reads one -- an encoding's anywhere, lower-case (Ruby's rule), a
+    # frozen string literal's first, in any case -- or a RuboCop directive, which would turn its cops
+    # off, or fail them.
+    MAGIC = /\b(?:en)?coding\s*[:=]|\A(?i:frozen[_-]string[_-]literal):|(?i:\brubocop\s*:)/
     private_constant :GITHUB, :TAG, :ANNOTATION, :MAGIC
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
@@ -166,8 +168,10 @@ module Veragem
     end
 
     private_class_method def self.annotation?(summary)
-      keyword = summary[ANNOTATION, 1] or return false
-      keyword != keyword.capitalize || summary[keyword.size] != " "
+      keyword, colon, space, note = summary.match(ANNOTATION)&.captures
+      return false unless keyword && (colon || space)
+
+      !(keyword == keyword.capitalize && !colon && note)
     end
 
     private

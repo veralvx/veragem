@@ -9,12 +9,15 @@ class TestProject < Minitest::Test
 
   REFUSED_SUMMARIES = ["Note: a fork.", "see also: foo.", "EXAMPLE: x", "Parses `foo files.", "Bold **text.",
                        "@param x", "(see #foo)", "review the code", "Review: the code", "HACK: a fix",
-                       "todo later", "encoding: ascii", "A gem: encoding: utf-8 inside", "A coding=utf-8 thing",
-                       "Frozen_string_literal: true", "rubocop:disable all", "Parses C# rubocop:disable all"].freeze
+                       "Note : a fork.", "Hack :x", "todo later", "NOTE a fork", "encoding: ascii",
+                       "A gem: encoding: utf-8 inside", "A coding=utf-8 thing", "coding : x",
+                       "Frozen_string_literal: true", "frozen-string-literal: x", "rubocop:disable all",
+                       "Parses C# rubocop:disable all", "Rubocop:disable all"].freeze
   TAKEN_SUMMARIES = ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.",
                      "Squares: x ** 2.", "Code `a **b` too.", "Review the code", "Todo later", "Notebook support",
                      "Decoding: utf-8 fast", "see the docs", "Note-taking app", "Hack's toolkit", "Note.", "Review",
-                     "note-taking app"].freeze
+                     "note-taking app", "Notes: x", "Encoding: helpers", "Coding: kata", "Encoding=x",
+                     "Frozen string literal: x", "A frozen_string_literal: true"].freeze
 
   def test_the_github_user_follows_githubs_rule
     ["jane", "jane-doe", "J4ne", "a" * 39].each { assert_equal it, project(github: it).github }
