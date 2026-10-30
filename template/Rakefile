@@ -22,8 +22,8 @@ YARD::Rake::YardocTask.new { it.files = ["lib/**/*.rb"] }
 
 task default: %i[rubocop steep test yard_lint]
 
-# TypeProf infers; Steep, against sig/, is the gate. TypeProf reads Ruby's core signatures alone,
-# not the standard library's.
+# Steep, against sig/, is the gate. TypeProf reads Ruby's core signatures alone, not the standard
+# library's.
 desc "Print the signatures TypeProf infers from lib/, to start sig/ from, and what it finds amiss"
 task :typeprof do
   sh "typeprof", "--show-errors", "lib"

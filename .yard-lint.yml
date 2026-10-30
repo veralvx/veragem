@@ -1,17 +1,11 @@
-# YARD-Lint Configuration (Strict Mode)
-# See https://github.com/mensfeld/yard-lint for documentation
-#
-# This is a strict configuration suitable for new projects with high documentation standards.
-# All validators are set to 'error' severity (no warnings or conventions).
-# Minimum coverage is set to 100%.
+# yard-lint's strict preset (https://github.com/mensfeld/yard-lint): each enabled validator an
+# error, coverage at 100%.
 
-# Global settings for all validators
 AllValidators:
   # YARD command-line options (applied to all validators by default). The public API alone is
   # documented: .yardopts's query, which yard-lint's coverage reads too.
   YardOptions: []
 
-  # Global file exclusion patterns
   Exclude:
     - '\.git'
     - 'vendor/**/*'
@@ -19,80 +13,60 @@ AllValidators:
     - 'spec/**/*'
     - 'test/**/*'
 
-  # Exit code behavior (error, warning, convention, never)
+  # error, warning, convention or never
   FailOnSeverity: error
 
-  # Minimum documentation coverage percentage (0-100)
-  # Fails if coverage is below this threshold
+  # percent (0-100); a lower coverage fails
   MinCoverage: 100.0
 
-  # Diff mode settings
   DiffMode:
-    # Default base ref for --diff (auto-detects main/master if not specified)
+    # --diff's base ref; ~ detects main or master
     DefaultBaseRef: ~
 
-# Documentation validators
 Documentation/UndocumentedObjects:
   Description: 'Checks for classes, modules, and methods without documentation.'
   Enabled: true
   Severity: error
   ExcludedMethods:
-    - 'initialize/0'  # Exclude parameter-less initialize
-    - '/^_/'          # Exclude private methods (by convention)
-  # ExcludedObjects matches the fully-qualified name of ANY object (class,
-  # module, method, or constant). Unlike ExcludedMethods it can exclude
-  # constants and be matched against a full path (exact name, name/arity, or /regex/).
-  # ExcludedObjects:
-  #   - 'MyApp::Config::DEFAULTS'    # exact fully-qualified constant
-  #   - '/^MyApp::Keys::KEY_/'       # every KEY_* constant under MyApp::Keys
-  #   - 'MyApp::Api#call/1'          # only MyApp::Api#call with exactly 1 param
-  # AllowedParentClasses:
-  #   - StandardError           # Skip error subclasses
-  #   - ApplicationRecord       # Skip Rails model subclasses
+    - 'initialize/0'
+    - '/^_/'          # private by convention
+  # unset: ExcludedObjects, any object's full name (a constant's too): exact, name/arity or /regex/
+  # ('MyApp::Api#call/1'); AllowedParentClasses (StandardError: its subclasses skipped)
 
 Documentation/UndocumentedMethodArguments:
   Description: 'Checks for method parameters without @param tags.'
   Enabled: true
   Severity: error
-  # Match each parameter to a @param tag by name (catches a misnamed @param).
+  # each parameter matched to its @param by name: a misnamed @param caught
   CheckParameterNames: true
-  # Opt-in: skip methods with no documentation at all (reported by
-  # Documentation/UndocumentedObjects) instead of flagging them here too.
+  # true skips a method with no documentation at all: Documentation/UndocumentedObjects reports it
   SkipFullyUndocumented: false
-  # AllowedParentClasses:
-  #   - StandardError
-  # AllowedMethods: skip @param checks for specific methods (exact name, name/arity, /regex/)
-  #   - call
-  #   - perform
-  #   - initialize/1
+  # unset: AllowedParentClasses; AllowedMethods, skipped (exact name, name/arity or /regex/)
 
 Documentation/UndocumentedBooleanMethods:
   Description: 'Checks that question mark methods document their boolean return.'
   Enabled: true
   Severity: error
-  # AllowedParentClasses:
-  #   - StandardError
+  # unset: AllowedParentClasses
 
 Documentation/UndocumentedOptions:
   Description: 'Detects methods with options hash parameters but no @option tags.'
   Enabled: true
   Severity: error
-  # AllowedParentClasses:
-  #   - StandardError
+  # unset: AllowedParentClasses
 
 Documentation/MissingReturn:
   Description: 'Requires @return tags on all methods (opt-in for strict documentation).'
-  Enabled: true  # Enabled in strict mode
+  Enabled: true
   Severity: error
   ExcludedMethods:
-    - 'initialize'    # Exclude all initialize methods
-    # - '/^_/'        # Uncomment to exclude private methods (by convention)
-  # AllowedParentClasses:
-  #   - StandardError
+    - 'initialize'
+    # - '/^_/'        # private by convention, once uncommented
+  # unset: AllowedParentClasses
 
 Documentation/OrphanedDocComment:
   Description: 'Detects YARD comment blocks with tags not attached to any documentable construct.'
-  Enabled: true  # Enabled in strict mode
+  Enabled: true
   Severity: error
 
 Documentation/MarkdownSyntax:
@@ -116,23 +90,18 @@ Documentation/BlankLineBeforeDefinition:
   EnabledPatterns:
     SingleBlankLine: true
     OrphanedDocs: true
-  # Comment lines matching any of these patterns are NOT treated as
-  # documentation, so a blank line below them is not reported as a detached
-  # docstring. Each entry is a /regex/ or a literal matched at word boundaries.
-  # Handy for commented-out code in constant blocks, FIXME notes, separators, etc.
-  # IgnoredCommentPatterns:
-  #   - '/\A#\s*\w[\w:]*\s*=/'   # commented-out assignments, e.g. "# KEY = 1"
-  #   - 'FIXME'                  # a comment with the word FIXME
+  # unset: IgnoredCommentPatterns, comment lines (/regex/ or a literal at word boundaries) taken for
+  # no documentation, so no detached docstring above a blank line: commented-out code, FIXME notes
 
 Documentation/LineLength:
   Description: 'Detects documentation comment lines that exceed the configured maximum length.'
-  Enabled: false  # Opt-in validator
+  Enabled: false
   Severity: error
   MaxLength: 120
 
 Documentation/UnderfilledLines:
   Description: 'Detects documentation prose that wraps before using the available line width.'
-  Enabled: false  # Opt-in validator (heuristic; stays convention even in strict)
+  Enabled: false  # heuristic; convention even in strict
   Severity: convention
   MaxLength: 120
   MinTrailingSpace: 20
@@ -158,7 +127,6 @@ Documentation/ReferenceTypo:
   Enabled: true
   Severity: error
 
-# Tags validators
 Tags/Order:
   Description: 'Enforces consistent ordering of YARD tags.'
   Enabled: true
@@ -188,9 +156,8 @@ Tags/InvalidTypes:
     - yieldreturn
     - yieldparam
     - raise
-  # The strict preset opts in: flag CamelCase type names that are neither loaded
-  # Ruby constants nor defined in the analyzed codebase (catches typos). Add any
-  # legitimate dependency types to ExtraTypes to silence false positives.
+  # flags a CamelCase type neither a loaded constant nor defined in the code: a typo, or a
+  # dependency's type, which ExtraTypes admits
   StrictConstantNames: true
 
 Tags/TypeSyntax:
@@ -219,7 +186,7 @@ Tags/MeaninglessTag:
 
 Tags/MissingYield:
   Description: 'Detects methods that yield to a block without a @yield, @yieldparam, or @yieldreturn tag.'
-  Enabled: true  # Enabled in strict mode
+  Enabled: true
   Severity: error
   YardOptions: [] # the public API alone, as the others: it reads every visibility otherwise
 
@@ -243,13 +210,12 @@ Tags/TagTypePosition:
   CheckedTags:
     - param
     - option
-  # EnforcedStyle: 'type_after_name' (YARD standard: @param name [Type])
-  #                or 'type_first' (@param [Type] name)
+  # type_after_name, @param name [Type] (YARD's), or type_first, @param [Type] name
   EnforcedStyle: type_after_name
 
 Tags/ApiTags:
   Description: 'Enforces @api tags on public objects.'
-  Enabled: false  # Opt-in validator
+  Enabled: false
   Severity: error
   AllowedApis:
     - public
@@ -266,19 +232,15 @@ Tags/ExampleSyntax:
   Description: 'Validates Ruby syntax in @example tags.'
   Enabled: true
   Severity: error
-  # Opt-in: skip @example blocks that are interactive console transcripts
-  # (irb/pry sessions, their `=>` output, or shell `$` prompts) rather than
-  # runnable Ruby. Off by default so a real syntax error is not hidden.
+  # true skips @example console transcripts (irb or pry, `=>` output, `$` prompts): off, so no real
+  # syntax error hides
   SkipNonRuby: false
 
 Tags/ExampleStyle:
   Description: 'Validates code style in @example tags using RuboCop/StandardRB.'
-  Enabled: false  # Opt-in validator (requires RuboCop or StandardRB)
+  Enabled: false  # requires RuboCop or StandardRB
   Severity: convention
-  # Linter: auto  # Uncomment to explicitly configure: 'auto', 'rubocop', 'standard', 'none'
-  # SkipPatterns:  # Uncomment to skip examples matching patterns
-  #   - '/skip-lint/i'
-  #   - '/bad code/i'
+  # unset: Linter (auto, rubocop, standard or none); SkipPatterns, examples skipped ('/skip-lint/i')
 
 Tags/RedundantParamDescription:
   Description: 'Detects meaningless parameter descriptions that add no value.'
@@ -318,9 +280,8 @@ Tags/InformalNotation:
   Severity: error
   CaseSensitive: false
   RequireStartOfLine: true
-  # Opt-in: also skip 4-space/tab indented Markdown code blocks (not just
-  # fenced ``` blocks). Off by default - indented text is also used for list
-  # continuations and wrapped prose, which would then be skipped too.
+  # true skips indented Markdown code blocks too, not only fenced ones: off, as list continuations
+  # and wrapped prose are indented too
   SkipIndentedCodeBlocks: false
   Patterns:
     Note: '@note'
@@ -354,7 +315,7 @@ Tags/NonAsciiType:
 
 Tags/TagGroupSeparator:
   Description: 'Enforces blank line separators between different YARD tag groups.'
-  Enabled: false  # Opt-in validator
+  Enabled: false
   Severity: error
   TagGroups:
     param: [param, option]
@@ -367,31 +328,23 @@ Tags/TagGroupSeparator:
 
 Tags/TagSeparator:
   Description: 'Enforces a blank line between every consecutive YARD tag.'
-  Enabled: false  # Opt-in validator
+  Enabled: false
   Severity: error
   Exempt: []
   RequireAfterDescription: false
 
 Tags/ForbiddenTags:
   Description: 'Detects forbidden tag and type combinations.'
-  Enabled: false  # Opt-in validator
+  Enabled: false
   Severity: error
   ForbiddenPatterns: []
-  # Example patterns:
-  # - Tag: return
-  #   Types:
-  #     - void
-  # - Tag: param
-  #   Types:
-  #     - Object
-  # - Tag: api  # Forbids @api tag entirely (no Types = any occurrence)
+  # e.g. {Tag: return, Types: [void]}; a Tag without Types forbids the tag outright
 
 Tags/OverloadConsistency:
   Description: 'Checks the tags of each @overload against its own signature.'
   Enabled: true
   Severity: error
 
-# Warnings validators - catches YARD parser errors
 Warnings/SyntaxError:
   Description: 'Detects Ruby files YARD cannot parse (syntax errors).'
   Enabled: true
@@ -427,7 +380,6 @@ Warnings/UnknownParameterName:
   Enabled: true
   Severity: error
 
-# Semantic validators
 Semantic/AbstractMethods:
   Description: 'Ensures @abstract methods do not have real implementations.'
   Enabled: true

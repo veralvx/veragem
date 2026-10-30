@@ -1,10 +1,10 @@
 AllCops:
-  EnabledByDefault: false # if all optional cops should be enabled or not
+  EnabledByDefault: false
   Exclude:
     - "result*/**/*" # `nix build`'s links: the gem installed, which the project index would take for a second copy
   NewCops: enable # pending cops on now, not only at the next major release
-  ProjectIndexIncludesGems: true # indexes the sources of every gem in the project’s bundle. Has effects only when running with bundle exec rubocop
-  UseProjectIndex: true # uses rubydex gem: indexes the project -> sees across files (e.g. method defined twice)
+  ProjectIndexIncludesGems: true # the bundle's gems' sources indexed too: under `bundle exec rubocop` alone
+  UseProjectIndex: true # the rubydex gem indexes the project: cops see across files (a method defined twice)
 
 plugins:
   - rubocop-minitest
