@@ -66,13 +66,14 @@ class TestCitationQuestions < Minitest::Test
     assert_equal [nil, nil], [gem.orcid, gem.keywords]
   end
 
-  # asked last, the GitHub user offered, which may name an organization: "-" for none
+  # asked last, the GitHub user offered, which may name an organization: "-" for none, Unicode's
+  # spaces around it too
   def test_at_a_terminal_the_alias_offers_the_github_user
     gem, shown = ask("my_gem", "--citation", answers: [""] * 11)
 
     assert_equal "jane", gem.alias_name
     assert_match(/GitHub user \[jane\]: Alias, CITATION.cff's \(- for none\) \[jane\]: \z/, shown)
-    gem, shown = ask("my_gem", "--citation", "--github=acme", answers: [*[""] * 9, "-"])
+    gem, shown = ask("my_gem", "--citation", "--github=acme", answers: [*[""] * 9, "\u00A0-"])
 
     assert_nil gem.alias_name
     assert_includes shown, "Alias, CITATION.cff's (- for none) [acme]: "

@@ -107,6 +107,7 @@ module Veragem
     @output: _Output
     @dir: String
 
+    def self.none?: (String text) -> bool
     def initialize: (_Input input, _Output output, String dir) -> void
     def name: (String? given, exe: bool, citation: bool) -> String
     def values: (String name, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults)

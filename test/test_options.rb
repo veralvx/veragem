@@ -30,6 +30,7 @@ class TestOptions < Minitest::Test
     { "--email=-" => "email \"-\": a question's none; for none, --no-email",
       "--given-names=-" => "given names \"-\": a question's none; for none, --no-given-names",
       "--alias= - " => "alias \"-\": a question's none; for none, --no-alias",
+      "--alias=\u00A0-\u3000" => "alias \"-\": a question's none; for none, --no-alias",
       "--orcid=-" => "orcid \"-\": a question's none; for none, leave --orcid out",
       "--keywords=-" => "keywords \"-\": a question's none; for none, leave --keywords out" }.each do |option, why|
       error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", option) }

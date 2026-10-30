@@ -69,7 +69,7 @@ module Veragem
     # can give it.
     private_class_method def self.checked(key, value)
       none = Project::OPTIONAL[key]
-      if none && value.b.strip == "-"
+      if none && Questions.none?(value)
         raise Error, %(invalid #{key.name.tr("_", " ")} "-": a question's none; for none, #{none})
       end
 

@@ -21,6 +21,15 @@ module Veragem
     }.freeze
     private_constant :QUESTIONS
 
+    # Whether +text+ is "-", an optional question's none: spaces around it stripped, Unicode's too, as
+    # a value's are.
+    # @param text [String] an answer or an option's value, its bytes as given
+    # @return [Boolean]
+    def self.none?(text)
+      text = text.dup.force_encoding(Encoding::UTF_8)
+      text.valid_encoding? && text.match?(/\A[[:space:]]*-[[:space:]]*\z/)
+    end
+
     # Questions on +output+, answered on +input+, for a gem generated into +dir+.
     # @param input [#gets, #tty?] where the answers are typed
     # @param output [#print, #puts] where the questions are shown
@@ -87,7 +96,7 @@ module Veragem
       default = offered(question, default, check)
       loop do
         reply = read(question, default, optional) || default
-        return if optional && [nil, "-"].include?(reply)
+        return if optional && (reply.nil? || Questions.none?(reply))
 
         value = reply && checked(question, reply, check)
         return value unless value.nil?
