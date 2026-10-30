@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "yaml"
 
 # A project's values, checked, and what follows from them.
 class TestProject < Minitest::Test
@@ -68,6 +69,13 @@ class TestProject < Minitest::Test
       Pbt.property(Pbt.printable_string) do |value|
         assert_equal value, eval(gem.quote(value)) # rubocop:disable Security/Eval -- generated strings, read back
       end
+    end
+  end
+
+  def test_a_yaml_value_reads_back_as_itself
+    gem = project
+    Pbt.assert do
+      Pbt.property(Pbt.printable_string) { |value| assert_equal value, YAML.safe_load("v: #{gem.yaml(value)}")["v"] }
     end
   end
 

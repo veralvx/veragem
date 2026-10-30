@@ -36,10 +36,10 @@ class TestVeragem < Minitest::Test
   # its input a terminal, the directory given is the one checked before any question
   def test_from_a_terminal_it_asks_into_the_directory_given
     in_tmpdir do |dir|
-      terminal = StringIO.new("n\n\n\n").tap { |io| def io.tty? = true }
+      terminal = StringIO.new("n\nn\n\n\n").tap { |io| def io.tty? = true }
       _, err = capture_io { Veragem.run(ARGS, dir:, input: terminal) }
 
-      assert_match(%r{\AA command line, exe/my_gem \(y/n\) \[n\]: License}, err)
+      assert_match(%r{\AA command line, exe/my_gem \(y/n\) \[n\]: A citation file, CITATION\.cff \(y/n\) \[n\]: }, err)
       error = assert_raises(Veragem::Error) { Veragem.run(ARGS, dir:, input: terminal) }
       assert_equal "#{File.join(dir, "my_gem")} already exists", error.message
     end

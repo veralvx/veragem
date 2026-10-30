@@ -1,0 +1,30 @@
+# The citation GitHub's "Cite this repository" and Zenodo read (Citation File Format 1.2.0);
+# `rake bump` sets version and date-released at each release.
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+title: <%= yaml(name) %>
+abstract: <%= yaml(summary) %>
+authors:
+  - family-names: <%= yaml(family_names) %>
+<%- if given_names -%>
+    given-names: <%= yaml(given_names) %>
+<%- end -%>
+<%- if orcid -%>
+    orcid: "<%= orcid %>"
+<%- end -%>
+<%- if keywords -%>
+keywords:
+<%- keywords.each do |keyword| -%>
+  - <%= yaml(keyword) %>
+<%- end -%>
+<%- end -%>
+version: "0.1.0"
+date-released: "<%= today %>"
+<%- if licenses.one? -%>
+license: <%= licenses.first %>
+<%- else -%>
+# no license: CFF writes MIT OR Apache-2.0 as a list, which Zenodo's import refuses
+# (zenodo/zenodo#2515); Zenodo takes the licence GitHub detects
+<%- end -%>
+repository-code: "https://github.com/<%= github %>/<%= name %>"
+repository-artifact: "https://rubygems.org/gems/<%= name %>"

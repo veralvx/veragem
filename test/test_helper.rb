@@ -65,6 +65,12 @@ module Veragem
     end
   end
 
+  # What the citation's tests share: the refusal of its values without one, and an ORCID iD.
+  module CitationSupport
+    NEEDED = "--given-names, --family-names, --orcid and --keywords are CITATION.cff's: they need a citation"
+    ORCID = "https://orcid.org/0000-0002-1825-0097"
+  end
+
   # What the generator's tests share: each kind generated, and what it holds.
   module GeneratedSupport
     # Each kind and license, generated: its project, its directory and its files.

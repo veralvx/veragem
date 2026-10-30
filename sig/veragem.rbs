@@ -22,6 +22,21 @@ module Veragem
     private def self.nestings_of: (String name) -> Array[String]
   end
 
+  module Citation
+    KEYS: Array[Symbol]
+    ORCID: Regexp
+    ORCID_BLOCKS: Array[Range[Integer]]
+
+    def self.cited?: (Hash[Symbol, String | bool | nil] values) -> bool
+    def self.check_values: (Hash[Symbol, String | bool | nil] values, bool citation) -> void
+    def self.check_name: (String name, bool citation) -> void
+    def self.default: (Symbol key, Hash[Symbol, String | bool | nil] values) -> String?
+    def self.names: (String field, String names) -> String
+    def self.keywords: (String value) { (String keyword) -> String } -> Array[String]
+    def self.orcid: (String value) -> String
+    private def self.valid?: (String digits) -> bool
+  end
+
   class Project
     GITHUB: Regexp
     LICENSES: Hash[String, Array[String]]
@@ -34,6 +49,11 @@ module Veragem
     attr_reader summary: String
     attr_reader license: String
     attr_reader exe: bool
+    attr_reader citation: bool
+    attr_reader given_names: String?
+    attr_reader family_names: String?
+    attr_reader orcid: String?
+    attr_reader keywords: Array[String]?
 
     def initialize: (String name, Hash[Symbol, untyped] values) -> void
     def path: () -> String
@@ -42,16 +62,21 @@ module Veragem
     def modules: () -> Array[String]
     def licenses: () -> Array[String]
     def year: () -> Integer
+    def today: () -> String
+    def yaml: (String value) -> String
     def quote: (String value) -> String
     def nest: (String body, ?doc: String?) -> String
     def self.quote: (String value) -> String
     def self.check: (Symbol key, String value) -> String
     private def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     private def self.text: (String field, String value) -> String
+    private def self.line: (String field, String value) -> String
     private def self.documented: (String summary) -> String
 
     private
 
+    def extras: (Hash[Symbol, untyped] values) -> void
+    def cite: (Hash[Symbol, untyped] values) -> void
     def indent: (String code) -> String
   end
 
@@ -68,20 +93,22 @@ module Veragem
     end
 
     QUESTIONS: Hash[Symbol, String]
+    OPTIONAL: Array[Symbol]
 
     @input: _Input
     @output: _Output
     @dir: String
 
     def initialize: (_Input input, _Output output, String dir) -> void
-    def name: (String? given, exe: bool) -> String
+    def name: (String? given, exe: bool, citation: bool) -> String
     def values: (String name, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults)
               -> Hash[Symbol, String | bool | nil]
 
     private
 
-    def check_name: (String name, bool exe) -> String
-    def answer: (Symbol key, String text, String name) -> (String | bool)
+    def check_name: (String name, bool exe, bool citation) -> String
+    def answer: (Symbol key, String text, String name, Hash[Symbol, String | bool | nil] values) -> (String | bool)
+    def default: (Symbol key, Hash[Symbol, String] defaults, Hash[Symbol, String | bool | nil] values) -> String?
     def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?optional: bool) -> (String | bool | nil)
     def offered: (String question, String? default, ^(String) -> (String | bool) check) -> String?
     def read: (String question, String? default) -> String?
@@ -95,6 +122,7 @@ module Veragem
     GIT_CONFIG: Hash[Symbol, String]
     DEFAULTS: Hash[Symbol, String]
     BANNER: String
+    OPTIONS: Array[[String, String]]
 
     def self.parse: (Array[String] argv, ?dir: String, ?config: ^(String) -> String?, ?input: Questions::_Input,
                      ?output: Questions::_Output) -> Project
@@ -112,6 +140,7 @@ module Veragem
     EXE: Array[String]
     GIT_LOCAL: Hash[String, nil]
     LICENSE_FILES: Hash[String, String]
+    CITATION: String
 
     def self.generate: (Project project, String target) -> void
     def self.check_name: (String name, bool exe) -> void

@@ -7,13 +7,20 @@ module Veragem
     # Each value's question, in the order asked; the name's comes first.
     QUESTIONS = {
       exe: "A command line, exe/%<name>s (y/n)",
+      citation: "A citation file, CITATION.cff (y/n)",
       license: "License (mit, apache or dual)",
       summary: "Summary",
       author: "Author",
+      family_names: "Family names, CITATION.cff's",
+      given_names: "Given names, CITATION.cff's",
+      orcid: "ORCID iD, CITATION.cff's",
+      keywords: "Keywords, comma-separated, CITATION.cff's",
       email: "Email",
       github: "GitHub user"
     }.freeze
-    private_constant :QUESTIONS
+    # The questions an empty answer may leave unanswered.
+    OPTIONAL = %i[email given_names orcid keywords].freeze
+    private_constant :QUESTIONS, :OPTIONAL
 
     # Generating into +dir+.
     # @param input [#gets, #tty?] where the answers are typed
@@ -26,43 +33,56 @@ module Veragem
       @dir = dir
     end
 
-    # The name, +given+ or else asked for: checked as far as it and +exe+ decide, before the rest.
+    # The name, +given+ or else asked for: checked as far as it, +exe+ and +citation+ decide, before
+    # the rest.
     # @param given [String, nil] the name the arguments give
     # @param exe [Boolean] whether --exe is given
+    # @param citation [Boolean] whether --citation, or a citation's value, is given
     # @return [String]
     # @raise [Veragem::Error] +given+ is refused, or nothing is answered
-    def name(given, exe:)
-      return check_name(given, exe) if given
+    def name(given, exe:, citation:)
+      return check_name(given, exe, citation) if given
 
-      ask("Gem name", check: -> { check_name(it, exe) }) #: String
+      ask("Gem name", check: -> { check_name(it, exe, citation) }) #: String
     end
 
-    # +given+ (the options) and the answers to the rest, +defaults+ offered.
+    # +given+ (the options) and the answers to the rest, +defaults+ offered; a citation's values asked
+    # only for a citation, the author's words offered for its names.
     # @param name [String] the gem's, checked
     # @param given [Hash{Symbol => String, Boolean}] the options' values
     # @param defaults [Hash{Symbol => String}] git's and Options' own
-    # @return [Hash{Symbol => String, Boolean, nil}] a value for each key, the email's nil for none
+    # @return [Hash{Symbol => String, Boolean, nil}] a value for each key asked, nil for none
     # @raise [Veragem::Error] nothing is answered, or the terminal cannot be asked
     def values(name, given, defaults)
-      defaults = { exe: "n", **defaults }
-      asked = QUESTIONS.except(*given.keys).to_h do |key, question|
-        [key, ask(format(question, name:), defaults[key], optional: key == :email, check: -> { answer(key, it, name) })]
+      values = given.dup #: Hash[Symbol, String | bool | nil]
+      QUESTIONS.except(*given.keys).each do |key, question|
+        next if Citation::KEYS.include?(key) && values[:citation] != true
+
+        check = -> { answer(key, it, name, values) }
+        offer = default(key, defaults, values)
+        values[key] = ask(format(question, name:), offer, optional: OPTIONAL.include?(key), check:)
       end
-      asked.merge(given)
+      values
     end
 
     private
 
-    def check_name(name, exe)
+    def check_name(name, exe, citation)
       Name.check(name).tap do |checked|
         Generator.check_name(checked, exe)
+        Citation.check_name(checked, citation)
         Generator.check_target(File.join(@dir, checked))
       end
     end
 
-    def answer(key, text, name)
+    def answer(key, text, name, values)
       case key
       when :exe then yes?(text).tap { Generator.check_name(name, it) }
+      when :citation
+        yes?(text).tap do |cited|
+          Citation.check_values(values, cited)
+          Citation.check_name(name, cited)
+        end
       when :license then Project.check(key, completed(text))
       else Project.check(key, text)
       end
@@ -118,6 +138,8 @@ module Veragem
       else raise Error, "y or n"
       end
     end
+
+    def default(key, defaults, values) = Citation.default(key, values) || { exe: "n", **defaults }[key]
 
     # A licence abbreviated, completed as the option's is: when one licence alone starts so.
     def completed(answer)

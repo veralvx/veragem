@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "json"
+
 module Veragem
   # The gem to generate: the values given, checked, and what follows from them.
   class Project
@@ -12,7 +14,8 @@ module Veragem
                      |raises|example):/xi
     private_constant :GITHUB, :INFORMAL_TAG
 
-    attr_reader :name, :author, :email, :github, :summary, :license, :exe
+    attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
+                :orcid, :keywords
 
     # +value+ as a Ruby string literal, as written whatever the locale (String#inspect escapes
     # what the locale cannot show): a quote, a backslash and an interpolation escaped.
@@ -21,21 +24,28 @@ module Veragem
     def self.quote(value) = %("#{value.gsub(/["\\]|#(?=[{$@])/) { "\\#{it}" }}")
 
     # The value +key+ takes, an option's or an answer's: checked, or an Error saying why not.
-    # @param key [Symbol] :author, :email, :github, :summary or :license
+    # @param key [Symbol] :author, :email, :github, :summary, :license, :given_names, :family_names,
+    #   :orcid or :keywords
     # @param value [String] as given
-    # @return [String] the value a file writes
+    # @return [String] the value a file writes: an ORCID iD its URL, keywords joined by ", "
     # @raise [Veragem::Error] +key+ cannot take it
     def self.check(key, value)
+      field = key.name.tr("_", " ")
       case key
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
       when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
       when :summary then documented(text("summary", value))
-      else text(key.name, value)
+      when :given_names, :family_names then Citation.names(field, line(field, value))
+      when :orcid then Citation.orcid(value)
+      when :keywords then Citation.keywords(value) { line("keyword", it) }.join(", ")
+      else text(field, value)
       end
     end
 
-    # +name+, and +values+: the author, email, github, summary and license (strings, but an email false,
-    # --no-email's, or nil for none), exe (true for a command line), as Options reads them.
+    # +name+, and +values+: the author, email, github, summary, license and a citation's given and
+    # family names, ORCID iD and keywords (strings, but an email or given names false, --no-email's,
+    # --no-given-names', or nil for none), exe and citation (true for a command line, for
+    # CITATION.cff), as Options reads them.
     # @param name [String] the gem's name, as given
     # @param values [Hash{Symbol => String, Boolean, nil}] the rest, as given
     # @return [void]
@@ -47,7 +57,7 @@ module Veragem
       @github = Project.check(:github, values[:github])
       @summary = Project.check(:summary, values[:summary])
       @license = Project.check(:license, values[:license])
-      @exe = values[:exe] == true
+      extras(values)
     end
 
     # The file the gem requires, lib/'s: `my-gem`'s my/gem.
@@ -74,6 +84,15 @@ module Veragem
     # @return [Integer]
     def year = Time.now.year
 
+    # Today, as CFF writes a date: CITATION.cff's date-released until `rake bump` sets a release's.
+    # @return [String]
+    def today = Time.now.strftime("%F")
+
+    # +value+ as a YAML double-quoted string: JSON's, which YAML reads alike.
+    # @param value [String] a value of the gem's, checked
+    # @return [String]
+    def yaml(value) = JSON.generate(value)
+
     # Project.quote, for the templates.
     # @param value [String] a value of the gem's, checked
     # @return [String]
@@ -98,19 +117,26 @@ module Veragem
       value
     end
 
-    # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped (Unicode's too),
-    # short enough for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as
-    # unfinished.
+    # A value a file quotes, which RubyGems does not refuse as unfinished.
     private_class_method def self.text(field, value)
-      value = value.dup.force_encoding(Encoding::UTF_8)
-      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029]/)
-      line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
-      raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
-      raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
+      line = line(field, value)
       if line.match?(/\A(TODO|FIXME)/)
         raise Error,
               "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
       end
+
+      line
+    end
+
+    # One line of valid UTF-8, its surrounding spaces stripped (Unicode's too), short enough for the
+    # gemspec's line (RuboCop's 120 columns). U+FFFE and U+FFFF are outside YAML's printable
+    # characters: CITATION.cff's.
+    private_class_method def self.line(field, value)
+      value = value.dup.force_encoding(Encoding::UTF_8)
+      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/)
+      line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
+      raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
+      raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
 
       line
     end
@@ -130,6 +156,25 @@ module Veragem
     end
 
     private
+
+    # What the gem holds beyond the library: a command line, a citation.
+    def extras(values)
+      @exe, @citation = values.values_at(:exe, :citation).map { it == true }
+      Citation.check_values(values, citation)
+      Citation.check_name(name, citation)
+      cite(values) if citation
+    end
+
+    # CITATION.cff's author is a person: the family names it needs, the rest it may have.
+    def cite(values)
+      given, family, orcid, keywords = values.values_at(:given_names, :family_names, :orcid, :keywords)
+      raise Error, "no family names: --family-names, CITATION.cff's author" unless family
+
+      @given_names = (Project.check(:given_names, given) if given)
+      @family_names = Project.check(:family_names, family)
+      @orcid = (Project.check(:orcid, orcid) if orcid)
+      @keywords = (Project.check(:keywords, keywords).split(", ") if keywords)
+    end
 
     # a blank line left blank, no trailing spaces
     def indent(code) = code.gsub(/^(?=.)/, "  ")

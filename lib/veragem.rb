@@ -3,6 +3,7 @@
 require "bundler"
 require_relative "veragem/version"
 require_relative "veragem/name"
+require_relative "veragem/citation"
 require_relative "veragem/project"
 require_relative "veragem/questions"
 require_relative "veragem/options"

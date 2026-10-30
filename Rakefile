@@ -55,9 +55,12 @@ task :cog do
   sh "cog", "check"
 end
 
-# A command's standard output; its failure fails the task, as `sh`'s does.
+# A command's standard output, as UTF-8 whatever the locale (git-cliff's commits, their authors' names);
+# its failure fails the task, as `sh`'s does.
 def output(*command)
-  IO.popen(command, &:read).tap { raise "#{command.join(" ")} failed" unless Process.last_status.success? }
+  IO.popen(command, external_encoding: Encoding::UTF_8, &:read).tap do
+    raise "#{command.join(" ")} failed" unless Process.last_status.success?
+  end
 end
 
 desc "Lint and check the format of the shell scripts git tracks (shellcheck, shfmt)"
@@ -114,7 +117,20 @@ def next_version(current, level)
   parts.fill(0, level + 1).join(".")
 end
 
-# The release commit: the version, the lock, the changelog.
+# CITATION.cff, where the gem has one (bundle veragem --citation): its text with the release's version
+# and date, or nil; read as UTF-8, as written, whatever the locale.
+def cited(version)
+  return unless File.exist?("CITATION.cff")
+
+  released = { "version" => version, "date-released" => Time.now.strftime("%F") }
+  released.reduce(File.read("CITATION.cff", encoding: Encoding::UTF_8)) do |cff, (key, value)|
+    abort "error: CITATION.cff has no #{key}: line" unless cff.match?(/^#{key}: /)
+
+    cff.sub(/^#{key}: .*$/, %(#{key}: "#{value}"))
+  end
+end
+
+# The release commit: the version, the lock, the changelog, and CITATION.cff's version and date.
 desc "Bump the version (major, minor or patch), write the changelog and commit"
 task :bump, [:level] => "release:guard_clean" do |_, args|
   level = %w[major minor patch].index(args[:level]) or abort 'usage: rake "bump[major|minor|patch]"'
@@ -127,12 +143,14 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
 
   file = "lib/#{gemspec.name.tr("-", "/")}/version.rb"
   abort "error: #{file} declares no \"#{current}\"" unless File.read(file).include?(%("#{current}"))
+  citation = cited(version)
   first = !File.exist?("CHANGELOG.md")
   begin
     File.write(file, File.read(file).sub(%("#{current}"), %("#{version}")))
+    File.write("CITATION.cff", citation) if citation
     sh "bundle", "lock"
     sh(*cliff, "--tag", "v#{version}", "--output", "CHANGELOG.md")
-    sh "git", "add", file, "Gemfile.lock", "CHANGELOG.md"
+    sh "git", "add", file, "Gemfile.lock", "CHANGELOG.md", *("CITATION.cff" if citation)
     sh "git", "commit", "--message", "chore(release): v#{version}"
   rescue StandardError, Interrupt
     # The tracked files were committed (release:guard_clean): put back what this changed.
