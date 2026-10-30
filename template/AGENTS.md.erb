@@ -42,11 +42,13 @@ configuration, zizmor's security audit.
 
 ### 1.3. Types: signatures by hand, TypeProf to start them
 
-`sig/` is written by hand and Steep holds `lib/` to it. `bundle exec rake typeprof` prints the
-signatures TypeProf infers from `lib/`: a start for a new method's, never a replacement for
-reading them -- it says `untyped` where it cannot tell. A signature is as narrow as the code
-allows: `untyped` only where the value truly is any value. When a diagnostic has to stay, ignore
-it on its line, the reason on the line above (text after the diagnostic's name voids the ignore):
+`sig/` is written by hand and Steep holds `lib/` to it, so every method's types are there, a private
+one's too (it has no YARD tags): look a method's up in `sig/<%= path %>.rbs`.
+`bundle exec rake typeprof` prints the signatures TypeProf infers from `lib/`: a start for a new
+method's, never a replacement for reading them -- it says `untyped` where it cannot tell. A
+signature is as narrow as the code allows: `untyped` only where the value truly is any value. When
+a diagnostic has to stay, ignore it on its line, the reason on the line above (text after the
+diagnostic's name voids the ignore):
 
 ```ruby
 # the library declares no signature
