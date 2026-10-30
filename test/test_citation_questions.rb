@@ -43,7 +43,6 @@ class TestCitationQuestions < Minitest::Test
     refute_includes shown, "Given names"
   end
 
-  # asked after the names, each may be none; an answer refused is asked again
   # under a locale not UTF-8's, the arguments and the answers come as bytes: the family names given
   # are compared with the author answered as the values Project takes, UTF-8's
   def test_at_a_terminal_the_names_offered_whatever_the_locale
@@ -54,6 +53,7 @@ class TestCitationQuestions < Minitest::Test
     assert_equal ["Ana", "de Souz\u00E1"], [gem.given_names, gem.family_names]
   end
 
+  # asked after the names, each may be none; an answer refused is asked again
   def test_at_a_terminal_the_orcid_id_and_the_keywords_are_asked
     answers = ["", "", "", "", "", "", "0000-0002-1825-0098", "0000-0002-1825-0097", ",", "ruby, gem", "", ""]
     gem, shown = ask("my_gem", "--citation", answers:)
