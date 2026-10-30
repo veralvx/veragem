@@ -85,4 +85,16 @@ class TestCitationQuestions < Minitest::Test
     assert_equal ["ab", false], [gem.name, gem.citation]
     assert_includes shown, "(y/n) [n]: invalid gem name ab with --citation"
   end
+
+  # a citation's values given, the citation's question takes y alone: its name is refused first
+  def test_at_a_terminal_a_citations_values_given_refuse_a_short_name
+    why, shown = refused("ab", "--family-names=Doe")
+
+    assert_match(/\Ainvalid gem name ab with --citation/, why)
+    assert_empty shown
+    gem, shown = ask("--orcid=0000-0002-1825-0097", answers: ["ab", "abc", "", "y", "", "", "", "", "", "", "", ""])
+
+    assert_equal ["abc", true, ORCID], [gem.name, gem.citation, gem.orcid]
+    assert_includes shown, "Gem name: invalid gem name ab with --citation"
+  end
 end

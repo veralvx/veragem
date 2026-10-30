@@ -56,7 +56,7 @@ class TestCitation < Minitest::Test
   end
 
   def test_keywords_are_comma_separated_their_blanks_and_repeats_dropped
-    gem = parse("my_gem", "--citation", "--family-names=Doe", "--keywords= ruby, gem,, ruby ,")
+    gem = parse("my_gem", "--citation", "--family-names=Doe", "--keywords= ruby, gem,, ruby ,\u00A0,")
 
     assert_equal %w[ruby gem], gem.keywords
     [",", " , ", "a\tb", "x" * 99].each do |given|

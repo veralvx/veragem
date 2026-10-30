@@ -141,7 +141,7 @@ module Veragem
 
     # Keywords, comma-separated: each one line, blanks and repeats dropped, as CFF's list takes them.
     private_class_method def self.keywords(value)
-      words = value.split(",").reject { it.strip.empty? }.map { line("keyword", it) }.uniq
+      words = value.split(",").grep_v(/\A[[:space:]]*\z/).map { line("keyword", it) }.uniq
       raise Error, "invalid keywords #{value.inspect}: one or more, comma-separated" if words.empty?
 
       words.join(", ")

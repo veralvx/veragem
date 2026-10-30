@@ -46,8 +46,8 @@ module Veragem
       ask("Gem name", check: -> { check_name(it, exe, citation) }) #: String
     end
 
-    # +given+ (the options) and the answers to the rest, +defaults+ offered; a citation's names asked
-    # only for a citation, the author's words offered for them.
+    # +given+ (the options) and the answers to the rest, +defaults+ offered; a citation's values asked
+    # only for a citation, the author's words offered for its names.
     # @param name [String] the gem's, checked
     # @param given [Hash{Symbol => String, Boolean}] the options' values
     # @param defaults [Hash{Symbol => String}] git's and Options' own

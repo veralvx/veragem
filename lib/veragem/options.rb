@@ -62,8 +62,9 @@ module Veragem
 
     # From a terminal: the names counted, as without one, then the name checked before any question.
     private_class_method def self.ask(names, given, defaults, questions)
-      kinds = given.values_at(:exe, :citation).map { it == true }
-      name = questions.name((name_of(names) unless names.empty?), exe: kinds[0], citation: kinds[1])
+      # a citation's values given, the citation's question takes y alone: the name is checked for one
+      citation = given[:citation] == true || given.values_at(*Citation::KEYS).any?
+      name = questions.name((name_of(names) unless names.empty?), exe: given[:exe] == true, citation:)
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
       Project.new(name, questions.values(name, given, defaults))
     end
