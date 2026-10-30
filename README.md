@@ -99,8 +99,10 @@ narrower than CFF:
 - an ORCID iD Zenodo's check takes, its check digit and its block ORCID's, written as its URL;
 - names without a comma: Zenodo reads one as the end of the family names (`Smith, Jr.`);
 - a name of 3 characters or more, Zenodo's least title;
-- the repository, and RubyGems' page as its artifact; no email (CFF's pattern is stricter than
-  veragem's), and no DOI: Zenodo gives it at the first release, to add then.
+- the repository, RubyGems' page as its artifact, and its API documentation on rubydoc.info as
+  its URL (there from the first release); no email (CFF's pattern is stricter than veragem's);
+- its DOIs commented out, the concept DOI and a version's, to uncomment once Zenodo gives them
+  after a release.
 
 `rake bump` sets its version and date at each release, and `nix flake check` validates it against
 CFF's schema (cffconvert): a check of the schema alone, which passes files Zenodo's import refuses.

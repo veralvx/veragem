@@ -31,7 +31,22 @@ class TestCitationFile < Minitest::Test
                    "authors" => [{ "family-names" => "Doe", "given-names" => "Jane", "orcid" => ORCID }],
                    "keywords" => %w[ruby gem], "version" => version, "date-released" => Time.now.strftime("%F"),
                    "repository-code" => "https://github.com/jane/my_gem",
-                   "repository-artifact" => "https://rubygems.org/gems/my_gem" }, cff.except("message"))
+                   "repository-artifact" => "https://rubygems.org/gems/my_gem",
+                   "url" => "https://rubydoc.info/gems/my_gem" }, cff.except("message"))
+  end
+
+  # Zenodo's DOIs, commented out until a release gives them: uncommented, the concept DOI and a
+  # version's
+  def test_the_dois_are_ready_to_uncomment
+    in_tmpdir do |dir|
+      Veragem::Generator.generate(project(citation: true, family_names: "Doe"), File.join(dir, "my_gem"))
+      cff = YAML.safe_load(read(dir, "my_gem/CITATION.cff").gsub(/^# (?=doi:|identifiers:|  )/, ""))
+
+      identifiers = cff["identifiers"].map { it.values_at("type", "value") }
+
+      assert_equal "10.5281/zenodo.0000000", cff["doi"]
+      assert_equal [%w[doi 10.5281/zenodo.0000000], %w[doi 10.5281/zenodo.0000001]], identifiers
+    end
   end
 
   # one licence a string, and none for dual: CFF's list, its OR, fails Zenodo's import (zenodo/zenodo#2515)
