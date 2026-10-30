@@ -91,13 +91,6 @@ module Veragem
       end
     end
 
-    # +value+, if the block takes it.
-    # @param field [String] its name in the refusal
-    # @param value [Object] as given
-    # @yieldparam value [Object] as given
-    # @yieldreturn [Boolean] whether it is valid
-    # @return [Object] +value+
-    # @raise [Veragem::Error] the block refuses it
     def self.valid(field, value)
       raise Error, "invalid #{field} #{value.inspect}" unless yield value
 
@@ -108,10 +101,6 @@ module Veragem
     # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped (Unicode's too),
     # short enough for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as
     # unfinished.
-    # @param field [String] its name in the refusal
-    # @param value [String] as given, in any encoding
-    # @return [String] stripped, in UTF-8
-    # @raise [Veragem::Error] it is not such a line
     def self.text(field, value)
       value = value.dup.force_encoding(Encoding::UTF_8)
       one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029]/)
@@ -130,9 +119,6 @@ module Veragem
     # +summary+, which is the module's comment too: one the gem's own yard-lint takes, no informal tag
     # first and no backtick or bold left open -- a `**` outside code with a non-space beside it, as
     # yard-lint counts (`x ** 2` is no bold).
-    # @param summary [String] a text, checked
-    # @return [String] +summary+
-    # @raise [Veragem::Error] yard-lint would refuse it
     def self.documented(summary)
       raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(INFORMAL_TAG)
 
@@ -147,9 +133,7 @@ module Veragem
 
     private
 
-    # +code+, each line not empty indented a level.
-    # @param code [String] Ruby code
-    # @return [String]
+    # a blank line left blank, no trailing spaces
     def indent(code) = code.gsub(/^(?=.)/, "  ")
   end
 end

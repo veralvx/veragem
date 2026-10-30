@@ -53,11 +53,6 @@ module Veragem
 
     private
 
-    # +name+ checked as Name, Generator and the target directory would.
-    # @param name [String] as typed
-    # @param exe [Boolean] whether the gem has a command line
-    # @return [String] +name+
-    # @raise [Veragem::Error] it is refused
     def check_name(name, exe)
       Name.check(name).tap do |checked|
         Generator.check_name(checked, exe)
@@ -65,12 +60,6 @@ module Veragem
       end
     end
 
-    # What +text+ answers for +key+, or an Error saying why not.
-    # @param key [Symbol] a QUESTIONS key
-    # @param text [String] as typed, stripped
-    # @param name [String] the gem's, checked
-    # @return [String, Boolean]
-    # @raise [Veragem::Error] it is refused
     def answer(key, text, name)
       case key
       when :exe then yes?(text).tap { Generator.check_name(name, it) }
@@ -81,12 +70,6 @@ module Veragem
 
     # The answer, or the default, through +check+; asked again when there is neither, or the check
     # fails, but an +optional+ one is nil.
-    # @param question [String] its prompt
-    # @param default [String, nil] what an empty answer takes
-    # @param check [Proc] an answer's value, raising an Error to refuse it
-    # @param optional [Boolean] whether no answer at all may be
-    # @return [String, Boolean, nil] what +check+ makes of the answer, nil for none
-    # @raise [Veragem::Error] no line comes, or the terminal cannot be asked
     def ask(question, default = nil, check:, optional: false)
       default = offered(question, default, check)
       loop do
@@ -99,18 +82,9 @@ module Veragem
     end
 
     # +default+ if it passes +check+: one refused, said why, is not offered.
-    # @param question [String] its prompt
-    # @param default [String, nil] git's, or Options', to offer
-    # @param check [Proc] an answer's value, raising an Error to refuse it
-    # @return [String, nil]
-    # @raise [Veragem::Error] the terminal cannot show why
     def offered(question, default, check) = (default unless default.nil? || checked(question, default, check).nil?)
 
     # A line's text, nil when empty; one its encoding cannot read as bytes, as an argument's.
-    # @param question [String] its prompt
-    # @param default [String, nil] the default the prompt offers
-    # @return [String, nil]
-    # @raise [Veragem::Error] no line comes, or the terminal cannot be asked
     def read(question, default)
       line = terminal(question) do
         @output.print "#{question}#{" [#{default}]" if default}: "
@@ -122,12 +96,6 @@ module Veragem
       answer unless answer.empty?
     end
 
-    # What +check+ makes of +answer+; nil, said why, when it refuses it.
-    # @param question [String] its prompt
-    # @param answer [String] typed, or a default
-    # @param check [Proc] an answer's value, raising an Error to refuse it
-    # @return [String, Boolean, nil]
-    # @raise [Veragem::Error] the terminal cannot show why
     def checked(question, answer, check)
       check.call(answer)
     rescue Error => e
@@ -137,21 +105,12 @@ module Veragem
 
     # The block's reading or writing of the terminal: one that fails cannot ask +question+, unlike a
     # check's own failure.
-    # @param question [String] its prompt
-    # @yield reads or writes the terminal
-    # @yieldreturn [Object] what is read, if anything
-    # @return [Object] the block's value
-    # @raise [Veragem::Error] the terminal fails
     def terminal(question)
       yield
     rescue SystemCallError, IOError => e
       raise Error, "cannot ask #{question}: #{e.message}"
     end
 
-    # Whether +answer+ says yes, y or n, case aside.
-    # @param answer [String] as typed
-    # @return [Boolean]
-    # @raise [Veragem::Error] it is neither
     def yes?(answer)
       case answer.downcase
       in "y" | "yes" then true
@@ -161,8 +120,6 @@ module Veragem
     end
 
     # A licence abbreviated, completed as the option's is: when one licence alone starts so.
-    # @param answer [String] as typed
-    # @return [String] the licence, or +answer+
     def completed(answer)
       case Project::LICENSES.keys.select { it.start_with?(answer) }
       in [licence] then licence

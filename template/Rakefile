@@ -29,10 +29,11 @@ task :typeprof do
   sh "typeprof", "--show-errors", "lib"
 end
 
-# yard graph draws what yardoc records (.yardoc): lib/'s, quietly, so the graph alone is printed
+# yard graph draws what yardoc records (.yardoc): lib/'s, quietly, so the graph alone is printed, and
+# its private methods too (no .yardopts, whose query keeps the public API)
 desc "Print lib/'s classes and modules as a Graphviz graph (yard graph), for `dot`"
 task :graph do
-  sh "yard", "doc", "-n", "-q", "--no-stats", "lib/**/*.rb"
+  sh "yard", "doc", "-n", "-q", "--no-stats", "--no-yardopts", "lib/**/*.rb"
   sh "yard", "graph", "--protected", "--private", "--full", "--dependencies"
 end
 

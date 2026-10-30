@@ -21,12 +21,6 @@ require_relative "../<%= File.basename(path) %>"
       2
     end
 
-    # What +options+ ask for, the help or the version, else the greeting for +name+.
-    # @param options [Hash{Symbol => Boolean}] the options given
-    # @param name [String] who to greet, "" for nobody
-    # @option options [Boolean] :help --help's
-    # @option options [Boolean] :version --version's
-    # @return [String]
     def self.output(options, name)
       if options[:help]
         parser.help
@@ -39,7 +33,6 @@ require_relative "../<%= File.basename(path) %>"
     private_class_method :output
 
     # --help as an option of its own: OptionParser's built-in one exits the process.
-    # @return [OptionParser]
     def self.parser
       #{option_parser}.new("Usage: #{name} [options] [NAME]") do |opts|
         opts.program_name = "#{name}"

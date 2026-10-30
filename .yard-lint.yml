@@ -7,10 +7,9 @@
 
 # Global settings for all validators
 AllValidators:
-  # YARD command-line options (applied to all validators by default)
-  YardOptions:
-    - --private
-    - --protected
+  # YARD command-line options (applied to all validators by default). The public API alone is
+  # documented: .yardopts's query, which yard-lint's coverage reads too.
+  YardOptions: []
 
   # Global file exclusion patterns
   Exclude:
@@ -181,6 +180,7 @@ Tags/InvalidTypes:
   Description: 'Validates type definitions in @param, @return, @option tags.'
   Enabled: true
   Severity: error
+  YardOptions: [] # the public API alone, as the others: it reads every visibility otherwise
   ValidatedTags:
     - param
     - option
@@ -221,6 +221,7 @@ Tags/MissingYield:
   Description: 'Detects methods that yield to a block without a @yield, @yieldparam, or @yieldreturn tag.'
   Enabled: true  # Enabled in strict mode
   Severity: error
+  YardOptions: [] # the public API alone, as the others: it reads every visibility otherwise
 
 Tags/CollectionType:
   Description: 'Validates Hash collection syntax consistency.'
@@ -259,6 +260,7 @@ Tags/OptionTags:
   Description: 'Requires @option tags for methods with options parameters.'
   Enabled: true
   Severity: error
+  YardOptions: [] # the public API alone, as the others: it reads every visibility otherwise
 
 Tags/ExampleSyntax:
   Description: 'Validates Ruby syntax in @example tags.'

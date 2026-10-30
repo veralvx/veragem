@@ -29,9 +29,11 @@ configuration, zizmor's security audit.
 
 ### 1.2. YARD
 
-- Every object of `lib/` is documented, the private ones too (yard-lint, at 100% coverage): what
-  it is for, then its tags -- each `@param`, `@return`, `@yield` and `@raise` -- their types the
-  signatures' in YARD's syntax (`Array<String>`, `Hash{Symbol => String}`, `String, nil`).
+- Every public object of `lib/` is documented (yard-lint, at 100% coverage; `.yardopts` keeps the
+  public API): what it is for, then its tags -- each `@param`, `@return`, `@yield` and `@raise` --
+  their types the signatures' in YARD's syntax (`Array<String>`, `Hash{Symbol => String}`,
+  `String, nil`). A private one takes a comment only as §2 has it, and no tags: its signature
+  holds its types.
 - `bundle exec rake yard_lint` lints it (`yard-lint lib --stats`); `bundle exec rake yard` writes
   it to `doc/`.
 - `yardoc` queries the tags: `--query '@return && @param'`, `--query 'has_tag?(:api)'`.

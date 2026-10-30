@@ -1,0 +1,1 @@
+--query 'object.visibility == :public'
