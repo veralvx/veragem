@@ -55,9 +55,9 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
 - **Regressions:** if you are fixing a bug, include a test that reproduces the previous failure.
 - **Coverage:** every line, branch and method of `lib/` (SimpleCov's `strict` profile,
   `test/test_helper.rb`). Code a test cannot reach is questioned before it is excluded. One test
-  file, or some tests (`bundle exec rake test N=/greets/`), runs fewer than the gate counts: its exit
-  fails, the tests' own verdict above it; SimpleCov merges a run into the last one's `coverage/`
-  within ten minutes, so remove it after such a run.
+  file, or some tests (`bundle exec rake test N=/greets/`), runs fewer than the gate counts: its
+  exit fails, the tests' own verdict above it; SimpleCov merges a run into the last one's
+  `coverage/` within ten minutes, so remove it after such a run.
 
 ## Development Workflow
 
@@ -130,7 +130,9 @@ Then, in whichever order suits you:
   GitHub release follows RubyGems': without the publisher, neither is made.
 - Limit the `release` environment's deployments to the release tags (Settings → Environments, a
   rule of ref type Tag, `v*`): a trusted publisher names the environment, not a ref, so without the
-  rule a workflow pushed to any branch could publish the gem.
+  rule a workflow pushed to any branch could publish the gem. And limit who creates the release tags
+  (Settings → Rules → Rulesets, a tag ruleset on `v*`): a tag pushed on any commit runs that
+  commit's workflows in the environment.
 <%- if exe -%>
 - After the first release, make the image public: GHCR publishes a new package as private (its
   page, Package settings → Change visibility).
@@ -138,7 +140,7 @@ Then, in whichever order suits you:
   `v*`): its jobs push the image.
 - To publish the image to Docker Hub too: create its repository there, then set the repository
   variable `DOCKERHUB_USERNAME` and the `image` environment's secret `DOCKERHUB_TOKEN` (an access
-  token that writes; the environment's alone, no other workflow can read it) -- and the variable
+  token that writes; only the environment's jobs, on a release tag, can read it) -- and the variable
   `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`. A Docker Hub
   failure in a push (its login, its name) holds GHCR's tag back too.
 <%- end -%>
@@ -174,9 +176,9 @@ declared, whatever the level), updates the lock, writes the changelog (git-cliff
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
 <%- end -%>
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
-tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`) and the build, the push to RubyGems
-by Trusted Publishing, then the GitHub release of the same gem, its notes the changelog's new
-section.
+tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`) and the build, the
+push to RubyGems by Trusted Publishing, then the GitHub release of the same gem, its notes the
+changelog's new section.
 <%- if exe -%>
 Beside `release.yml`, waiting for no RubyGems push, `image.yml` publishes the command's OCI image
 to GHCR (`nix build .#image` builds it here).
@@ -189,7 +191,9 @@ removes the tag (Bundler's doing): run `rake release` again once allowed.
 ## Updating the tools
 
 Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake's inputs
-monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass.
+monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass. An
+advisory with no fixed version yet fails `security.yml` on every pull request until you weigh it:
+its ID under `ignore:` in `.bundler-audit.yml` (bundler-audit's own file) lets the checks pass.
 dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
 brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
 A bump the new cops fail stays unmerged: its failed run's summary holds RuboCop's safe corrections

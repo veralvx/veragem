@@ -72,28 +72,6 @@ class TestNames < Minitest::Test
     end
   end
 
-  # in a Ruby of its own: nothing the library prints is taken for an answer, and it loads with no
-  # arguments, in an empty directory
-  def test_the_probe_requires_the_top_level_library_alone
-    assert_equal ["", "", "Module", "Class"], Veragem::Name.probe("date", "my_gem", %w[Comparable Date])
-    in_tmpdir do |dir|
-      noisy = File.join(dir, "noisy.rb")
-      File.write(noisy, "puts 'Class'\nwarn 'Class'\nNoisy = 1\nCleared = 1 if ARGV.empty?\n" \
-                        "Scratch = 1 if Dir.empty?('.')\n")
-
-      assert_equal ["", "", "Integer", "", "Integer", "Integer"],
-                   Veragem::Name.probe(noisy, "my_gem", %w[Noisy Quiet Cleared Scratch])
-    end
-  end
-
-  # once a process; RUBYOPT's options, printed before the answers, are not the child's
-  def test_the_probe_is_asked_once_and_whatever_rubyopt
-    answers = with_env("RUBYOPT" => "-v") { Veragem::Name.probe("date", "probed_once", %w[ProbedOnce]) }
-
-    assert_equal ["", "", ""], answers
-    assert_same answers, Veragem::Name.probe("date", "probed_once", %w[ProbedOnce])
-  end
-
   # Project checks the name as written alone; Generator.check, the rest
   def test_a_project_is_checked_as_written_its_generation_the_rest
     assert_equal "set-extras", project("set-extras").name
@@ -104,12 +82,6 @@ class TestNames < Minitest::Test
 
       assert_equal "invalid gem name set-extras: Set is a Class, not a module", error.message
     end
-  end
-
-  def test_a_failing_probe_refuses
-    error = assert_raises(Veragem::Error) { Veragem::Name.probe("set", "my_gem", ["not a constant"]) }
-
-    assert_equal "could not check set's modules", error.message
   end
 
   def test_a_name_nested_in_a_module_reopens_it

@@ -100,9 +100,9 @@ module Veragem
       files.reject { File.directory?(File.join(TEMPLATE, it)) || (!exe && EXE.include?(it)) }
     end
 
-    # The lock's gems, its GEM section's specs (a dependency indented deeper)
+    # The lock's gems, its GEM section's specs (a dependency indented deeper), its lines LF's or CRLF's
     private_class_method def self.tools
-      File.read(TOOLS_LOCK)[/^GEM\n.*?^$/m].to_s.scan(/^ {4}(\S+) \(/).flatten
+      File.read(TOOLS_LOCK)[/^GEM\r?\n.*?^\r?$/m].to_s.scan(/^ {4}(\S+) \(/).flatten
     end
 
     private_class_method def self.path_of(file, name)

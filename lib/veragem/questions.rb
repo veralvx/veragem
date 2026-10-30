@@ -85,10 +85,9 @@ module Veragem
     # The answer, or the default, through +check+; asked again when there is neither, or the check
     # fails, but an +optional+ one is nil -- and "-" its none, which a default would take otherwise.
     def ask(question, default = nil, check:, optional: false)
-      question = "#{question} (- for none)" if optional
       default = offered(question, default, check)
       loop do
-        reply = read(question, default) || default
+        reply = read(question, default, optional) || default
         return if optional && [nil, "-"].include?(reply)
 
         value = reply && checked(question, reply, check)
@@ -100,9 +99,9 @@ module Veragem
     def offered(question, default, check) = (default unless default.nil? || checked(question, default, check).nil?)
 
     # A line's text, nil when empty; one its encoding cannot read as bytes, as an argument's.
-    def read(question, default)
+    def read(question, default, optional)
       line = terminal(question) do
-        @output.print "#{question}#{" [#{default}]" if default}: "
+        @output.print "#{question}#{" (- for none)" if optional}#{" [#{default}]" if default}: "
         @input.gets.tap { @output.puts unless it }
       end
       raise Error, "no answer to #{question}" unless line

@@ -94,7 +94,10 @@ Open a pull request against `main`, titled as a conventional commit, once
   this repository, the workflow `release.yml`, the environment `release` -- and limit that
   environment's deployments to the tags `v*` (Settings → Environments, a rule of ref type Tag): a
   trusted publisher names the environment, not a ref, so without the rule a workflow pushed to any
-  branch could publish.
+  branch could publish. Limit who creates those tags too (Settings → Rules → Rulesets, a tag
+  ruleset on `v*`): a tag pushed on any commit runs that commit's workflows in the environment.
+- An advisory with no fixed version yet fails `security.yml` on every pull request until weighed:
+  its ID under `ignore:` in `.bundler-audit.yml` (bundler-audit's own file) lets the checks pass.
 
 ### Releasing
 
@@ -108,5 +111,5 @@ bundle exec rake release
 
 `rake bump` sets the version, updates the lock, writes the changelog (git-cliff) and commits;
 `rake release`, Bundler's own, tags `v<version>` and pushes the branch and the tag. The tag runs
-`release.yml`: the Ruby checks (`rake`) and the build, the push to RubyGems by Trusted Publishing, then the
-GitHub release.
+`release.yml`: the Ruby checks (`rake`) and the build, the push to RubyGems by Trusted Publishing,
+then the GitHub release.

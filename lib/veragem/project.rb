@@ -13,11 +13,12 @@ module Veragem
     # (.yard-lint.yml) takes for one written informally.
     TAG = /\A(?:@|\(see\b|(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since
             |returns|raises|example):)/xi
-    # RuboCop's annotation keywords, first in a comment: an annotation, no documentation, but where
-    # one is a sentence's capitalized first word, a space after it.
-    ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)\b/i
-    # A magic comment, as RuboCop reads one anywhere in a comment (an encoding's, Ruby's own rule).
-    MAGIC = /\b(?:en)?coding\s*[:=]|\Afrozen_string_literal\s*:/i
+    # RuboCop's annotation keywords, first in a comment and a colon or a space after: an annotation,
+    # no documentation, but where one is a sentence's capitalized first word, a space after it.
+    ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)(?=[:\s])/i
+    # A magic comment, as RuboCop reads one anywhere in a comment (an encoding's, Ruby's own rule),
+    # or a RuboCop directive, which would turn its cops off, or fail them.
+    MAGIC = /\b(?:en)?coding\s*[:=]|\Afrozen_string_literal\s*:|\brubocop\s*:/i
     private_constant :GITHUB, :TAG, :ANNOTATION, :MAGIC
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
@@ -153,7 +154,7 @@ module Veragem
     private_class_method def self.documented(summary)
       raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(TAG)
       if annotation?(summary) || summary.match?(MAGIC)
-        raise Error, "invalid summary #{summary.inspect}: RuboCop would read an annotation or a magic comment"
+        raise Error, "invalid summary #{summary.inspect}: RuboCop would read an annotation or a directive"
       end
 
       bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size

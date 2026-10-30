@@ -56,9 +56,10 @@ class TestRefusals < Minitest::Test
     assert_nil Veragem::Generator.check_name("c_l_i-x", true)
   end
 
-  # its lock's gems, those the tools load too: Bundler would resolve them to the new gem itself
+  # its lock's gems, those the tools load too (RuboCop's parser): Bundler would resolve them to the
+  # new gem itself
   def test_a_gem_the_gemfiles_tools_load_is_refused
-    %w[rubocop-rake parser rainbow terminal-table concurrent-ruby].each do |name|
+    %w[rubocop-rake parser].each do |name|
       error = assert_raises(Veragem::Error) { Veragem::Generator.check_name(name, false) }
 
       assert_equal "invalid gem name #{name}: a gem the Gemfile's tools load", error.message

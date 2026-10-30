@@ -7,6 +7,15 @@ require "yaml"
 class TestProject < Minitest::Test
   include Veragem::TestSupport
 
+  REFUSED_SUMMARIES = ["Note: a fork.", "see also: foo.", "EXAMPLE: x", "Parses `foo files.", "Bold **text.",
+                       "@param x", "(see #foo)", "review the code", "Review: the code", "HACK: a fix",
+                       "todo later", "encoding: ascii", "A gem: encoding: utf-8 inside", "A coding=utf-8 thing",
+                       "Frozen_string_literal: true", "rubocop:disable all", "Parses C# rubocop:disable all"].freeze
+  TAKEN_SUMMARIES = ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.",
+                     "Squares: x ** 2.", "Code `a **b` too.", "Review the code", "Todo later", "Notebook support",
+                     "Decoding: utf-8 fast", "see the docs", "Note-taking app", "Hack's toolkit", "Note.", "Review",
+                     "note-taking app"].freeze
+
   def test_the_github_user_follows_githubs_rule
     ["jane", "jane-doe", "J4ne", "a" * 39].each { assert_equal it, project(github: it).github }
 
@@ -25,16 +34,10 @@ class TestProject < Minitest::Test
   # the module's comment too: each refused fails the generated gem's yard-lint or RuboCop as it, and
   # each taken passes them (both checked so in a generated gem)
   def test_a_summary_is_a_comment_yard_lint_and_rubocop_take
-    ["Note: a fork.", "see also: foo.", "EXAMPLE: x", "Parses `foo files.", "Bold **text.", "@param x",
-     "(see #foo)", "review the code", "Review: the code", "HACK: a fix", "todo later", "encoding: ascii",
-     "A gem: encoding: utf-8 inside", "A coding=utf-8 thing", "Frozen_string_literal: true"].each do |summary|
+    REFUSED_SUMMARIES.each do |summary|
       assert_raises(Veragem::Error, summary.inspect) { Veragem::Project.check(:summary, summary) }
     end
-    ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.", "Squares: x ** 2.",
-     "Code `a **b` too.", "Review the code", "Todo later", "Notebook support", "Decoding: utf-8 fast",
-     "see the docs"].each do |summary|
-      assert_equal summary, Veragem::Project.check(:summary, summary)
-    end
+    TAKEN_SUMMARIES.each { assert_equal it, Veragem::Project.check(:summary, it) }
   end
 
   # ARGV under the C locale is binary: the bytes are taken as UTF-8.

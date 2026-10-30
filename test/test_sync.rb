@@ -29,6 +29,11 @@ class TestSync < Minitest::Test
     assert_empty(plain_files.reject { copy?(it) })
   end
 
+  # the gems a name cannot take, which Generator reads from it wherever the plugin is installed
+  def test_the_gem_ships_the_tools_lock
+    assert_includes Gem::Specification.load(File.join(ROOT, "veragem.gemspec")).files, "Gemfile.lock"
+  end
+
   def test_the_files_that_differ_are_the_templates_too
     DIFFERENT.each { assert_path_exists File.join(TEMPLATE, it) }
   end

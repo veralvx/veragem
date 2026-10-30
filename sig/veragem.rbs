@@ -117,7 +117,7 @@ module Veragem
     def default: (Symbol key, Hash[Symbol, String] defaults, Hash[Symbol, String | bool | nil] values) -> String?
     def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?optional: bool) -> (String | bool | nil)
     def offered: (String question, String? default, ^(String) -> (String | bool) check) -> String?
-    def read: (String question, String? default) -> String?
+    def read: (String question, String? default, bool optional) -> String?
     def checked: (String question, String answer, ^(String) -> (String | bool) check) -> (String | bool | nil)
     def terminal: [T] (String question) { () -> T } -> T
     def yes?: (String answer) -> bool

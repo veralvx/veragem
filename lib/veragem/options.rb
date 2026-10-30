@@ -28,7 +28,8 @@ module Veragem
     private_constant :GIT_CONFIG, :DEFAULTS, :BANNER, :OPTIONS
 
     # The Project +argv+ gives, what it does not asked of +input+ when a terminal, the questions on
-    # +output+ (stderr, as a prompt is); the name checked for +dir+.
+    # +output+ (stderr, as a prompt is): at a terminal the name checked for +dir+ before any question,
+    # the generation's check otherwise.
     # @param argv [Array<String>] the command's arguments
     # @param dir [String] where the gem is to be generated
     # @param config [#call] a git config key's value, nil when unset
