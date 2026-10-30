@@ -109,7 +109,7 @@ module Veragem
       end
       raise Error, "could not check #{library}'s modules" unless answers.size == nestings.size + 2
 
-      answers.map(&:chomp)
+      answers.map(&:chomp).freeze
     end
 
     # Its lib/<path>.rb, first on the load path, must not shadow a library its tools require

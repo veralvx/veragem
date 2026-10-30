@@ -66,6 +66,15 @@ class TestRefusals < Minitest::Test
     end
   end
 
+  # a lock checked out with CRLF line ends (git's core.autocrlf) lists the same gems
+  def test_the_tools_are_read_whatever_the_locks_line_ends
+    lock = File.read(File.join(__dir__, "../Gemfile.lock"))
+    tools = Veragem::Generator.send(:tools, lock)
+
+    assert_includes tools, "parser"
+    assert_equal tools, Veragem::Generator.send(:tools, lock.gsub("\n", "\r\n"))
+  end
+
   # git's own complaint goes to the user's terminal; here, nowhere
   def test_a_failing_git_is_refused
     in_tmpdir do |dir|

@@ -23,7 +23,8 @@ module Veragem
     # The citation's file, a citation's alone (--citation).
     CITATION = "CITATION.cff.erb"
     # The tools' resolution: this repository's Gemfile is the template's (test_sync.rb), so its lock
-    # names every gem a generated gem's tools load, theirs included. (Steep: as TEMPLATE.)
+    # names every gem a generated gem's tools load, theirs included. (Steep: __dir__ is never nil in
+    # a required file.)
     TOOLS_LOCK = File.expand_path("../../Gemfile.lock", __dir__) # steep:ignore ArgumentTypeMismatch
     private_constant :GIT_LOCAL, :LICENSE_FILES, :CITATION, :TOOLS_LOCK
 
@@ -53,20 +54,21 @@ module Veragem
     # @param citation [Boolean] whether the gem has CITATION.cff
     # @param target [String] its directory, not yet there
     # @return [String] +name+
-    # @raise [Veragem::Error] the gem cannot have the name, or +target+ exists
+    # @raise [Veragem::Error] the gem cannot have the name, its modules could not be checked, or
+    #   +target+ exists
     def self.check(name, exe:, citation:, target:)
       Name.check(name)
+      check_target(target)
       check_name(name, exe)
       Citation.check_name(name, citation)
       Name.check_modules(name)
-      check_target(target)
       name
     end
 
     # What a name and its kind decide. A gem the Gemfile's tools load (its lock's), the bundle would
-    # resolve to the new gem itself and break them. A command line names
-    # the gem's module from within it, <Gem>::CLI, whose constant lookup finds CLI and VERSION first:
-    # neither can be its module. Two files at one path: `helper`'s test would be test/test_helper.rb.
+    # resolve to the new gem itself and break them. A command line names the gem's module from
+    # within it, <Gem>::CLI, whose constant lookup finds CLI and VERSION first: neither can be its
+    # module. Two files at one path: `helper`'s test would be test/test_helper.rb.
     # @param name [String] one Name.check takes
     # @param exe [Boolean] whether the gem has a command line
     # @return [void]
@@ -101,8 +103,8 @@ module Veragem
     end
 
     # The lock's gems, its GEM section's specs (a dependency indented deeper), its lines LF's or CRLF's
-    private_class_method def self.tools
-      File.read(TOOLS_LOCK)[/^GEM\r?\n.*?^\r?$/m].to_s.scan(/^ {4}(\S+) \(/).flatten
+    private_class_method def self.tools(lock = File.read(TOOLS_LOCK))
+      lock[/^GEM\r?\n.*?^\r?$/m].to_s.scan(/^ {4}(\S+) \(/).flatten
     end
 
     private_class_method def self.path_of(file, name)

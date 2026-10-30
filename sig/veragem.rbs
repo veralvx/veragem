@@ -155,7 +155,7 @@ module Veragem
     private def self.check_target: (String target) -> void
     private def self.files: (Project project) -> Hash[String, String]
     private def self.templates: (bool exe) -> Array[String]
-    private def self.tools: () -> Array[String]
+    private def self.tools: (?String lock) -> Array[String]
     private def self.path_of: (String file, String name) -> String
     private def self.removed_unless_done: (String target) { () -> void } -> void
     private def self.write: (String source, String destination, Project project) -> void
