@@ -96,12 +96,17 @@ class TestOptions < Minitest::Test
     system("git", "config", "--global", "github.user", "ada", exception: true)
     system("git", "config", "--global", "user.name", "Jos\u00E9", exception: true)
 
-    assert_equal ["ada", nil], [Veragem::Options.git_config("github.user"), Veragem::Options.git_config("user.email")]
-    # its bytes, whatever the locale: Project reads them as UTF-8
-    assert_equal "José", parse("my_gem", config: ->(key) { Veragem::Options.git_config(key) || "x" }).author
+    gem = Veragem::Options.parse(["my_gem"], input: StringIO.new)
+
+    # no user.email, none; its bytes, whatever the locale: Project reads them as UTF-8
+    assert_equal ["ada", nil, "José"], [gem.github, gem.email, gem.author]
   end
 
   def test_without_git_no_value
-    with_env("PATH" => "") { assert_nil Veragem::Options.git_config("user.name") }
+    with_env("PATH" => "") do
+      error = assert_raises(Veragem::Error) { Veragem::Options.parse(["my_gem"], input: StringIO.new) }
+
+      assert_equal "no author: --author, or git config user.name", error.message
+    end
   end
 end

@@ -44,56 +44,6 @@ module Veragem
       name
     end
 
-    # The gem writes lib/<path>.rb, `module` for each of its modules, and tests that name the first.
-    # @param name [String] one PATTERN matches
-    # @return [void]
-    # @raise [Veragem::Error] its file or a module would meet another's
-    def self.check_modules(name)
-      nestings = nestings_of(name)
-      shadowed, found, *kinds = probe(library_of(name), path(name), nestings)
-      check_shadowing(name, shadowed.to_s, found.to_s)
-      check_defined(name, nestings.zip(kinds).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
-    end
-
-    # Its lib/<path>.rb, first on the load path, must not shadow a library its tools require
-    # (lib/json.rb, JSON's); its tests' classes, Minitest::Test's, and its gemspec, which `gem build`
-    # evaluates in Gem::Specification, must find its module, not one of theirs (`lifecycle_hooks`:
-    # Minitest::Test::LifecycleHooks).
-    # @param name [String] one PATTERN matches
-    # @param shadowed [String] the library its file would shadow, "" when none
-    # @param found [String] what its tests or `gem build` would find for its module, "" when nothing
-    # @return [void]
-    # @raise [Veragem::Error] either is not ""
-    def self.check_shadowing(name, shadowed, found)
-      raise Error, "invalid gem name #{name}: its lib/#{path(name)}.rb would shadow #{shadowed}" unless shadowed.empty?
-      raise Error, "invalid gem name #{name}: #{found} for its module" unless found.empty?
-    end
-
-    # The +defined+ nestings, outermost first, each with its class: the gem's own module, +innermost+,
-    # one defined already (Comparable) would reopen; an outer one that is a class (Set, Logger), it
-    # could not open.
-    # @param name [String] one PATTERN matches
-    # @param defined [Array<Array(String, String)>] each nesting already defined, with its class's name
-    # @param innermost [String, nil] the gem's own module
-    # @return [void]
-    # @raise [Veragem::Error] the gem's module is defined, or an outer one is not a module
-    def self.check_defined(name, defined, innermost)
-      raise Error, "invalid gem name #{name}: #{innermost} is already defined" if defined.last&.first == innermost
-
-      outer = defined.find { |_, kind| kind != "Module" }
-      raise Error, "invalid gem name #{name}: #{outer[0]} is a #{outer[1]}, not a module" if outer
-    end
-
-    # The gem's top-level library: `date-holidays`' date
-    # @param name [String] one PATTERN matches
-    # @return [String]
-    def self.library_of(name) = name.split("-").fetch(0)
-
-    # Each of its modules' full names, outermost first: `my-gem`'s My, My::Gem.
-    # @param name [String] one PATTERN matches
-    # @return [Array<String>]
-    def self.nestings_of(name) = modules(name).then { |modules| (1..modules.size).map { modules.first(it).join("::") } }
-
     # The child: no stdin, a scratch directory, its arguments cleared before the libraries load, their
     # own output kept from the answers, no exit hooks.
     PROBE = <<~RUBY
@@ -141,6 +91,41 @@ module Veragem
       raise Error, "could not check #{library}'s modules" unless answers.size == nestings.size + 2
 
       answers.map(&:chomp)
+    end
+
+    # The gem writes lib/<path>.rb, `module` for each of its modules, and tests that name the first.
+    private_class_method def self.check_modules(name)
+      nestings = nestings_of(name)
+      shadowed, found, *kinds = probe(library_of(name), path(name), nestings)
+      check_shadowing(name, shadowed.to_s, found.to_s)
+      check_defined(name, nestings.zip(kinds).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
+    end
+
+    # Its lib/<path>.rb, first on the load path, must not shadow a library its tools require
+    # (lib/json.rb, JSON's); its tests' classes, Minitest::Test's, and its gemspec, which `gem build`
+    # evaluates in Gem::Specification, must find its module, not one of theirs (`lifecycle_hooks`:
+    # Minitest::Test::LifecycleHooks).
+    private_class_method def self.check_shadowing(name, shadowed, found)
+      raise Error, "invalid gem name #{name}: its lib/#{path(name)}.rb would shadow #{shadowed}" unless shadowed.empty?
+      raise Error, "invalid gem name #{name}: #{found} for its module" unless found.empty?
+    end
+
+    # The +defined+ nestings, outermost first, each with its class: the gem's own module, +innermost+,
+    # one defined already (Comparable) would reopen; an outer one that is a class (Set, Logger), it
+    # could not open.
+    private_class_method def self.check_defined(name, defined, innermost)
+      raise Error, "invalid gem name #{name}: #{innermost} is already defined" if defined.last&.first == innermost
+
+      outer = defined.find { |_, kind| kind != "Module" }
+      raise Error, "invalid gem name #{name}: #{outer[0]} is a #{outer[1]}, not a module" if outer
+    end
+
+    # The gem's top-level library: `date-holidays`' date
+    private_class_method def self.library_of(name) = name.split("-").fetch(0)
+
+    # Each of its modules' full names, outermost first: `my-gem`'s My, My::Gem.
+    private_class_method def self.nestings_of(name)
+      modules(name).then { |modules| (1..modules.size).map { modules.first(it).join("::") } }
     end
   end
 end

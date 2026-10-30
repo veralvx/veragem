@@ -14,12 +14,12 @@ module Veragem
     def self.path: (String name) -> String
     def self.underscored: (String name) -> String
     def self.check: (String name) -> String
-    def self.check_modules: (String name) -> void
-    def self.check_shadowing: (String name, String shadowed, String found) -> void
-    def self.check_defined: (String name, Array[[String, String?]] defined, String? innermost) -> void
-    def self.library_of: (String name) -> String
-    def self.nestings_of: (String name) -> Array[String]
     def self.probe: (String library, String path, Array[String] nestings) -> Array[String]
+    private def self.check_modules: (String name) -> void
+    private def self.check_shadowing: (String name, String shadowed, String found) -> void
+    private def self.check_defined: (String name, Array[[String, String?]] defined, String? innermost) -> void
+    private def self.library_of: (String name) -> String
+    private def self.nestings_of: (String name) -> Array[String]
   end
 
   class Project
@@ -98,13 +98,13 @@ module Veragem
 
     def self.parse: (Array[String] argv, ?dir: String, ?config: ^(String) -> String?, ?input: Questions::_Input,
                      ?output: Questions::_Output) -> Project
-    def self.arguments: (Array[String] argv) -> [Array[String], Hash[Symbol, String | bool]]
-    def self.ask: (Array[String] names, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults,
-                   Questions questions) -> Project
-    def self.name_of: (Array[String] names) -> String
-    def self.required: (Hash[Symbol, String | bool | nil] values) -> Hash[Symbol, String | bool]
-    def self.parser: () -> OptionParser
-    def self.git_config: (String key) -> String?
+    private def self.arguments: (Array[String] argv) -> [Array[String], Hash[Symbol, String | bool]]
+    private def self.ask: (Array[String] names, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults,
+                           Questions questions) -> Project
+    private def self.name_of: (Array[String] names) -> String
+    private def self.required: (Hash[Symbol, String | bool | nil] values) -> Hash[Symbol, String | bool]
+    private def self.parser: () -> OptionParser
+    private def self.git_config: (String key) -> String?
   end
 
   module Generator
@@ -113,16 +113,16 @@ module Veragem
     GIT_LOCAL: Hash[String, nil]
     LICENSE_FILES: Hash[String, String]
 
-    def self.files: (Project project) -> Hash[String, String]
-    def self.templates: (bool exe) -> Array[String]
-    def self.tools: () -> Array[String]
+    def self.generate: (Project project, String target) -> void
     def self.check_name: (String name, bool exe) -> void
     def self.check_target: (String target) -> void
-    def self.path_of: (String file, String name) -> String
-    def self.generate: (Project project, String target) -> void
-    def self.removed_unless_done: (String target) { () -> void } -> void
-    def self.write: (String source, String destination, Project project) -> void
-    def self.render: (String source, Project project) -> String
-    def self.git: (String dir, *String args) -> void
+    private def self.files: (Project project) -> Hash[String, String]
+    private def self.templates: (bool exe) -> Array[String]
+    private def self.tools: () -> Array[String]
+    private def self.path_of: (String file, String name) -> String
+    private def self.removed_unless_done: (String target) { () -> void } -> void
+    private def self.write: (String source, String destination, Project project) -> void
+    private def self.render: (String source, Project project) -> String
+    private def self.git: (String dir, *String args) -> void
   end
 end

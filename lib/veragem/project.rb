@@ -10,6 +10,7 @@ module Veragem
     # What yard-lint (.yard-lint.yml) takes for a tag written informally, first in a comment.
     INFORMAL_TAG = /\A(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since|returns
                      |raises|example):/xi
+    private_constant :GITHUB, :INFORMAL_TAG
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe
 
@@ -91,17 +92,16 @@ module Veragem
       end
     end
 
-    def self.valid(field, value)
+    private_class_method def self.valid(field, value)
       raise Error, "invalid #{field} #{value.inspect}" unless yield value
 
       value
     end
-    private_class_method :valid
 
     # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped (Unicode's too),
     # short enough for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as
     # unfinished.
-    def self.text(field, value)
+    private_class_method def self.text(field, value)
       value = value.dup.force_encoding(Encoding::UTF_8)
       one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029]/)
       line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
@@ -114,12 +114,11 @@ module Veragem
 
       line
     end
-    private_class_method :text
 
     # +summary+, which is the module's comment too: one the gem's own yard-lint takes, no informal tag
     # first and no backtick or bold left open -- a `**` outside code with a non-space beside it, as
     # yard-lint counts (`x ** 2` is no bold).
-    def self.documented(summary)
+    private_class_method def self.documented(summary)
       raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(INFORMAL_TAG)
 
       bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size
@@ -129,7 +128,6 @@ module Veragem
 
       summary
     end
-    private_class_method :documented
 
     private
 
