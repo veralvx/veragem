@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module Veragem
-  # CITATION.cff's rules beyond its values' text: who may give them, the name it takes, the ORCID iD
-  # Zenodo's import takes, and the author's names guessed from the author.
+  # CITATION.cff's rules beyond its values' text, as Zenodo's import takes them: who may give them,
+  # the gem's name, the author's names (no comma) and ORCID iD, the keywords; and what its questions
+  # offer.
   module Citation
     # The values CITATION.cff alone writes.
     KEYS = %i[given_names family_names orcid keywords].freeze

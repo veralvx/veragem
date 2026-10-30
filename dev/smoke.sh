@@ -45,9 +45,9 @@ for gem in smoke_lib smoke-omniauth-google_oauth2 smoke_apache; do
     # a release's CITATION.cff: `rake bump` sets its version and date, under an ASCII locale too
     if [ -e CITATION.cff ]; then
       git tag v0.1.0
-      export GIT_AUTHOR_NAME="Smoke Test" GIT_AUTHOR_EMAIL=smoke@example.com
+      export GIT_AUTHOR_NAME="Smöke Test" GIT_AUTHOR_EMAIL=smoke@example.com
       export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME" GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
-      git commit --quiet --allow-empty --message "fix: a smoke release"
+      git commit --quiet --allow-empty --message "fix: a smöke release"
       LC_ALL=C bundle exec rake "bump[patch]"
       grep -qx 'version: "0.1.1"' CITATION.cff
       grep -qx "date-released: \"$(date +%F)\"" CITATION.cff

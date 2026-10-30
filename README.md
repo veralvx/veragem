@@ -81,10 +81,11 @@ questions) nothing is asked: the defaults apply, and a missing name, author, Git
 
 `CITATION.cff` (Citation File Format 1.2.0) is for software meant to be cited, research's: GitHub
 offers its "Cite this repository", and Zenodo, once the repository is enabled there (the generated
-CONTRIBUTING.md's first steps), archives each release with its values and gives it a DOI. Its author is a person, family names required, given names, ORCID iD and
-keywords optional. Asked at a terminal, the family names offer the author's last word, and the
-given names the words before the family names, where the author ends with them. Its values need a
-citation: without one they are refused, and at a terminal its question takes y alone.
+CONTRIBUTING.md's first steps), archives each release with its values and gives it a DOI. Its
+author is a person, family names required, given names, ORCID iD and keywords optional. Asked at a
+terminal, the family names offer the author's last word, and the given names the words before the
+family names, where the author ends with them. Its values need a citation: without one they are
+refused, and at a terminal its question takes y alone.
 
 What it holds is what GitHub and Zenodo read, written as Zenodo's import takes it, which is
 narrower than CFF:

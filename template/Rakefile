@@ -55,9 +55,12 @@ task :cog do
   sh "cog", "check"
 end
 
-# A command's standard output; its failure fails the task, as `sh`'s does.
+# A command's standard output, as UTF-8 whatever the locale (git-cliff's commits, their authors' names);
+# its failure fails the task, as `sh`'s does.
 def output(*command)
-  IO.popen(command, &:read).tap { raise "#{command.join(" ")} failed" unless Process.last_status.success? }
+  IO.popen(command, external_encoding: Encoding::UTF_8, &:read).tap do
+    raise "#{command.join(" ")} failed" unless Process.last_status.success?
+  end
 end
 
 desc "Lint and check the format of the shell scripts git tracks (shellcheck, shfmt)"

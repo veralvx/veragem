@@ -55,7 +55,8 @@ module Veragem
       names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: given)
       # OptionParser keys --given-names as :"given-names"; Project's are :given_names
       given.transform_keys! { it.name.tr("-", "_").to_sym }
-      # each value as checked, UTF-8 and stripped: the questions compare them with their answers
+      # each value as Project checks it (a text's UTF-8 and stripped): the questions compare them with
+      # their answers
       checked = given.to_h { |key, value| [key, value.is_a?(String) ? Project.check(key, value) : value] }
       Citation.check_values(checked, checked[:citation] == true) if checked.key?(:citation)
       [names, checked]
