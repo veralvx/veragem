@@ -21,7 +21,7 @@ module Veragem
       ["--summary=TEXT", "The gem's summary (default: A Ruby gem.)"],
       ["--[no-]citation", "Add CITATION.cff, the citation GitHub and Zenodo read (default: --no-citation)"],
       ["--family-names=NAMES", "With --citation: the author's family names (required)"],
-      ["--[no-]given-names=NAMES", "With --citation: the author's given names (--no-given-names, none)"],
+      ["--[no-]given-names=NAMES", "With --citation: the author's given names (--no-given-names: none, unasked)"],
       ["--orcid=ID", "With --citation: the author's ORCID iD"],
       ["--keywords=LIST", "With --citation: keywords, comma-separated"]
     ].freeze #: Array[[String, String]]

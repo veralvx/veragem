@@ -102,6 +102,21 @@ class TestCitationQuestions < Minitest::Test
     assert_includes shown, "(y/n) [n]: invalid gem name ab with --citation"
   end
 
+  # --no-citation with a citation's value: refused before any question, as a licence is
+  def test_at_a_terminal_no_citation_with_its_values_is_refused_first
+    why, shown = refused("my_gem", "--no-citation", "--family-names=Doe")
+
+    assert_equal NEEDED, why
+    assert_empty shown
+  end
+
+  # the author given as bytes, as a locale not UTF-8's gives it: guessed from as checked
+  def test_at_a_terminal_an_author_given_as_bytes_is_guessed_from
+    gem, = ask("my_gem", "--citation", "--author=Jos\u00E9 N\u00FA\u00F1ez".b, answers: [""] * 9)
+
+    assert_equal %W[Jos\u00E9 N\u00FA\u00F1ez], [gem.given_names, gem.family_names]
+  end
+
   # a citation's values given, the citation's question takes y alone: its name is refused first
   def test_at_a_terminal_a_citations_values_given_refuse_a_short_name
     why, shown = refused("ab", "--family-names=Doe")

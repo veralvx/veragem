@@ -76,8 +76,8 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes
 it, and a refused answer is asked again. With other input (CI, a pipe, `< /dev/null` to skip the
-questions) nothing is asked: the defaults apply, and a missing name, author or GitHub user is
-refused.
+questions) nothing is asked: the defaults apply, and a missing name, author, GitHub user or, with
+`--citation`, family names is refused.
 
 `CITATION.cff` (Citation File Format 1.2.0) is for software meant to be cited, research's: GitHub
 offers its "Cite this repository", and Zenodo, once the repository is enabled there (the generated
@@ -100,7 +100,7 @@ narrower than CFF:
   veragem's), and no DOI: Zenodo gives it at the first release, to add then.
 
 `rake bump` sets its version and date at each release, and `nix flake check` validates it against
-CFF's schema (cffconvert), which takes what Zenodo refuses too.
+CFF's schema (cffconvert): a check of the schema alone, which passes files Zenodo's import refuses.
 
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
 is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:

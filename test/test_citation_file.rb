@@ -9,6 +9,7 @@ class TestCitationFile < Minitest::Test
   include Veragem::GeneratedSupport
   include Veragem::CitationSupport
 
+  # the file, and CONTRIBUTING.md's steps for it: Zenodo, and the release that bumps it
   def test_the_file_is_a_citations_alone
     in_tmpdir do |dir|
       Veragem::Generator.generate(project, File.join(dir, "my_gem"))
@@ -16,6 +17,9 @@ class TestCitationFile < Minitest::Test
 
       refute_path_exists File.join(dir, "my_gem/CITATION.cff")
       assert_path_exists File.join(dir, "my_cited/CITATION.cff")
+      cited = %w[my_gem my_cited].map { read(dir, "#{it}/CONTRIBUTING.md").scan("CITATION.cff").size }
+
+      assert_equal [0, 3], cited
     end
   end
 
