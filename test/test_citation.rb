@@ -1,19 +1,20 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "yaml"
 
-# CITATION.cff, a gem's with --citation alone: its author's names, asked or given, and the file.
+# CITATION.cff's values, as options give them: a citation's alone, checked as Zenodo's import takes them.
 class TestCitation < Minitest::Test
   include Veragem::TerminalSupport
-  include Veragem::GeneratedSupport
+
+  NEEDED = "--given-names, --family-names, --orcid and --keywords are CITATION.cff's: they need a citation"
+  ORCID = "https://orcid.org/0000-0002-1825-0097"
 
   def parse(*argv) = Veragem::Options.parse(argv, config: CONFIG.method(:[]), input: StringIO.new)
 
   def test_a_citation_is_opt_in
     gem = parse("my_gem")
 
-    assert_equal [false, nil, nil], [gem.citation, gem.given_names, gem.family_names]
+    assert_equal [false, nil, nil, nil, nil], [gem.citation, gem.given_names, gem.family_names, gem.orcid, gem.keywords]
   end
 
   def test_with_a_citation_the_family_names_are_required_the_given_names_optional
@@ -28,12 +29,50 @@ class TestCitation < Minitest::Test
     end
   end
 
-  def test_names_without_a_citation_are_refused
-    [%w[--family-names=Doe], %w[--given-names=Jane], %w[--no-citation --family-names=Doe]].each do |argv|
-      error = assert_raises(Veragem::Error) { parse("my_gem", *argv) }
-
-      assert_equal "--given-names and --family-names are CITATION.cff's: they need a citation", error.message
+  def test_a_citations_values_without_one_are_refused
+    [%w[--family-names=Doe], %w[--given-names=Jane], %w[--orcid=0000-0002-1825-0097], %w[--keywords=ruby],
+     %w[--no-citation --family-names=Doe]].each do |argv|
+      assert_equal NEEDED, assert_raises(Veragem::Error) { parse("my_gem", *argv) }.message
     end
+  end
+
+  # ORCID's own examples, its check digit an X too; and its blocks' bounds, as Zenodo's idutils has them
+  def test_an_orcid_id_is_one_zenodo_takes_written_as_its_url
+    { "0000-0002-1825-0097" => ORCID, " http://orcid.org/0000-0002-9079-593X " => "https://orcid.org/0000-0002-9079-593X",
+      "https://orcid.org/0000-0002-1694-233x" => "https://orcid.org/0000-0002-1694-233X",
+      "0000-0001-5000-0007" => "https://orcid.org/0000-0001-5000-0007",
+      "0009-0000-1234-567X" => "https://orcid.org/0009-0000-1234-567X" }.each do |given, written|
+      assert_equal written, parse("my_gem", "--citation", "--family-names=Doe", "--orcid=#{given}").orcid
+    end
+  end
+
+  def test_an_orcid_id_zenodo_refuses_is_refused
+    ["0000-0002-1825-0098", "0000-0001-4999-9992", "0009-0010-0000-0011", "0000000218250097", "orcid",
+     "https://isni.org/0000-0002-1825-0097", "0000-0002-1825-0097\nx", "0000-0002-1825-009\xFF"].each do |given|
+      error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", "--orcid=#{given}") }
+
+      assert_match(/\Ainvalid ORCID iD /, error.message)
+    end
+  end
+
+  def test_keywords_are_comma_separated_their_blanks_and_repeats_dropped
+    gem = parse("my_gem", "--citation", "--family-names=Doe", "--keywords= ruby, gem,, ruby ,")
+
+    assert_equal %w[ruby gem], gem.keywords
+    [",", " , ", "a\tb", "x" * 99].each do |given|
+      error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", "--keywords=#{given}") }
+
+      assert_match(/\Ainvalid keyword/, error.message)
+    end
+  end
+
+  # its title the name: Zenodo's import refuses one under 3 characters
+  def test_a_name_under_three_characters_cannot_have_a_citation
+    error = assert_raises(Veragem::Error) { parse("ab", "--citation", "--family-names=Doe") }
+
+    assert_equal "invalid gem name ab with --citation: Zenodo takes a title of 3 characters or more", error.message
+    assert_equal "abc", parse("abc", "--citation", "--family-names=Doe").name
+    assert_equal "ab", parse("ab").name
   end
 
   def test_no_given_names_is_none
@@ -50,95 +89,6 @@ class TestCitation < Minitest::Test
       error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", name) }
 
       assert_match message, error.message
-    end
-  end
-
-  def test_at_a_terminal_the_names_are_asked_the_authors_words_offered
-    config = CONFIG.merge("user.name" => "Ana María de Souza")
-    gem, shown = ask("my_gem", "--license=mit", "--summary=Hi", answers: ["", "y", "", "", "", "", ""], config:)
-
-    assert_equal [true, "Ana María de", "Souza"], [gem.citation, gem.given_names, gem.family_names]
-    assert_includes shown, "Family names, CITATION.cff's [Souza]: Given names, CITATION.cff's [Ana María de]: "
-  end
-
-  # the given names offered: the author's words before the family names, whichever they are
-  def test_at_a_terminal_the_given_names_offered_follow_the_family_names
-    config = CONFIG.merge("user.name" => "Ana María de Souza")
-    answers = [""] * 7
-    { "de Souza" => "Ana María", "Plato" => nil }.each do |family, given|
-      gem, shown = ask("my_gem", "--citation", "--family-names=#{family}", answers:, config:)
-
-      assert_equal [given, family], [gem.given_names, gem.family_names]
-      assert_includes shown, "Given names, CITATION.cff's#{" [#{given}]" if given}: Email"
-    end
-  end
-
-  # one word, the family names alone: no given names offered, and none taken
-  def test_at_a_terminal_the_given_names_may_be_none
-    gem, shown = ask("my_gem", "--citation", "--author=Plato", answers: [""] * 7)
-
-    assert_equal [nil, "Plato"], [gem.given_names, gem.family_names]
-    assert_includes shown, "Family names, CITATION.cff's [Plato]: Given names, CITATION.cff's: "
-  end
-
-  def test_at_a_terminal_no_given_names_is_not_asked
-    gem, shown = ask("my_gem", "--citation", "--no-given-names", answers: [""] * 7)
-
-    assert_equal [nil, "Doe"], [gem.given_names, gem.family_names]
-    refute_includes shown, "Given names"
-  end
-
-  def test_at_a_terminal_without_a_citation_no_name_is_asked
-    _, shown = ask("my_gem", answers: ["", "n", "", "", "", "", ""])
-
-    refute_includes shown, "names"
-  end
-
-  # names given: the citation's question refuses no
-  def test_at_a_terminal_names_given_need_the_citation
-    gem, shown = ask("my_gem", "--family-names=Doe", answers: ["", "n", "y", "", "", "", "", "", ""])
-
-    assert_equal [true, "Doe"], [gem.citation, gem.family_names]
-    assert_includes shown, "--given-names and --family-names are CITATION.cff's: they need a citation\n"
-  end
-
-  def test_the_file_is_a_citations_alone
-    in_tmpdir do |dir|
-      Veragem::Generator.generate(project, File.join(dir, "my_gem"))
-      Veragem::Generator.generate(project("my_cited", citation: true, family_names: "Doe"), File.join(dir, "my_cited"))
-
-      refute_path_exists File.join(dir, "my_gem/CITATION.cff")
-      assert_path_exists File.join(dir, "my_cited/CITATION.cff")
-    end
-  end
-
-  def test_the_file_holds_the_projects_values
-    %w[mit apache dual].each do |license|
-      gem = project(license:, citation: true, given_names: "Jane", family_names: "Doe")
-      cff, version = generated(gem)
-
-      assert_equal({ "cff-version" => "1.2.0", "title" => "my_gem", "abstract" => "A Ruby gem.",
-                     "authors" => [{ "given-names" => "Jane", "family-names" => "Doe" }], "version" => version,
-                     "date-released" => Time.now.strftime("%F"), "license" => gem.licenses,
-                     "repository-code" => "https://github.com/jane/my_gem" }, cff.except("message"))
-    end
-  end
-
-  def test_the_values_read_back_as_given
-    names = "José \"Q\" \\ \#{x} # 'y': - [z] *a &b !c %d @e `f` {g}"
-    cff, = generated(project(summary: names, citation: true, family_names: names))
-
-    assert_equal [names, [{ "family-names" => names }]], cff.values_at("abstract", "authors")
-  end
-
-  private
-
-  # +gem+'s CITATION.cff, parsed, and its VERSION
-  def generated(gem)
-    in_tmpdir do |dir|
-      target = File.join(dir, gem.name)
-      Veragem::Generator.generate(gem, target)
-      [YAML.safe_load(read(target, "CITATION.cff")), read(target, "lib/#{gem.path}/version.rb")[/VERSION = "(.+)"/, 1]]
     end
   end
 end

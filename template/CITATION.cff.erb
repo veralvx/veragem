@@ -5,17 +5,26 @@ message: "If you use this software, please cite it using the metadata from this 
 title: <%= yaml(name) %>
 abstract: <%= yaml(summary) %>
 authors:
-<%- if given_names -%>
-  - given-names: <%= yaml(given_names) %>
-    family-names: <%= yaml(family_names) %>
-<%- else -%>
   - family-names: <%= yaml(family_names) %>
+<%- if given_names -%>
+    given-names: <%= yaml(given_names) %>
+<%- end -%>
+<%- if orcid -%>
+    orcid: "<%= orcid %>"
+<%- end -%>
+<%- if keywords -%>
+keywords:
+<%- keywords.each do |keyword| -%>
+  - <%= yaml(keyword) %>
+<%- end -%>
 <%- end -%>
 version: "0.1.0"
 date-released: "<%= today %>"
-# a list is read as OR: the licences to choose from
-license:
-<%- licenses.each do |spdx| -%>
-  - <%= spdx %>
+<%- if licenses.one? -%>
+license: <%= licenses.first %>
+<%- else -%>
+# no license: CFF writes MIT OR Apache-2.0 as a list, which Zenodo's import refuses (its issue
+# 2515); Zenodo takes the licence GitHub detects
 <%- end -%>
 repository-code: "https://github.com/<%= github %>/<%= name %>"
+repository-artifact: "https://rubygems.org/gems/<%= name %>"

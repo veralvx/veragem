@@ -22,6 +22,18 @@ module Veragem
     private def self.nestings_of: (String name) -> Array[String]
   end
 
+  module Citation
+    KEYS: Array[Symbol]
+    ORCID: Regexp
+    ORCID_BLOCKS: Array[Range[Integer]]
+
+    def self.check_values: (bool citation, Hash[Symbol, untyped] values) -> void
+    def self.check_name: (String name, bool citation) -> void
+    def self.offered: (Symbol key, Hash[Symbol, String | bool | nil] values) -> String?
+    def self.orcid: (String value) -> String
+    private def self.issued?: (String digits) -> bool
+  end
+
   class Project
     GITHUB: Regexp
     LICENSES: Hash[String, Array[String]]
@@ -37,6 +49,8 @@ module Veragem
     attr_reader citation: bool
     attr_reader given_names: String?
     attr_reader family_names: String?
+    attr_reader orcid: String?
+    attr_reader keywords: Array[String]?
 
     def initialize: (String name, Hash[Symbol, untyped] values) -> void
     def path: () -> String
@@ -51,14 +65,16 @@ module Veragem
     def nest: (String body, ?doc: String?) -> String
     def self.quote: (String value) -> String
     def self.check: (Symbol key, String value) -> String
-    def self.check_citation: (bool citation, Hash[Symbol, untyped] values) -> void
     private def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     private def self.text: (String field, String value) -> String
+    private def self.line: (String field, String value) -> String
+    private def self.keywords: (String value) -> String
     private def self.documented: (String summary) -> String
 
     private
 
-    def extras: (Hash[Symbol, untyped] values) -> [bool, bool, String?, String?]
+    def extras: (Hash[Symbol, untyped] values) -> void
+    def cite: (Hash[Symbol, untyped] values) -> void
     def indent: (String code) -> String
   end
 
@@ -75,7 +91,6 @@ module Veragem
     end
 
     QUESTIONS: Hash[Symbol, String]
-    CITATION: Array[Symbol]
     OPTIONAL: Array[Symbol]
 
     @input: _Input
@@ -83,13 +98,13 @@ module Veragem
     @dir: String
 
     def initialize: (_Input input, _Output output, String dir) -> void
-    def name: (String? given, exe: bool) -> String
+    def name: (String? given, exe: bool, citation: bool) -> String
     def values: (String name, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults)
               -> Hash[Symbol, String | bool | nil]
 
     private
 
-    def check_name: (String name, bool exe) -> String
+    def check_name: (String name, bool exe, bool citation) -> String
     def answer: (Symbol key, String text, String name, Hash[Symbol, String | bool | nil] values) -> (String | bool)
     def default: (Symbol key, Hash[Symbol, String] defaults, Hash[Symbol, String | bool | nil] values) -> String?
     def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?optional: bool) -> (String | bool | nil)

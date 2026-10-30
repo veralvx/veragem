@@ -70,6 +70,8 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 | `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository" |
 | `--family-names=NAMES`     | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff` |
 | `--[no-]given-names=NAMES` | optional; `--no-given-names`: none          | with `--citation`: the author's, `CITATION.cff` |
+| `--orcid=ID`               | optional                                    | with `--citation`: the author's ORCID iD        |
+| `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated    |
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes
@@ -78,12 +80,25 @@ questions) nothing is asked: the defaults apply, and a missing name, author or G
 refused.
 
 `CITATION.cff` (Citation File Format 1.2.0) is for software meant to be cited, research's: GitHub
-offers its "Cite this repository", Zenodo reads it. Its author is a person, family names required,
-given names optional. Asked at a terminal, the family names offer the author's last word, and the
-given names the words before the family names, where the author ends with them. Names need a
-citation: without one they are refused, and at a terminal its question takes y alone. It holds no
-email (CFF's pattern is stricter than veragem's); `rake bump` sets its version and date at each
-release, and `nix flake check` validates it (cffconvert).
+offers its "Cite this repository", and Zenodo's GitHub integration archives each release with its
+values and gives it a DOI. Its author is a person, family names required, given names, ORCID iD and
+keywords optional. Asked at a terminal, the family names offer the author's last word, and the
+given names the words before the family names, where the author ends with them. Its values need a
+citation: without one they are refused, and at a terminal its question takes y alone.
+
+What it holds is what GitHub and Zenodo read, written as Zenodo's import takes it, which is
+narrower than CFF:
+
+- one licence as its SPDX identifier, and none for `dual`: CFF writes an OR as a list, and Zenodo
+  refuses the whole file for one ([zenodo/zenodo#2515](https://github.com/zenodo/zenodo/issues/2515)),
+  so it takes the licence GitHub detects instead, Apache-2.0 (MIT can be added on the record);
+- an ORCID iD Zenodo's check takes, its check digit and its block ORCID's, written as its URL;
+- a name of 3 characters or more, Zenodo's least title;
+- the repository, and RubyGems' page as its artifact; no email (CFF's pattern is stricter than
+  veragem's), and no DOI: Zenodo gives it at the first release, to add then.
+
+`rake bump` sets its version and date at each release, and `nix flake check` validates it against
+CFF's schema (cffconvert), which takes what Zenodo refuses too.
 
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
 is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:

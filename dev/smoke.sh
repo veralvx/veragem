@@ -19,7 +19,8 @@ generate() {
 }
 generate smoke_lib
 generate smoke-omniauth-google_oauth2 --exe --license mit
-generate smoke_apache --license apache --citation --given-names Smoke --family-names Test
+generate smoke_apache --license apache --citation --given-names Smoke --family-names Test \
+  --orcid 0000-0002-1825-0097 --keywords smoke,test
 
 for gem in smoke_lib smoke-omniauth-google_oauth2 smoke_apache; do
   echo "== $gem"

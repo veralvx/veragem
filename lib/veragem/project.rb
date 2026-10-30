@@ -14,7 +14,8 @@ module Veragem
                      |raises|example):/xi
     private_constant :GITHUB, :INFORMAL_TAG
 
-    attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names
+    attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
+                :orcid, :keywords
 
     # +value+ as a Ruby string literal, as written whatever the locale (String#inspect escapes
     # what the locale cannot show): a quote, a backslash and an interpolation escaped.
@@ -23,33 +24,26 @@ module Veragem
     def self.quote(value) = %("#{value.gsub(/["\\]|#(?=[{$@])/) { "\\#{it}" }}")
 
     # The value +key+ takes, an option's or an answer's: checked, or an Error saying why not.
-    # @param key [Symbol] :author, :email, :github, :summary, :license, :given_names or :family_names
+    # @param key [Symbol] :author, :email, :github, :summary, :license, :given_names, :family_names,
+    #   :orcid or :keywords
     # @param value [String] as given
-    # @return [String] the value a file writes
+    # @return [String] the value a file writes: an ORCID iD its URL, keywords joined by ", "
     # @raise [Veragem::Error] +key+ cannot take it
     def self.check(key, value)
       case key
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
       when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
       when :summary then documented(text("summary", value))
+      when :orcid then Citation.orcid(value)
+      when :keywords then keywords(value)
       else text(key.name.tr("_", " "), value)
       end
     end
 
-    # A citation's names, given only with a citation: CITATION.cff alone writes them.
-    # @param citation [Boolean] whether the gem has CITATION.cff
-    # @param values [Hash{Symbol => String, Boolean, nil}] the names among them
-    # @return [void]
-    # @raise [Veragem::Error] a name is given without a citation
-    def self.check_citation(citation, values)
-      return if citation || !(values[:given_names] || values[:family_names])
-
-      raise Error, "--given-names and --family-names are CITATION.cff's: they need a citation"
-    end
-
     # +name+, and +values+: the author, email, github, summary, license and a citation's given and
-    # family names (strings, but an email or given names false, --no-email's, --no-given-names', or
-    # nil for none), exe and citation (true for a command line, for CITATION.cff), as Options reads them.
+    # family names, ORCID iD and keywords (strings, but an email or given names false, --no-email's,
+    # --no-given-names', or nil for none), exe and citation (true for a command line, for
+    # CITATION.cff), as Options reads them.
     # @param name [String] the gem's name, as given
     # @param values [Hash{Symbol => String, Boolean, nil}] the rest, as given
     # @return [void]
@@ -61,7 +55,7 @@ module Veragem
       @github = Project.check(:github, values[:github])
       @summary = Project.check(:summary, values[:summary])
       @license = Project.check(:license, values[:license])
-      @exe, @citation, @given_names, @family_names = extras(values)
+      extras(values)
     end
 
     # The file the gem requires, lib/'s: `my-gem`'s my/gem.
@@ -121,21 +115,36 @@ module Veragem
       value
     end
 
-    # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped (Unicode's too),
-    # short enough for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as
-    # unfinished. U+FFFE and U+FFFF are outside YAML's printable characters: CITATION.cff's.
+    # A value a file quotes, which RubyGems does not refuse as unfinished.
     private_class_method def self.text(field, value)
-      value = value.dup.force_encoding(Encoding::UTF_8)
-      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/)
-      line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
-      raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
-      raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
+      line = line(field, value)
       if line.match?(/\A(TODO|FIXME)/)
         raise Error,
               "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
       end
 
       line
+    end
+
+    # One line of valid UTF-8, its surrounding spaces stripped (Unicode's too), short enough for the
+    # gemspec's line (RuboCop's 120 columns). U+FFFE and U+FFFF are outside YAML's printable
+    # characters: CITATION.cff's.
+    private_class_method def self.line(field, value)
+      value = value.dup.force_encoding(Encoding::UTF_8)
+      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/)
+      line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
+      raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
+      raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
+
+      line
+    end
+
+    # Keywords, comma-separated: each one line, blanks and repeats dropped, as CFF's list takes them.
+    private_class_method def self.keywords(value)
+      words = value.split(",").reject { it.strip.empty? }.map { line("keyword", it) }.uniq
+      raise Error, "invalid keywords #{value.inspect}: one or more, comma-separated" if words.empty?
+
+      words.join(", ")
     end
 
     # +summary+, which is the module's comment too: one the gem's own yard-lint takes, no informal tag
@@ -154,17 +163,23 @@ module Veragem
 
     private
 
-    # What the gem holds beyond the library: a command line, a citation. CITATION.cff's author is a
-    # person: the family names it needs, the given names it may have.
+    # What the gem holds beyond the library: a command line, a citation.
     def extras(values)
-      exe, citation = values.values_at(:exe, :citation).map { it == true }
-      Project.check_citation(citation, values)
-      return [exe, false, nil, nil] unless citation
+      @exe, @citation = values.values_at(:exe, :citation).map { it == true }
+      Citation.check_values(citation, values)
+      Citation.check_name(name, citation)
+      cite(values) if citation
+    end
 
-      given, family = values.values_at(:given_names, :family_names)
+    # CITATION.cff's author is a person: the family names it needs, the rest it may have.
+    def cite(values)
+      given, family, orcid, keywords = values.values_at(*Citation::KEYS)
       raise Error, "no family names: --family-names, CITATION.cff's author" unless family
 
-      [exe, true, (Project.check(:given_names, given) if given), Project.check(:family_names, family)]
+      @given_names = (Project.check(:given_names, given) if given)
+      @family_names = Project.check(:family_names, family)
+      @orcid = (Project.check(:orcid, orcid) if orcid)
+      @keywords = (Project.check(:keywords, keywords).split(", ") if keywords)
     end
 
     # a blank line left blank, no trailing spaces
