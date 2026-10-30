@@ -158,6 +158,9 @@ bundle exec rake release
 change a user meets (`feat`, `fix`, `perf`, `build`...): `chore`, `ci` and `style` alone make
 none. It sets the version in `lib/<%= path %>/version.rb` (the first release keeps the version
 declared, whatever the level), updates the lock, writes the changelog (git-cliff) and commits.
+<%- if citation -%>
+It sets `CITATION.cff`'s version and date-released too: a citation names the release.
+<%- end -%>
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
 tag; it pushes no gem. The tag runs `release.yml`: the checks and the build, the push to RubyGems
 by Trusted Publishing, then the GitHub release of the same gem, its notes the changelog's new

@@ -7,13 +7,19 @@ module Veragem
     # Each value's question, in the order asked; the name's comes first.
     QUESTIONS = {
       exe: "A command line, exe/%<name>s (y/n)",
+      citation: "A citation file, CITATION.cff (y/n)",
       license: "License (mit, apache or dual)",
       summary: "Summary",
       author: "Author",
+      given_names: "Given names, CITATION.cff's",
+      family_names: "Family names, CITATION.cff's",
       email: "Email",
       github: "GitHub user"
     }.freeze
-    private_constant :QUESTIONS
+    # The questions a citation alone asks, and those an empty answer may leave unanswered.
+    CITATION = %i[given_names family_names].freeze
+    OPTIONAL = %i[email given_names].freeze
+    private_constant :QUESTIONS, :CITATION, :OPTIONAL
 
     # Generating into +dir+.
     # @param input [#gets, #tty?] where the answers are typed
@@ -37,18 +43,23 @@ module Veragem
       ask("Gem name", check: -> { check_name(it, exe) }) #: String
     end
 
-    # +given+ (the options) and the answers to the rest, +defaults+ offered.
+    # +given+ (the options) and the answers to the rest, +defaults+ offered; a citation's names asked
+    # only for a citation, the author's words offered for them.
     # @param name [String] the gem's, checked
     # @param given [Hash{Symbol => String, Boolean}] the options' values
     # @param defaults [Hash{Symbol => String}] git's and Options' own
-    # @return [Hash{Symbol => String, Boolean, nil}] a value for each key, the email's nil for none
+    # @return [Hash{Symbol => String, Boolean, nil}] a value for each key asked, nil for none
     # @raise [Veragem::Error] nothing is answered, or the terminal cannot be asked
     def values(name, given, defaults)
-      defaults = { exe: "n", **defaults }
-      asked = QUESTIONS.except(*given.keys).to_h do |key, question|
-        [key, ask(format(question, name:), defaults[key], optional: key == :email, check: -> { answer(key, it, name) })]
+      values = given.dup #: Hash[Symbol, String | bool | nil]
+      QUESTIONS.except(*given.keys).each do |key, question|
+        next if CITATION.include?(key) && values[:citation] != true
+
+        check = -> { answer(key, it, name, values) }
+        default = default(key, defaults, values)
+        values[key] = ask(format(question, name:), default, optional: OPTIONAL.include?(key), check:)
       end
-      asked.merge(given)
+      values
     end
 
     private
@@ -60,9 +71,10 @@ module Veragem
       end
     end
 
-    def answer(key, text, name)
+    def answer(key, text, name, values)
       case key
       when :exe then yes?(text).tap { Generator.check_name(name, it) }
+      when :citation then yes?(text).tap { Project.check_citation(it, values) }
       when :license then Project.check(key, completed(text))
       else Project.check(key, text)
       end
@@ -117,6 +129,14 @@ module Veragem
       in "n" | "no" then false
       else raise Error, "y or n"
       end
+    end
+
+    # A citation's names offer the author's words, a guess: the last the family names.
+    def default(key, defaults, values)
+      return { exe: "n", citation: "n", **defaults }[key] unless CITATION.include?(key)
+
+      *given, family = values[:author].to_s.split
+      key == :family_names ? family : (given.join(" ") unless given.empty?)
     end
 
     # A licence abbreviated, completed as the option's is: when one licence alone starts so.

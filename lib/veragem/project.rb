@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "json"
+
 module Veragem
   # The gem to generate: the values given, checked, and what follows from them.
   class Project
@@ -12,7 +14,7 @@ module Veragem
                      |raises|example):/xi
     private_constant :GITHUB, :INFORMAL_TAG
 
-    attr_reader :name, :author, :email, :github, :summary, :license, :exe
+    attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names
 
     # +value+ as a Ruby string literal, as written whatever the locale (String#inspect escapes
     # what the locale cannot show): a quote, a backslash and an interpolation escaped.
@@ -21,7 +23,7 @@ module Veragem
     def self.quote(value) = %("#{value.gsub(/["\\]|#(?=[{$@])/) { "\\#{it}" }}")
 
     # The value +key+ takes, an option's or an answer's: checked, or an Error saying why not.
-    # @param key [Symbol] :author, :email, :github, :summary or :license
+    # @param key [Symbol] :author, :email, :github, :summary, :license, :given_names or :family_names
     # @param value [String] as given
     # @return [String] the value a file writes
     # @raise [Veragem::Error] +key+ cannot take it
@@ -30,12 +32,24 @@ module Veragem
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
       when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
       when :summary then documented(text("summary", value))
-      else text(key.name, value)
+      else text(key.name.tr("_", " "), value)
       end
     end
 
-    # +name+, and +values+: the author, email, github, summary and license (strings, but an email false,
-    # --no-email's, or nil for none), exe (true for a command line), as Options reads them.
+    # A citation's names, given only with a citation: CITATION.cff alone writes them.
+    # @param citation [Boolean] whether the gem has CITATION.cff
+    # @param values [Hash{Symbol => String, Boolean, nil}] the names among them
+    # @return [void]
+    # @raise [Veragem::Error] a name is given without a citation
+    def self.check_citation(citation, values)
+      return if citation || !(values[:given_names] || values[:family_names])
+
+      raise Error, "--given-names and --family-names are CITATION.cff's: add --citation"
+    end
+
+    # +name+, and +values+: the author, email, github, summary, license and a citation's given and
+    # family names (strings, but an email false, --no-email's, or nil for none), exe and citation (true
+    # for a command line, for CITATION.cff), as Options reads them.
     # @param name [String] the gem's name, as given
     # @param values [Hash{Symbol => String, Boolean, nil}] the rest, as given
     # @return [void]
@@ -47,7 +61,7 @@ module Veragem
       @github = Project.check(:github, values[:github])
       @summary = Project.check(:summary, values[:summary])
       @license = Project.check(:license, values[:license])
-      @exe = values[:exe] == true
+      @exe, @citation, @given_names, @family_names = extras(values)
     end
 
     # The file the gem requires, lib/'s: `my-gem`'s my/gem.
@@ -73,6 +87,15 @@ module Veragem
     # The copyright's year: this one.
     # @return [Integer]
     def year = Time.now.year
+
+    # Today, as CFF writes a date: CITATION.cff's date-released until `rake bump` sets a release's.
+    # @return [String]
+    def today = Time.now.strftime("%F")
+
+    # +value+ as a YAML double-quoted string: JSON's, which YAML reads alike.
+    # @param value [String] a value of the gem's, checked
+    # @return [String]
+    def yaml(value) = JSON.generate(value)
 
     # Project.quote, for the templates.
     # @param value [String] a value of the gem's, checked
@@ -130,6 +153,19 @@ module Veragem
     end
 
     private
+
+    # What the gem holds beyond the library: a command line, a citation. CITATION.cff's author is a
+    # person: the family names it needs, the given names it may have.
+    def extras(values)
+      exe, citation = values.values_at(:exe, :citation).map { it == true }
+      Project.check_citation(citation, values)
+      return [exe, false, nil, nil] unless citation
+
+      given, family = values.values_at(:given_names, :family_names)
+      raise Error, "no family names: --family-names, CITATION.cff's author" unless family
+
+      [exe, true, (Project.check(:given_names, given) if given), Project.check(:family_names, family)]
+    end
 
     # a blank line left blank, no trailing spaces
     def indent(code) = code.gsub(/^(?=.)/, "  ")

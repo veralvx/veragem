@@ -114,7 +114,15 @@ def next_version(current, level)
   parts.fill(0, level + 1).join(".")
 end
 
-# The release commit: the version, the lock, the changelog.
+# CITATION.cff, where the gem has one (bundle veragem --citation): the release's version and date.
+def cite(version)
+  Dir["CITATION.cff"].each do |cff|
+    released = File.read(cff).sub(/^version: .*$/, %(version: "#{version}"))
+    File.write(cff, released.sub(/^date-released: .*$/, %(date-released: "#{Time.now.strftime("%F")}")))
+  end
+end
+
+# The release commit: the version, the lock, the changelog, and CITATION.cff's version and date.
 desc "Bump the version (major, minor or patch), write the changelog and commit"
 task :bump, [:level] => "release:guard_clean" do |_, args|
   level = %w[major minor patch].index(args[:level]) or abort 'usage: rake "bump[major|minor|patch]"'
@@ -130,9 +138,10 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
   first = !File.exist?("CHANGELOG.md")
   begin
     File.write(file, File.read(file).sub(%("#{current}"), %("#{version}")))
+    cite(version)
     sh "bundle", "lock"
     sh(*cliff, "--tag", "v#{version}", "--output", "CHANGELOG.md")
-    sh "git", "add", file, "Gemfile.lock", "CHANGELOG.md"
+    sh "git", "add", file, "Gemfile.lock", "CHANGELOG.md", *Dir["CITATION.cff"]
     sh "git", "commit", "--message", "chore(release): v#{version}"
   rescue StandardError, Interrupt
     # The tracked files were committed (release:guard_clean): put back what this changed.

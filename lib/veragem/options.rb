@@ -13,7 +13,17 @@ module Veragem
     # --help's first lines.
     BANNER = "Usage: bundle veragem NAME [options]\n" \
              "With a terminal for input, what no option gives (the name too) is asked for."
-    private_constant :GIT_CONFIG, :DEFAULTS, :BANNER
+    # Each option after --exe and --license, and its --help.
+    OPTIONS = [
+      ["--author=NAME", "The author (default: git config user.name)"],
+      ["--[no-]email=EMAIL", "The author's email (default: git config user.email; --no-email, none)"],
+      ["--github=USER", "The GitHub user or organization (default: git config github.user)"],
+      ["--summary=TEXT", "The gem's summary (default: A Ruby gem.)"],
+      ["--[no-]citation", "Add CITATION.cff, the citation GitHub and Zenodo read (default: --no-citation)"],
+      ["--given-names=NAMES", "With --citation: the author's given names, CITATION.cff's"],
+      ["--family-names=NAMES", "With --citation: the author's family names, CITATION.cff's (required)"]
+    ].freeze #: Array[[String, String]]
+    private_constant :GIT_CONFIG, :DEFAULTS, :BANNER, :OPTIONS
 
     # +dir+, where the gem is to be generated; the questions on +output+, as a prompt is.
     # @param argv [Array<String>] the command's arguments
@@ -41,7 +51,10 @@ module Veragem
       # an argument of invalid UTF-8 as bytes, as git's values are: OptionParser's matching raises on
       # it, Project refuses it
       names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: given)
+      # OptionParser keys --given-names as :"given-names"; Project's are :given_names
+      given.transform_keys! { it.name.tr("-", "_").to_sym }
       given.each { |key, value| Project.check(key, value) if value.is_a?(String) }
+      Project.check_citation(given[:citation] == true, given) if given.key?(:citation)
       [names, given]
     end
 
@@ -69,10 +82,7 @@ module Veragem
         opts.version = VERSION
         opts.on("--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)")
         opts.on("--license=LICENSE", Project::LICENSES.keys, "mit, apache or dual (MIT OR Apache-2.0, the default)")
-        opts.on("--author=NAME", "The author (default: git config user.name)")
-        opts.on("--[no-]email=EMAIL", "The author's email (default: git config user.email; --no-email, none)")
-        opts.on("--github=USER", "The GitHub user or organization (default: git config github.user)")
-        opts.on("--summary=TEXT", "The gem's summary (default: A Ruby gem.)")
+        OPTIONS.each { |switch, help| opts.on(switch, help) }
       end
     end
 

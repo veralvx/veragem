@@ -58,21 +58,31 @@ git commit -m "chore: initial commit from veragem"
 bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix develop`'s
 ```
 
-| Option               | Default                                     | Goes into                                       |
-| -------------------- | ------------------------------------------- | ----------------------------------------------- |
-| `NAME`               | --                                          | the gem, its module, its files: as `bundle gem` |
-| `--[no-]exe`         | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/NAME/cli.rb`   |
-| `--license=LICENSE`  | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE |
-| `--author=NAME`      | `git config user.name` (required)           | the gemspec, the licence's copyright line       |
-| `--[no-]email=EMAIL` | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                |
-| `--github=USER`      | `git config github.user` (required)         | the homepage, the repository's links            |
-| `--summary=TEXT`     | `A Ruby gem.`                               | the gemspec, the README, the module's comment   |
+| Option                 | Default                                     | Goes into                                       |
+| ---------------------- | ------------------------------------------- | ----------------------------------------------- |
+| `NAME`                 | --                                          | the gem, its module, its files: as `bundle gem` |
+| `--[no-]exe`           | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/NAME/cli.rb`   |
+| `--license=LICENSE`    | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE |
+| `--author=NAME`        | `git config user.name` (required)           | the gemspec, the licence's copyright line       |
+| `--[no-]email=EMAIL`   | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                |
+| `--github=USER`        | `git config github.user` (required)         | the homepage, the repository's links            |
+| `--summary=TEXT`       | `A Ruby gem.`                               | the gemspec, the README, the module's comment   |
+| `--[no-]citation`      | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository" |
+| `--given-names=NAMES`  | none                                        | with `--citation`: the author's, `CITATION.cff` |
+| `--family-names=NAMES` | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff` |
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes
 it, and a refused answer is asked again. With other input (CI, a pipe, `< /dev/null` to skip the
 questions) nothing is asked: the defaults apply, and a missing name, author or GitHub user is
 refused.
+
+`CITATION.cff` (Citation File Format 1.2.0) is for software meant to be cited, research's: GitHub
+offers its "Cite this repository", Zenodo reads it. Its author is a person, family names required,
+given names optional; asked at a terminal, they offer the author's words split, the last the family
+names. Names without `--citation` are refused. It holds no email (CFF's pattern is stricter than
+veragem's); `rake bump` sets its version and date at each release, and `nix flake check` validates
+it (cffconvert).
 
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
 is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
@@ -116,6 +126,7 @@ dprint.json, .editorconfig
                       image), the style checks, Dependabot, its auto-merge and its bumps'
                       RuboCop corrections; issue and pull request templates
 README, CONTRIBUTING, AGENTS, SECURITY, CODE_OF_CONDUCT, LICENSE-MIT / LICENSE-APACHE
+CITATION.cff          with --citation: the citation, its version and date `rake bump`'s
 ```
 
 The Gemfile leaves the development tools unconstrained: the lock pins them at the versions current

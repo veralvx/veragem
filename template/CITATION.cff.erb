@@ -1,0 +1,21 @@
+# The citation GitHub's "Cite this repository" and Zenodo read (Citation File Format 1.2.0);
+# `rake bump` sets version and date-released at each release.
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+title: <%= yaml(name) %>
+abstract: <%= yaml(summary) %>
+authors:
+<%- if given_names -%>
+  - given-names: <%= yaml(given_names) %>
+    family-names: <%= yaml(family_names) %>
+<%- else -%>
+  - family-names: <%= yaml(family_names) %>
+<%- end -%>
+version: "0.1.0"
+date-released: "<%= today %>"
+# a list is read as OR: the licences to choose from
+license:
+<%- licenses.each do |spdx| -%>
+  - <%= spdx %>
+<%- end -%>
+repository-code: "https://github.com/<%= github %>/<%= name %>"

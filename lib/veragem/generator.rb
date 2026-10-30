@@ -20,7 +20,9 @@ module Veragem
                    GIT_PREFIX GIT_SHALLOW_FILE GIT_COMMON_DIR].to_h { [it, nil] }.freeze
     # Each LICENSE-* file's SPDX identifier.
     LICENSE_FILES = { "LICENSE-MIT.erb" => "MIT", "LICENSE-APACHE.erb" => "Apache-2.0" }.freeze
-    private_constant :GIT_LOCAL, :LICENSE_FILES
+    # The citation's file, a citation's alone (--citation).
+    CITATION = "CITATION.cff.erb"
+    private_constant :GIT_LOCAL, :LICENSE_FILES, :CITATION
 
     # Into +target+, a new directory: a failure, an interrupt included, leaves none behind.
     # @param project [Veragem::Project] the gem
@@ -69,8 +71,9 @@ module Veragem
 
     private_class_method def self.files(project)
       check_name(project.name, project.exe)
-      licenses = LICENSE_FILES.reject { |_, spdx| project.licenses.include?(spdx) }.keys
-      (templates(project.exe) - licenses).to_h { [it, path_of(it, project.name)] }
+      skipped = LICENSE_FILES.reject { |_, spdx| project.licenses.include?(spdx) }.keys
+      skipped << CITATION unless project.citation
+      (templates(project.exe) - skipped).to_h { [it, path_of(it, project.name)] }
     end
 
     # The template's files a kind takes (+exe+, a command line's too), each licence's included.

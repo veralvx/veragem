@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The plugin as a user meets it: installed from this checkout (`bundle plugin install --path`), it
-# generates a gem of each kind and licence, and each passes its own `rake checks` and builds, and
-# the command's OCI image runs, on Linux where Docker runs -- its gems from rubygems.org, its tools
-# the dev shell's: run it in `nix develop`. smoke.yml's.
+# generates a gem of each kind and licence, one with CITATION.cff, and each passes its own
+# `rake checks` and builds, and the command's OCI image runs, on Linux where Docker runs -- its gems
+# from rubygems.org, its tools the dev shell's: run it in `nix develop`. smoke.yml's.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -19,7 +19,7 @@ generate() {
 }
 generate smoke_lib
 generate smoke-omniauth-google_oauth2 --exe --license mit
-generate smoke_apache --license apache
+generate smoke_apache --license apache --citation --given-names Smoke --family-names Test
 
 for gem in smoke_lib smoke-omniauth-google_oauth2 smoke_apache; do
   echo "== $gem"

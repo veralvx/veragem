@@ -36,8 +36,9 @@ sig/, test/, dev/smoke.sh
 `template/` is the generated gem. A file ending `.erb` is rendered with ERB (trim mode `-`), the
 project its `self` (`lib/veragem/project.rb`: `name`, `path`, `constant`, `author`, `quote`,
 `nest`...); every other file is copied as is. In a path, `%name%`, `%path%` and `%underscored%`
-are the project's. The command line's files are the `--exe` kind's alone, and each LICENSE file its
-licence's (`Generator::EXE`, `Generator::LICENSE_FILES`).
+are the project's. The command line's files are the `--exe` kind's alone, each LICENSE file its
+licence's, and CITATION.cff a `--citation`'s (`Generator::EXE`, `Generator::LICENSE_FILES`,
+`Generator::CITATION`).
 
 Keep a file plain unless it needs a value: a plain file is checked in place, as this repository's
 own. **This repository's harness is the template's**: each plain file of `template/` is here too,

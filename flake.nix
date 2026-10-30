@@ -9,7 +9,8 @@
 #   nix fmt          the Nix, by nixfmt
 #   nix flake check  the Nix format, the shell scripts (shellcheck, shfmt), the workflows
 #                    (actionlint, zizmor), the package and its library loaded -- and the command
-#                    run, and its image -- offline in the sandbox: git's files alone
+#                    run, and its image; CITATION.cff, where there is one, validated (cffconvert)
+#                    -- offline in the sandbox: git's files alone
 #
 # Nothing here names the gem: its name is the gemspec's file; its version, lib/<path>/version.rb's
 # VERSION; its summary, homepage and licences, the gemspec's lines that set them.
@@ -73,6 +74,7 @@
         else
           lib.concatLists (lib.filter lib.isList (builtins.split ''"([^"]*)"'' (lib.head found)));
       command = builtins.pathExists ./exe/${name};
+      citation = builtins.pathExists ./CITATION.cff;
 
       check =
         pkgs: checkName: tools: script:
@@ -185,6 +187,10 @@
                   fi
                   touch $out
                 '';
+          }
+          // lib.optionalAttrs citation {
+            # CITATION.cff, where the gem has one (bundle veragem --citation): valid as CFF 1.2.0
+            citation = check pkgs "citation" [ pkgs.cffconvert ] "cffconvert --validate -i CITATION.cff";
           }
           // lib.optionalAttrs linuxCommand { inherit image; };
 
