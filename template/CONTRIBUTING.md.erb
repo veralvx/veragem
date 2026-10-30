@@ -69,6 +69,7 @@ bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workf
 bundle exec rake format   # RuboCop's corrections, dprint and nixfmt, in place
 bundle exec rake typeprof # the signatures TypeProf infers from lib/, to start sig/ from
 bundle exec rake yard     # the documentation of lib/, in doc/
+bundle exec rake graph    # its classes and modules, for Graphviz: | dot -Tsvg -o graph.svg
 nix build                 # the gem, built and installed by Nix (flake.nix)
 ```
 

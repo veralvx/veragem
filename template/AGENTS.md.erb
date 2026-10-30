@@ -35,8 +35,8 @@ configuration, zizmor's security audit.
 - `bundle exec rake yard_lint` lints it (`yard-lint lib --stats`); `bundle exec rake yard` writes
   it to `doc/`.
 - `yardoc` queries the tags: `--query '@return && @param'`, `--query 'has_tag?(:api)'`.
-- `yard graph --protected --private --full --dependencies` draws the classes and modules, for
-  Graphviz's `dot`.
+- `bundle exec rake graph` prints the classes and modules as a Graphviz graph
+  (`yard graph --protected --private --full --dependencies`): `| dot -Tsvg -o graph.svg`.
 
 ### 1.3. Types: signatures by hand, TypeProf to start them
 
