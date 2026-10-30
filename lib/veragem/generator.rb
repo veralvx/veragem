@@ -22,7 +22,10 @@ module Veragem
     LICENSE_FILES = { "LICENSE-MIT.erb" => "MIT", "LICENSE-APACHE.erb" => "Apache-2.0" }.freeze
     # The citation's file, a citation's alone (--citation).
     CITATION = "CITATION.cff.erb"
-    private_constant :GIT_LOCAL, :LICENSE_FILES, :CITATION
+    # The tools' resolution: this repository's Gemfile is the template's (test_sync.rb), so its lock
+    # names every gem a generated gem's tools load, theirs included. (Steep: as TEMPLATE.)
+    TOOLS_LOCK = File.expand_path("../../Gemfile.lock", __dir__) # steep:ignore ArgumentTypeMismatch
+    private_constant :GIT_LOCAL, :LICENSE_FILES, :CITATION, :TOOLS_LOCK
 
     # Into +target+, a new directory: a failure, an interrupt included, leaves none behind.
     # @param project [Veragem::Project] the gem
@@ -30,19 +33,38 @@ module Veragem
     # @return [void]
     # @raise [Veragem::Error] +target+ exists, its name cannot be generated, or a write or git fails
     def self.generate(project, target)
-      check_target(target)
-      files = files(project)
+      check(project.name, exe: project.exe, citation: project.citation, target:)
+      written = files(project)
       Dir.mkdir(target)
       removed_unless_done(target) do
-        files.each { |file, path| write(File.join(TEMPLATE, file), File.join(target, path), project) }
+        written.each { |file, path| write(File.join(TEMPLATE, file), File.join(target, path), project) }
         git(target, "init", "--quiet", "--initial-branch=main")
-        git(target, "add", "--all")
+        # --force: the user's own excludes (core.excludesFile) keep none of the gem's files out
+        git(target, "add", "--all", "--force")
       end
     rescue SystemCallError => e
       raise Error, e.message
     end
 
-    # What a name and its kind decide. A tool's, the Gemfile would name twice. A command line names
+    # Every rule a gem's name meets before anything is written, its kinds' and its directory's: the
+    # questions' and the generation's one check.
+    # @param name [String] as typed
+    # @param exe [Boolean] whether the gem has a command line
+    # @param citation [Boolean] whether the gem has CITATION.cff
+    # @param target [String] its directory, not yet there
+    # @return [String] +name+
+    # @raise [Veragem::Error] the gem cannot have the name, or +target+ exists
+    def self.check(name, exe:, citation:, target:)
+      Name.check(name)
+      check_name(name, exe)
+      Citation.check_name(name, citation)
+      Name.check_modules(name)
+      check_target(target)
+      name
+    end
+
+    # What a name and its kind decide. A gem the Gemfile's tools load (its lock's), the bundle would
+    # resolve to the new gem itself and break them. A command line names
     # the gem's module from within it, <Gem>::CLI, whose constant lookup finds CLI and VERSION first:
     # neither can be its module. Two files at one path: `helper`'s test would be test/test_helper.rb.
     # @param name [String] one Name.check takes
@@ -50,7 +72,7 @@ module Veragem
     # @return [void]
     # @raise [Veragem::Error] the kind cannot have the name
     def self.check_name(name, exe)
-      raise Error, "invalid gem name #{name}: the Gemfile's own tool" if tools.include?(name)
+      raise Error, "invalid gem name #{name}: a gem the Gemfile's tools load" if tools.include?(name)
 
       innermost = Name.modules(name).last
       if exe && %w[CLI VERSION].include?(innermost)
@@ -61,16 +83,12 @@ module Veragem
       raise Error, "invalid gem name #{name}: it would write #{clash[0]} twice" if clash
     end
 
-    # +target+ is free: neither a file nor a link, dangling ones too.
-    # @param target [String] the gem's directory
-    # @return [void]
-    # @raise [Veragem::Error] it exists
-    def self.check_target(target)
+    # +target+ is free: neither a file nor a link, dangling ones too
+    private_class_method def self.check_target(target)
       raise Error, "#{target} already exists" if File.exist?(target) || File.symlink?(target)
     end
 
     private_class_method def self.files(project)
-      check_name(project.name, project.exe)
       skipped = LICENSE_FILES.reject { |_, spdx| project.licenses.include?(spdx) }.keys
       skipped << CITATION unless project.citation
       (templates(project.exe) - skipped).to_h { [it, path_of(it, project.name)] }
@@ -82,8 +100,9 @@ module Veragem
       files.reject { File.directory?(File.join(TEMPLATE, it)) || (!exe && EXE.include?(it)) }
     end
 
+    # The lock's gems, its GEM section's specs (a dependency indented deeper)
     private_class_method def self.tools
-      File.read(File.join(TEMPLATE, "Gemfile")).scan(/^gem "([^"]+)"/).flatten
+      File.read(TOOLS_LOCK)[/^GEM\n.*?^$/m].to_s.scan(/^ {4}(\S+) \(/).flatten
     end
 
     private_class_method def self.path_of(file, name)

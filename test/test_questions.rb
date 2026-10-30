@@ -100,7 +100,7 @@ class TestQuestions < Minitest::Test
       gem, shown = ask(answers: ["rubocop-rake", "taken", "helper", "cli", "y", "no", "", "", "", "", "", ""], dir:)
 
       assert_equal ["cli", false], [gem.name, gem.exe]
-      ["the Gemfile's own tool", "#{File.join(dir, "taken")} already exists",
+      ["a gem the Gemfile's tools load", "#{File.join(dir, "taken")} already exists",
        "it would write test/test_helper.rb twice", "it would write test/test_cli.rb twice"].each do |why|
         assert_includes shown, why
       end

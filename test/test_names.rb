@@ -34,7 +34,7 @@ class TestNames < Minitest::Test
     { "set" => "Set", "comparable" => "Comparable",
       "bundler-thor" => "Bundler::Thor", "option_parser" => "OptionParser" }
       .each do |name, defined|
-        error = assert_raises(Veragem::Error) { project(name) }
+        error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
         assert_equal "invalid gem name #{name}: #{defined} is already defined", error.message
       end
@@ -43,7 +43,7 @@ class TestNames < Minitest::Test
   # lib/json.rb, first on the load path, would be every tool's `require "json"`
   def test_a_name_whose_library_would_shadow_another_is_refused
     %w[json logger bundler bundler-plugin].each do |name|
-      error = assert_raises(Veragem::Error) { project(name) }
+      error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
       path = name.tr("-", "/")
 
@@ -57,7 +57,7 @@ class TestNames < Minitest::Test
     { "lifecycle_hooks" => "its tests would find Minitest::Test::LifecycleHooks",
       "u_n_d_e_f_i_n_e_d" => "its tests would find Minitest::Assertions::UNDEFINED",
       "date_like" => "gem build would find Gem::Specification::DateLike" }.each do |name, found|
-      error = assert_raises(Veragem::Error) { project(name) }
+      error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
       assert_equal "invalid gem name #{name}: #{found} for its module", error.message
     end
@@ -66,7 +66,7 @@ class TestNames < Minitest::Test
   # `module Set` cannot reopen the class Set; nor `module Date`, once a tool requires date
   def test_a_name_nested_in_a_class_is_refused
     { "set-extras" => "Set", "string-utils" => "String", "date-holidays" => "Date" }.each do |name, outer|
-      error = assert_raises(Veragem::Error) { project(name) }
+      error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
       assert_equal "invalid gem name #{name}: #{outer} is a Class, not a module", error.message
     end
@@ -83,6 +83,26 @@ class TestNames < Minitest::Test
 
       assert_equal ["", "", "Integer", "", "Integer", "Integer"],
                    Veragem::Name.probe(noisy, "my_gem", %w[Noisy Quiet Cleared Scratch])
+    end
+  end
+
+  # once a process; RUBYOPT's options, printed before the answers, are not the child's
+  def test_the_probe_is_asked_once_and_whatever_rubyopt
+    answers = with_env("RUBYOPT" => "-v") { Veragem::Name.probe("date", "probed_once", %w[ProbedOnce]) }
+
+    assert_equal ["", "", ""], answers
+    assert_same answers, Veragem::Name.probe("date", "probed_once", %w[ProbedOnce])
+  end
+
+  # Project checks the name as written alone; Generator.check, the rest
+  def test_a_project_is_checked_as_written_its_generation_the_rest
+    assert_equal "set-extras", project("set-extras").name
+    in_tmpdir do |dir|
+      error = assert_raises(Veragem::Error) do
+        Veragem::Generator.check("set-extras", exe: false, citation: false, target: File.join(dir, "set-extras"))
+      end
+
+      assert_equal "invalid gem name set-extras: Set is a Class, not a module", error.message
     end
   end
 

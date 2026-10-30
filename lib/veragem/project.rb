@@ -161,7 +161,6 @@ module Veragem
     def extras(values)
       @exe, @citation = values.values_at(:exe, :citation).map { it == true }
       Citation.check_values(values, citation)
-      Citation.check_name(name, citation)
       cite(values) if citation
     end
 

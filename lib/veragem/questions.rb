@@ -67,13 +67,7 @@ module Veragem
 
     private
 
-    def check_name(name, exe, citation)
-      Name.check(name).tap do |checked|
-        Generator.check_name(checked, exe)
-        Citation.check_name(checked, citation)
-        Generator.check_target(File.join(@dir, checked))
-      end
-    end
+    def check_name(name, exe, citation) = Generator.check(name, exe:, citation:, target: File.join(@dir, name))
 
     def answer(key, text, name, values)
       case key

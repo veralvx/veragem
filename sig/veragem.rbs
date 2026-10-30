@@ -10,12 +10,15 @@ module Veragem
     PATTERN: Regexp
     PROBE: String
 
+    self.@probed: Hash[[String, String, Array[String]], Array[String]]
+
     def self.modules: (String name) -> Array[String]
     def self.path: (String name) -> String
     def self.underscored: (String name) -> String
     def self.check: (String name) -> String
+    def self.check_modules: (String name) -> void
     def self.probe: (String library, String path, Array[String] nestings) -> Array[String]
-    private def self.check_modules: (String name) -> void
+    private def self.answers: (String library, String path, Array[String] nestings) -> Array[String]
     private def self.check_shadowing: (String name, String shadowed, String found) -> void
     private def self.check_defined: (String name, Array[[String, String?]] defined, String? innermost) -> void
     private def self.library_of: (String name) -> String
@@ -141,10 +144,12 @@ module Veragem
     GIT_LOCAL: Hash[String, nil]
     LICENSE_FILES: Hash[String, String]
     CITATION: String
+    TOOLS_LOCK: String
 
     def self.generate: (Project project, String target) -> void
+    def self.check: (String name, exe: bool, citation: bool, target: String) -> String
     def self.check_name: (String name, bool exe) -> void
-    def self.check_target: (String target) -> void
+    private def self.check_target: (String target) -> void
     private def self.files: (Project project) -> Hash[String, String]
     private def self.templates: (bool exe) -> Array[String]
     private def self.tools: () -> Array[String]

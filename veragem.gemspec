@@ -22,9 +22,10 @@ Gem::Specification.new do |spec|
   spec.metadata["rubygems_mfa_required"] = "true"
 
   # What the gem ships: the plugin (plugins.rb, which Bundler loads), its code and signatures, the
-  # template -- its dotfiles too -- and the documents. Read from the files, not git: the gem builds
-  # in Nix's sandbox too, which has none.
-  spec.files = Dir.glob(%w[plugins.rb lib/**/*.rb sig/**/*.rbs README.md CHANGELOG.md LICENSE-*], base: __dir__) +
+  # template -- its dotfiles too -- with its tools' lock (the gems a name cannot take), and the
+  # documents. Read from the files, not git: the gem builds in Nix's sandbox too, which has none.
+  spec.files = Dir.glob(%w[plugins.rb Gemfile.lock lib/**/*.rb sig/**/*.rbs README.md CHANGELOG.md LICENSE-*],
+                        base: __dir__) +
                Dir.glob("template/**/*", File::FNM_DOTMATCH, base: __dir__).select { File.file?(File.join(__dir__, it)) }
 
   spec.require_paths = ["lib"]
