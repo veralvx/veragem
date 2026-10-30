@@ -21,6 +21,9 @@ module Veragem
     # frozen string literal's first, in any case -- or a RuboCop directive, which would turn its cops
     # off, or fail them.
     MAGIC = /\b(?:en)?coding\s*[:=]|\A(?i:frozen[_-]string[_-]literal):|(?i:\brubocop\s*:)/
+    # The values that may be none, and how an option gives none: a question takes "-".
+    OPTIONAL = { email: "--no-email", given_names: "--no-given-names", alias: "--no-alias",
+                 orcid: "leave --orcid out", keywords: "leave --keywords out" }.freeze
     private_constant :GITHUB, :TAG, :ANNOTATION, :MAGIC
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,

@@ -25,6 +25,26 @@ class TestOptions < Minitest::Test
     assert_nil parse("my_gem", "--no-email").email
   end
 
+  # "-", a question's none, is no option's value, as no answer can give it
+  def test_a_questions_none_is_refused_as_an_options_value
+    { "--email=-" => "email \"-\": a question's none; for none, --no-email",
+      "--given-names=-" => "given names \"-\": a question's none; for none, --no-given-names",
+      "--alias= - " => "alias \"-\": a question's none; for none, --no-alias",
+      "--orcid=-" => "orcid \"-\": a question's none; for none, leave --orcid out",
+      "--keywords=-" => "keywords \"-\": a question's none; for none, leave --keywords out" }.each do |option, why|
+      error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", option) }
+
+      assert_equal "invalid #{why}", error.message
+    end
+  end
+
+  # within a value, as an answer can give it
+  def test_a_dash_within_an_options_value_is_kept
+    gem = parse("my_gem", "--citation", "--family-names=Doe", "--alias=-x", "--keywords=ruby,-")
+
+    assert_equal ["-x", %w[ruby -]], [gem.alias_name, gem.keywords]
+  end
+
   def test_the_author_and_the_github_user_are_required
     { "user.name" => /no author: --author, or git config user.name/,
       "github.user" => /no github: --github, or git config github.user/ }.each do |key, message|

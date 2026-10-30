@@ -47,6 +47,7 @@ module Veragem
     TAG: Regexp
     ANNOTATION: Regexp
     MAGIC: Regexp
+    OPTIONAL: Hash[Symbol, String]
 
     attr_reader name: String
     attr_reader author: String
@@ -101,7 +102,6 @@ module Veragem
     end
 
     QUESTIONS: Hash[Symbol, String]
-    OPTIONAL: Array[Symbol]
 
     @input: _Input
     @output: _Output
@@ -135,6 +135,7 @@ module Veragem
     def self.parse: (Array[String] argv, ?dir: String, ?config: ^(String) -> String?, ?input: Questions::_Input,
                      ?output: Questions::_Output) -> Project
     private def self.arguments: (Array[String] argv) -> [Array[String], Hash[Symbol, String | bool]]
+    private def self.checked: (Symbol key, String value) -> String
     private def self.ask: (Array[String] names, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults,
                            Questions questions) -> Project
     private def self.name_of: (Array[String] names) -> String

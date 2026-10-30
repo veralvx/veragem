@@ -19,9 +19,7 @@ module Veragem
       github: "GitHub user",
       alias: "Alias, CITATION.cff's"
     }.freeze
-    # The questions an empty answer may leave unanswered.
-    OPTIONAL = %i[email given_names alias orcid keywords].freeze
-    private_constant :QUESTIONS, :OPTIONAL
+    private_constant :QUESTIONS
 
     # Questions on +output+, answered on +input+, for a gem generated into +dir+.
     # @param input [#gets, #tty?] where the answers are typed
@@ -61,7 +59,7 @@ module Veragem
 
         check = -> { answer(key, it, name, values) }
         offer = default(key, defaults, values)
-        values[key] = ask(format(question, name:), offer, optional: OPTIONAL.include?(key), check:)
+        values[key] = ask(format(question, name:), offer, optional: Project::OPTIONAL.key?(key), check:)
       end
       values
     end
