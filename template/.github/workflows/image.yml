@@ -13,9 +13,10 @@
 # Docker Hub failure in a push (its login, its name) holds GHCR's multi-architecture tag back too;
 # a re-run, once fixed, completes both.
 #
-# The build, which runs the image, holds no write and no secret; the jobs that push run in the
-# `image` environment, which holds DOCKERHUB_TOKEN and which the generated CONTRIBUTING.md's first
-# steps limit to the release tags: a job of no other ref can read it.
+# The build, which runs the image, holds no write and no secret, and passes on the image it ran;
+# the jobs that push, which build nothing, run in the `image` environment, which holds
+# DOCKERHUB_TOKEN and which the generated CONTRIBUTING.md's first steps limit to the release tags: a
+# job of no other ref can read it.
 #
 # Run by hand (workflow_dispatch) on a branch, it builds and runs the image on both architectures,
 # pushing nothing: a rehearsal before the first release; on a tag, it publishes that release again.
@@ -42,6 +43,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      image: ${{ steps.build.outputs.image }}
       description: ${{ steps.build.outputs.description }}
     steps:
       - name: Checkout
@@ -62,9 +64,10 @@ jobs:
             echo "::error::$GITHUB_REF_NAME, but version.rb declares $version" >&2
             exit 1
           fi
-          # streamed into docker: no compressed copy of the closure in the store
+          # streamed: no compressed copy of the closure in the store
           stream="$(nix build --no-link --print-out-paths .#image.stream)"
-          "$stream" | docker load
+          "$stream" > image.tar
+          docker load --input image.tar
           loaded="$(nix eval --raw .#image.imageName):$version"
           # the image as a user runs it: its entrypoint, as its user
           expected="$(nix eval --raw .#image.imageName) $version"
@@ -76,7 +79,19 @@ jobs:
           # assigned first: a failing command substitution inside echo's arguments would not stop
           # the step
           description="$(nix eval --raw .#default.meta.description)"
-          echo "description=$description" >> "$GITHUB_OUTPUT"
+          {
+            echo "image=$loaded"
+            echo "description=$description"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Keep the image
+        if: github.ref_type == 'tag'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-${{ matrix.arch }}
+          path: image.tar
+          if-no-files-found: error
+          retention-days: 1
 
   push:
     name: Push (${{ matrix.arch }})
@@ -101,14 +116,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
+      - name: The build's image
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-${{ matrix.arch }}
 
-      - name: The image
-        # the build job's derivation, built again: no image passes between jobs
-        run: |
-          set -euo pipefail
-          "$(nix build --no-link --print-out-paths .#image.stream)" | docker load
+      - name: Load it
+        run: docker load --input image.tar
 
       - name: Push
         env:
@@ -120,14 +134,14 @@ jobs:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           DOCKERHUB_REPOSITORY: ${{ vars.DOCKERHUB_REPOSITORY }}
           ARCH: ${{ matrix.arch }}
+          LOADED: ${{ needs.build.outputs.image }}
         run: |
           set -euo pipefail
           repositories="$(.github/image-registries.sh)"
           version="${GITHUB_REF_NAME#v}"
-          loaded="$(nix eval --raw .#image.imageName):$version"
           # the list on its own descriptor: no command in the loop can read it away
           while read -r repository <&3; do
-            docker tag "$loaded" "$repository:$version-$ARCH"
+            docker tag "$LOADED" "$repository:$version-$ARCH"
             docker push "$repository:$version-$ARCH"
           done 3<<< "$repositories"
 
