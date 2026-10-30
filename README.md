@@ -17,10 +17,11 @@ and the rest:
   (`rake yard` writes it to `doc/`).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered.
-- **Security**: bundler-audit over `Gemfile.lock`, daily in CI; a pull request's new gems and
-  actions reviewed for their licences and advisories (`dependency-review.yml`, advisory, as in the
-  Python and Rust templates); zizmor over the workflows and Dependabot's configuration; Dependabot
-  for the gems, the actions and the flake, a release proposed once a week old.
+- **Security**: bundler-audit over `Gemfile.lock`, daily and on every pull request; a pull request's
+  new gems and actions reviewed for their licences and advisories (`dependency-review.yml`,
+  advisory, as in the Python and Rust templates); zizmor over the workflows and Dependabot's
+  configuration; Dependabot for the gems, the actions and the flake, a release proposed once a week
+  old.
 - **Commits and releases**: Conventional Commits (cocogitto, in CI and opt-in git hooks), a
   changelog written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own
   `rake release`; the tag publishes to RubyGems by Trusted Publishing, no API key stored, the gem
