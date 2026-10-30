@@ -30,6 +30,17 @@ class TestGenerator < Minitest::Test
     end
   end
 
+  # a module of the gem's named OptionParser, which the command line's lookup would find first
+  def test_the_command_line_names_option_parser_from_the_top_alone_where_the_gem_has_one
+    cli = File.join(Veragem::Generator::TEMPLATE, "lib/%path%/cli.rb.erb")
+    { "my-tool" => " OptionParser", "my-option_parser" => " ::OptionParser" }.each do |name, constant|
+      code = Veragem::Generator.render(cli, project(name, exe: true))
+
+      assert_includes code, "rescue#{constant}::ParseError"
+      assert_includes code, "#{constant}.new"
+    end
+  end
+
   def test_the_licenses_are_the_ones_chosen
     each_kind do |gem, _, files|
       licenses = { "MIT" => "LICENSE-MIT", "Apache-2.0" => "LICENSE-APACHE" }.values_at(*gem.licenses)

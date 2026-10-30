@@ -3,21 +3,24 @@
 require "optparse"
 require_relative "../<%= File.basename(path) %>"
 
+<%# `::` where one of the gem's modules is named OptionParser, which its lookup would find first -%>
+<%- option_parser = "#{"::" if modules.include?("OptionParser")}OptionParser" -%>
 <%= nest(<<~RUBY)
   # The command line: `#{name} [NAME]` prints the greeting.
   module CLI
-    # Runs the command line with +argv+; returns the exit status.
+    # Runs the command line with +argv+.
+    # @param argv [Array<String>] the command's arguments
+    # @return [Integer] the exit status: 0, or 2 for an option refused
     def self.run(argv)
       options = { help: false, version: false }
       names = parser.parse(argv, into: options)
       puts output(options, names.first || "")
       0
-    rescue ::OptionParser::ParseError => e
+    rescue #{option_parser}::ParseError => e
       warn e.message, parser.help
       2
     end
 
-    # What +options+ ask for, the help or the version, else the greeting for +name+.
     def self.output(options, name)
       if options[:help]
         parser.help
@@ -29,10 +32,9 @@ require_relative "../<%= File.basename(path) %>"
     end
     private_class_method :output
 
-    # --help as an option of its own: OptionParser's built-in one exits the process. `::`: a module of
-    # the gem's could be named OptionParser
+    # --help as an option of its own: OptionParser's built-in one exits the process.
     def self.parser
-      ::OptionParser.new("Usage: #{name} [options] [NAME]") do |opts|
+      #{option_parser}.new("Usage: #{name} [options] [NAME]") do |opts|
         opts.program_name = "#{name}"
         opts.version = VERSION
         opts.on("-h", "--help", "Print this help")

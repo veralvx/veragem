@@ -25,6 +25,7 @@ module Veragem
   class Project
     GITHUB: Regexp
     LICENSES: Hash[String, Array[String]]
+    INFORMAL_TAG: Regexp
 
     attr_reader name: String
     attr_reader author: String
@@ -47,6 +48,7 @@ module Veragem
     def self.check: (Symbol key, String value) -> String
     private def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     private def self.text: (String field, String value) -> String
+    private def self.documented: (String summary) -> String
 
     private
 

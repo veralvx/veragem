@@ -1,5 +1,6 @@
-# The Ruby checks, `bundle exec rake` (RuboCop, Steep, the tests with their coverage gate), on each
-# Ruby the matrix lists, the gems installed from Gemfile.lock; then TypeProf's verdict, advisory.
+# The Ruby checks, `bundle exec rake` (RuboCop, Steep, the tests with their coverage gate,
+# yard-lint), on each Ruby the matrix lists, the gems installed from Gemfile.lock; then TypeProf's
+# verdict, advisory.
 # nix.yml runs the flake's checks: the Nix format, the shell, the workflows, the package.
 name: Ruby CI
 
@@ -29,18 +30,18 @@ jobs:
         ruby: ["4.0"]
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Set up Ruby
         # bundler-cache: `bundle install`, frozen to Gemfile.lock, cached
-        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f #
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - name: RuboCop, Steep, the tests, Yard
+      - name: RuboCop, Steep, the tests, yard-lint
         env:
           RUBOCOP_OPTS: --format progress --format github
         run: bundle exec rake

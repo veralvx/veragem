@@ -16,6 +16,10 @@ module Veragem
     private_constant :QUESTIONS
 
     # Generating into +dir+.
+    # @param input [#gets, #tty?] where the answers are typed
+    # @param output [#print, #puts] where the questions are shown
+    # @param dir [String] where the gem is to be generated
+    # @return [void]
     def initialize(input, output, dir)
       @input = input
       @output = output
@@ -23,6 +27,10 @@ module Veragem
     end
 
     # The name, +given+ or else asked for: checked as far as it and +exe+ decide, before the rest.
+    # @param given [String, nil] the name the arguments give
+    # @param exe [Boolean] whether --exe is given
+    # @return [String]
+    # @raise [Veragem::Error] +given+ is refused, or nothing is answered
     def name(given, exe:)
       return check_name(given, exe) if given
 
@@ -30,6 +38,11 @@ module Veragem
     end
 
     # +given+ (the options) and the answers to the rest, +defaults+ offered.
+    # @param name [String] the gem's, checked
+    # @param given [Hash{Symbol => String, Boolean}] the options' values
+    # @param defaults [Hash{Symbol => String}] git's and Options' own
+    # @return [Hash{Symbol => String, Boolean, nil}] a value for each key, the email's nil for none
+    # @raise [Veragem::Error] nothing is answered, or the terminal cannot be asked
     def values(name, given, defaults)
       defaults = { exe: "n", **defaults }
       asked = QUESTIONS.except(*given.keys).to_h do |key, question|
@@ -47,7 +60,6 @@ module Veragem
       end
     end
 
-    # What +text+ answers for +key+, or an Error saying why not.
     def answer(key, text, name)
       case key
       when :exe then yes?(text).tap { Generator.check_name(name, it) }
@@ -84,7 +96,6 @@ module Veragem
       answer unless answer.empty?
     end
 
-    # What +check+ makes of +answer+; nil, said why, when it refuses it.
     def checked(question, answer, check)
       check.call(answer)
     rescue Error => e

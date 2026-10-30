@@ -12,7 +12,7 @@ CI (nixpkgs packages few of them, and older).
 
 - **[Ruby](https://www.ruby-lang.org) 4.0** or later, with Bundler (Ruby's own). `bin/setup`
   installs the gems `Gemfile.lock` pins: Rake, RuboCop, its extensions and rubydex (its project
-  index), Steep, TypeProf, Minitest, SimpleCov, pbt, bundler-audit.
+  index), Steep, TypeProf, Minitest, SimpleCov, pbt, YARD, yard-lint, bundler-audit.
 - **[ShellCheck](https://www.shellcheck.net/)** and **[shfmt](https://github.com/mvdan/sh)** --
   the shell's linter and formatter (its style is `.editorconfig`'s).
 - **[actionlint](https://github.com/rhysd/actionlint)** -- lints the workflows (and, through
@@ -64,10 +64,12 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
 2. Run the checks. The Rakefile runs the workflows' commands:
 
 ```sh
-bundle exec rake          # RuboCop, Steep, the tests: ruby-ci.yml
+bundle exec rake          # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
 bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the flake's checks
 bundle exec rake format   # RuboCop's corrections, dprint and nixfmt, in place
 bundle exec rake typeprof # the signatures TypeProf infers from lib/, to start sig/ from
+bundle exec rake yard     # the documentation of lib/, in doc/
+bundle exec rake graph    # its classes and modules, for Graphviz: | dot -Tsvg -o graph.svg
 nix build                 # the gem, built and installed by Nix (flake.nix)
 ```
 

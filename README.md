@@ -13,6 +13,8 @@ and the rest:
   across files do. In CI, offences are annotated on the pull request and a failed run's summary
   holds the safe corrections as a patch; a Dependabot bump the new cops fail gets them as a commit,
   then merges as any bump once you approve its runs (`rubocop-autocorrect.yml`, no token to set).
+- **Documentation**: YARD, every object of `lib/` documented, held by yard-lint at 100% coverage
+  (`rake yard` writes it to `doc/`).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered.
 - **Security**: bundler-audit over `Gemfile.lock`, daily in CI; a pull request's new gems and
@@ -89,6 +91,8 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
   first).
 
 The summary is plain text: written into the README as given, Markdown in it is dprint's to check.
+It is the module's YARD comment too, so one the gem's yard-lint would refuse is refused: a tag
+written informally first (`Note:`, `See also:`), a backtick or `**` left open.
 As `bundle gem` does, veragem makes the git repository and adds the files, and runs no
 `bundle install`: `bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists
 the first steps: the repository's settings, RubyGems' pending trusted publisher.
@@ -98,10 +102,10 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 ```
 NAME.gemspec          the gem: its version from lib/NAME/version.rb, its files lib/, sig/, exe/
 Gemfile               the gemspec, then the tools; Gemfile.lock pins them (written by bin/setup)
-Rakefile              `rake`: RuboCop, Steep, the tests; `rake checks`: what CI runs;
+Rakefile              `rake`: RuboCop, Steep, the tests, yard-lint; `rake checks`: what CI runs;
                       `rake "bump[level]"`, `rake release`; `rake -T` lists them all
 Steepfile, sig/       the types; typeprof.conf.jsonc, TypeProf's editor support
-.rubocop.yml          RuboCop and its extensions
+.rubocop.yml          RuboCop and its extensions; .yard-lint.yml, the documentation's lint
 lib/, test/           starter code: typed, documented, every line and branch tested
 bin/setup, bin/console
 flake.nix, flake.lock the dev shell, the package (and the command's image), `nix fmt`, the checks

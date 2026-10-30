@@ -21,6 +21,17 @@ class TestProject < Minitest::Test
     end
   end
 
+  # the module's comment too, which the gem's yard-lint holds
+  def test_a_summary_is_a_comment_yard_lint_takes
+    ["Note: a fork.", "see also: foo.", "EXAMPLE: x", "Parses `foo files.", "Bold **text."].each do |summary|
+      assert_raises(Veragem::Error, summary.inspect) { project(summary:) }
+    end
+    ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.", "Squares: x ** 2.",
+     "Code `a **b` too."].each do |summary|
+      assert_equal summary, project(summary:).summary
+    end
+  end
+
   # ARGV under the C locale is binary: the bytes are taken as UTF-8.
   def test_a_text_is_taken_as_utf8
     author = project(author: "Jos\xC3\xA9".b).author
@@ -63,6 +74,8 @@ class TestProject < Minitest::Test
   def test_code_nests_in_the_gems_modules
     assert_equal "# Doc.\nmodule MyGem\n  X = 1\n\n  Y = 2\nend\n", project.nest("X = 1\n\nY = 2\n", doc: "Doc.")
     assert_equal "module My\n  module Gem\n    X = 1\n  end\nend\n", project("my-gem").nest("X = 1\n")
+    assert_equal "# The namespace of My::Gem.\nmodule My\n  # Doc.\n  module Gem\n    X = 1\n  end\nend\n",
+                 project("my-gem").nest("X = 1\n", doc: "Doc.")
   end
 
   def test_the_year_is_this_one

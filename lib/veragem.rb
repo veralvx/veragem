@@ -13,8 +13,12 @@ module Veragem
   # A refusal: Bundler prints its message alone, and exits with its status.
   class Error < Bundler::PluginError; end
 
-  # Generates the gem +argv+ names into +dir+, what no option gives asked of +input+ when a terminal;
-  # returns its directory.
+  # Generates the gem +argv+ names into +dir+, what no option gives asked of +input+ when a terminal.
+  # @param argv [Array<String>] the command's arguments
+  # @param dir [String] where the gem is to be generated
+  # @param input [#gets, #tty?] where the answers are typed
+  # @return [String] the gem's directory
+  # @raise [Veragem::Error] veragem refuses
   def self.run(argv, dir: Dir.pwd, input: $stdin)
     project = Options.parse(argv, dir:, input:)
     target = File.join(dir, project.name)

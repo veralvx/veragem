@@ -22,6 +22,5 @@ gem "rubydex" # for rubocop UseProjectIndex
 gem "yard"
 gem "yard-lint"
 
-
 gem "steep"
 gem "typeprof"
