@@ -10,11 +10,11 @@ require_relative "../<%= File.basename(path) %>"
   module CLI
     # Runs the command line with +argv+.
     # @param argv [Array<String>] the command's arguments
-    # @return [Integer] the exit status: 0, or 2 for an option or a second name refused
+    # @return [Integer] the exit status: 0, or 2 for an option refused, or more than one name
     def self.run(argv)
       options = { help: false, version: false }
       names = parser.parse(argv, into: options)
-      raise #{option_parser}::NeedlessArgument, names[1] if names.size > 1
+      raise #{option_parser}::NeedlessArgument.new(*names.drop(1)) if names.size > 1
 
       puts output(options, names.first || "")
       0
