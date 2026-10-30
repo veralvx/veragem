@@ -4,10 +4,8 @@ require "test_helper"
 
 # CITATION.cff's values, as options give them: a citation's alone, checked as Zenodo's import takes them.
 class TestCitation < Minitest::Test
-  include Veragem::TerminalSupport
+  include Veragem::TestSupport
   include Veragem::CitationSupport
-
-  def parse(*argv) = Veragem::Options.parse(argv, config: CONFIG.method(:[]), input: StringIO.new)
 
   def test_a_citation_is_opt_in
     gem = parse("my_gem")

@@ -48,7 +48,7 @@ class TestQuestions < Minitest::Test
 
   def test_a_refused_answer_is_asked_again_saying_why
     gem, shown = ask(answers: ["1gem", "my_gem", "maybe", "YES", "", "MIT", "apache", "TODO", "Greets.",
-                               " ", "Ada", "a\tb", "ada@example.com", "-ada", "ada"])
+                               "\u00A0", "Ada", "a\tb", "ada@example.com", "-ada", "ada"])
 
     assert_equal ["my_gem", true, "apache", "Greets.", "Ada", "ada@example.com", "ada"],
                  [gem.name, gem.exe, gem.license, gem.summary, gem.author, gem.email, gem.github]

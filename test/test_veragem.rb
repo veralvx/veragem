@@ -4,7 +4,7 @@ require "test_helper"
 require_relative "../plugins"
 
 class TestVeragem < Minitest::Test
-  include Veragem::TestSupport
+  include Veragem::TerminalSupport
 
   ARGS = %w[my_gem --author Jane --email jane@example.com --github jane].freeze
 
@@ -36,11 +36,11 @@ class TestVeragem < Minitest::Test
   # its input a terminal, the directory given is the one checked before any question
   def test_from_a_terminal_it_asks_into_the_directory_given
     in_tmpdir do |dir|
-      terminal = StringIO.new("n\nn\n\n\n").tap { |io| def io.tty? = true }
-      _, err = capture_io { Veragem.run(ARGS, dir:, input: terminal) }
+      input = terminal("n", "n", "", "")
+      _, err = capture_io { Veragem.run(ARGS, dir:, input:) }
 
       assert_match(%r{\AA command line, exe/my_gem \(y/n\) \[n\]: A citation file, CITATION\.cff \(y/n\) \[n\]: }, err)
-      error = assert_raises(Veragem::Error) { Veragem.run(ARGS, dir:, input: terminal) }
+      error = assert_raises(Veragem::Error) { Veragem.run(ARGS, dir:, input:) }
       assert_equal "#{File.join(dir, "my_gem")} already exists", error.message
     end
   end

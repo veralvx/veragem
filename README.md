@@ -37,7 +37,7 @@ In the generated gem, `bundle exec rake` runs the Ruby checks, as CI does;
 
 ## Install
 
-Ruby 4.0 or later, then:
+Ruby 4.0 or later and git, then:
 
 ```sh
 bundle plugin install veragem
@@ -75,7 +75,7 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes
-it, and a refused answer is asked again. With other input (CI, a pipe, `< /dev/null` to skip the
+it, an optional one takes `-` for none, and a refused answer is asked again. With other input (CI, a pipe, `< /dev/null` to skip the
 questions) nothing is asked: the defaults apply, and a missing name, author, GitHub user or, with
 `--citation`, family names is refused.
 
@@ -112,7 +112,8 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 - whose module its tests or `gem build` would take for Minitest's or RubyGems' own
   (`lifecycle_hooks`, `date_like`);
 - that `bundle gem` would refuse or mangle (`1gem`, `my--gem`);
-- one of the Gemfile's own tools (`rubocop-rake`);
+- a gem the Gemfile's tools load, theirs included (`rubocop-rake`, `parser`): the tools' bundle
+  would resolve it to the new gem;
 - `test_helper`, whose lib/test_helper.rb would shadow the tests', or one that would write a
   template file twice (`helper`: test/test_helper.rb);
 - longer than 40 characters or deeper than 4 modules (the generated code's lines fit RuboCop's);
@@ -120,8 +121,10 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
   first).
 
 The summary is plain text: written into the README as given, Markdown in it is dprint's to check.
-It is the module's YARD comment too, so one the gem's yard-lint would refuse is refused: a tag
-written informally first (`Note:`, `See also:`), a backtick or `**` left open.
+It is the module's comment too, so one the gem's yard-lint or RuboCop would not take as its
+documentation is refused: a tag first, YARD's (`@param`, `(see`) or written informally (`Note:`,
+`See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic comment (`encoding:`), a
+backtick or `**` left open.
 As `bundle gem` does, veragem makes the git repository and adds the files, and runs no
 `bundle install`: `bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists
 the first steps: the repository's settings, RubyGems' pending trusted publisher.
@@ -129,7 +132,8 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 ## What you get
 
 ```
-NAME.gemspec          the gem: its version from lib/NAME/version.rb, its files lib/, sig/, exe/
+NAME.gemspec          the gem: its version from lib/PATH/version.rb (`my-gem`'s lib/my/gem/), its
+                      files lib/, sig/, exe/
 Gemfile               the gemspec, then the tools; Gemfile.lock pins them (written by bin/setup)
 Rakefile              `rake`: RuboCop, Steep, the tests, yard-lint; `rake checks`: what CI runs;
                       `rake "bump[level]"`, `rake release`; `rake -T` lists them all
@@ -160,11 +164,13 @@ packages few of them, and older).
   property), the options, every file of each kind and licence rendered, parsed and kept executable,
   the gemspec read back, the values written as given whatever the locale.
 - The harness here is the template's: this repository's Gemfile, Rakefile, workflows, hooks, flake
-  and tools' configuration are the template's own files, byte for byte (`test/test_sync.rb`), so
+  and tools' configuration are the template's own files, byte for byte (`test/test_sync.rb`; but
+  `dependabot.yml`, whose directories differ, and the smoke test's workflow, the plugin's alone), so
   the template's are checked in place by this repository's checks, and a command line's own
   (`image.yml`) by the smoke test's command gem.
 - The smoke test (`dev/smoke.sh`, `smoke.yml`, weekly too): the plugin installed from this checkout
-  generates a gem of each kind and licence, and each passes its own `rake checks` and builds.
+  generates a gem of each kind and licence, and each passes its own `rake checks` and builds; the
+  citation's gem releases twice (`rake bump`), a patch and a minor.
 
 ## Contributing
 

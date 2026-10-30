@@ -50,8 +50,9 @@ commit_preprocessors = [
     { pattern = '(?m)( *\[(skip ci|ci skip|no ci|skip actions|actions skip)\])+ *$', replace = "" },
 ]
 # every commit to the parsers, then an unconventional one they keep fails the changelog: cog lets
-# through merges and fixups alone, which they skip (one past cog: its SHA in .cliffignore). Filtered
-# before the parsers instead, a merge warns as a parse error
+# through merges and fixups alone, which they skip (one that got past cog anyway: its SHA in
+# .cliffignore, which git-cliff skips). Filtered before the parsers instead, a merge warns as a
+# parse error
 require_conventional = true
 protect_breaking_commits = true # a breaking change is listed whatever its type, first
 # by type, in any case (cog takes `Feat:`), the HTML comments ordering the groups

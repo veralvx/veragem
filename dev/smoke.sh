@@ -52,6 +52,11 @@ for gem in smoke_lib smoke-omniauth-google_oauth2 smoke_apache; do
       grep -qx 'version: "0.1.1"' CITATION.cff
       grep -qx "date-released: \"$(date +%F)\"" CITATION.cff
       git diff --quiet HEAD
+      # a minor release zeroes the patch number
+      git tag v0.1.1
+      git commit --quiet --allow-empty --message "feat: a smöke feature"
+      bundle exec rake "bump[minor]"
+      grep -qx 'version: "0.2.0"' CITATION.cff
     fi
   )
 done

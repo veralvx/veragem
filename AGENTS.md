@@ -25,7 +25,8 @@ configuration, zizmor's security audit.
 - Fix offenses with `bundle exec rubocop -a FILES`. Don't use `-A` unless asked.
 - If an offense is unclear, run `bundle exec rubocop --explain Department/CopName`.
 - Don't edit `.rubocop.yml` to make offenses go away.
-- When an offense has to stay, disable the cop on that line and say why:
+- When an offense has to stay, disable the cop on that line, or the next (`# rubocop:disable-next`
+  on the line above), and say why:
   `# rubocop:disable Department/CopName -- the reason`.
 
 ### 1.2. YARD
@@ -82,7 +83,7 @@ them with `--no-verify`. `git revert` writes `Revert "..."`, which CI refuses: r
 ## 4. Before you claim a change is done
 
 Run `bundle exec rake checks`, and for a change to the template the smoke test too
-(`nix develop --command dev/smoke.sh`). `rake checks` is what CI runs: RuboCop, Steep, the tests
+(`nix develop --command dev/smoke.sh`). `rake checks` runs CI's gates: RuboCop, Steep, the tests
 with every line, branch and method covered, yard-lint, bundler-audit, dprint, the commit messages,
 the shell, the workflows, and the flake's checks. Reporting "done" on a change that has not passed
 it is the one thing that wastes the most time here.

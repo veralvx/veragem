@@ -67,6 +67,11 @@ smoke test installs the plugin from this checkout, generates each kind, and runs
 finished when it passes. It needs the network: rubygems.org for the gems, GitHub and Nix's cache
 for the flake.
 
+One test file (`bundle exec ruby -Ilib -Itest test/test_names.rb`), or some tests
+(`bundle exec rake test N=/probe/`), runs fewer than the coverage gate counts: its exit fails,
+the tests' own verdict above it. SimpleCov merges a run into the last one's `coverage/` within ten
+minutes: remove it after such a run.
+
 ## Development Workflow
 
 [Conventional Commits](https://www.conventionalcommits.org/), enforced by `cog check` locally and
@@ -103,5 +108,5 @@ bundle exec rake release
 
 `rake bump` sets the version, updates the lock, writes the changelog (git-cliff) and commits;
 `rake release`, Bundler's own, tags `v<version>` and pushes the branch and the tag. The tag runs
-`release.yml`: the checks and the build, the push to RubyGems by Trusted Publishing, then the
+`release.yml`: the Ruby checks (`rake`) and the build, the push to RubyGems by Trusted Publishing, then the
 GitHub release.

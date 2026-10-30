@@ -22,7 +22,7 @@ module Veragem
     OPTIONAL = %i[email given_names orcid keywords].freeze
     private_constant :QUESTIONS, :OPTIONAL
 
-    # Generating into +dir+.
+    # Questions on +output+, answered on +input+, for a gem generated into +dir+.
     # @param input [#gets, #tty?] where the answers are typed
     # @param output [#print, #puts] where the questions are shown
     # @param dir [String] where the gem is to be generated

@@ -54,7 +54,10 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
   failure is shrunk to its smallest counterexample, with the seed that reproduces it.
 - **Regressions:** if you are fixing a bug, include a test that reproduces the previous failure.
 - **Coverage:** every line, branch and method of `lib/` (SimpleCov's `strict` profile,
-  `test/test_helper.rb`). Code a test cannot reach is questioned before it is excluded.
+  `test/test_helper.rb`). Code a test cannot reach is questioned before it is excluded. One test
+  file, or some tests (`bundle exec rake test N=/greets/`), runs fewer than the gate counts: its exit
+  fails, the tests' own verdict above it; SimpleCov merges a run into the last one's `coverage/`
+  within ten minutes, so remove it after such a run.
 
 ## Development Workflow
 
@@ -171,7 +174,7 @@ declared, whatever the level), updates the lock, writes the changelog (git-cliff
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
 <%- end -%>
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
-tag; it pushes no gem. The tag runs `release.yml`: the checks and the build, the push to RubyGems
+tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`) and the build, the push to RubyGems
 by Trusted Publishing, then the GitHub release of the same gem, its notes the changelog's new
 section.
 <%- if exe -%>

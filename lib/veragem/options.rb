@@ -27,10 +27,11 @@ module Veragem
     ].freeze #: Array[[String, String]]
     private_constant :GIT_CONFIG, :DEFAULTS, :BANNER, :OPTIONS
 
-    # +dir+, where the gem is to be generated; the questions on +output+, as a prompt is.
+    # The Project +argv+ gives, what it does not asked of +input+ when a terminal, the questions on
+    # +output+ (stderr, as a prompt is); the name checked for +dir+.
     # @param argv [Array<String>] the command's arguments
     # @param dir [String] where the gem is to be generated
-    # @param config [Proc] a git config key's value, nil when unset
+    # @param config [#call] a git config key's value, nil when unset
     # @param input [#gets, #tty?] where the answers are typed; asked only when a terminal
     # @param output [#print, #puts] where the questions are shown
     # @return [Veragem::Project]
