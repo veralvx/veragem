@@ -24,11 +24,13 @@ class TestCitationFile < Minitest::Test
   end
 
   def test_the_file_holds_the_projects_values
-    gem = project(citation: true, given_names: "Jane", family_names: "Doe", orcid: ORCID, keywords: "ruby, gem")
+    gem = project(citation: true, given_names: "Jane", family_names: "Doe", alias: "jdoe", orcid: ORCID,
+                  keywords: "ruby, gem")
     cff, version = generated(gem)
 
     assert_equal({ "cff-version" => "1.2.0", "title" => "my_gem", "abstract" => "A Ruby gem.",
-                   "authors" => [{ "family-names" => "Doe", "given-names" => "Jane", "orcid" => ORCID }],
+                   "authors" => [{ "family-names" => "Doe", "given-names" => "Jane", "alias" => "jdoe",
+                                   "orcid" => ORCID }],
                    "keywords" => %w[ruby gem], "version" => version, "date-released" => Time.now.strftime("%F"),
                    "repository-code" => "https://github.com/jane/my_gem",
                    "repository-artifact" => "https://rubygems.org/gems/my_gem",

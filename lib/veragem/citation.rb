@@ -2,11 +2,11 @@
 
 module Veragem
   # CITATION.cff's rules beyond its values' text, as Zenodo's import takes them: who may give them,
-  # the gem's name, the author's names (no comma) and ORCID iD, the keywords; and what its questions
-  # offer.
+  # the gem's name, the author's names (no comma), alias (which Zenodo reads not) and ORCID iD, the
+  # keywords; and what its questions offer.
   module Citation
     # The values CITATION.cff alone writes.
-    KEYS = %i[given_names family_names orcid keywords].freeze
+    KEYS = %i[given_names family_names alias orcid keywords].freeze
     # An ORCID iD, bare or as its URL: its 16th character, the check digit.
     ORCID = %r{\A(?:https?://orcid\.org/)?(\d{4}-\d{4}-\d{4}-\d{3}[\dX])\z}i
     # The ORCID iDs ORCID issues, without their check digit: those Zenodo's import takes (idutils).
@@ -26,7 +26,28 @@ module Veragem
     def self.check_values(values, citation)
       return if citation || !cited?(values)
 
-      raise Error, "--given-names, --family-names, --orcid and --keywords are CITATION.cff's: they need a citation"
+      raise Error, "--given-names, --family-names, --alias, --orcid and --keywords are CITATION.cff's: " \
+                   "they need a citation"
+    end
+
+    # The value a citation's +key+ takes, as Project.check's: an ORCID iD its URL, keywords joined by
+    # ", ".
+    # @param key [Symbol] one of KEYS
+    # @param value [String] as given
+    # @yieldparam field [String] a value's name, as a refusal names it
+    # @yieldparam text [String] the value, or a keyword
+    # @yieldreturn [String] it checked, one line
+    # @return [String]
+    # @raise [Veragem::Error] +key+ cannot take it
+    def self.check(key, value)
+      field = key.name.tr("_", " ")
+      case key
+      when :orcid then orcid(value)
+      when :keywords then keywords(value) { yield("keyword", it) }.join(", ")
+      # Zenodo's import reads no alias: a comma divides nothing in it
+      when :alias then yield(field, value)
+      else names(field, yield(field, value))
+      end
     end
 
     # The name, CITATION.cff's title: Zenodo's import refuses one under 3 characters.
@@ -43,7 +64,7 @@ module Veragem
     # What a citation's question offers. The citation, y where its values are given, which need one.
     # The names, guessed from the author's words, Unicode's spaces between them: the last the family
     # names, those before the family names the given names -- none where the author does not end
-    # with them.
+    # with them. The alias, the GitHub user: only offered, as it may name an organization.
     # @param key [Symbol] the question's
     # @param values [Hash{Symbol => String, Boolean, nil}] the answers so far, checked
     # @return [String, nil] nil for none, and for any other question
@@ -53,6 +74,7 @@ module Veragem
       when :citation then cited?(values) ? "y" : "n"
       when :family_names then author.split(/[[:space:]]+/).last
       when :given_names then author[/\A(.+?)[[:space:]]+#{Regexp.escape(values[:family_names].to_s)}\z/, 1]
+      when :alias then values[:github].to_s
       end
     end
 

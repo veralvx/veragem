@@ -33,6 +33,7 @@ module Veragem
     def self.cited?: (Hash[Symbol, String | bool | nil] values) -> bool
     def self.check_values: (Hash[Symbol, String | bool | nil] values, bool citation) -> void
     def self.check_name: (String name, bool citation) -> void
+    def self.check: (Symbol key, String value) { (String field, String text) -> String } -> String
     def self.default: (Symbol key, Hash[Symbol, String | bool | nil] values) -> String?
     def self.names: (String field, String names) -> String
     def self.keywords: (String value) { (String keyword) -> String } -> Array[String]
@@ -57,6 +58,7 @@ module Veragem
     attr_reader citation: bool
     attr_reader given_names: String?
     attr_reader family_names: String?
+    attr_reader alias_name: String?
     attr_reader orcid: String?
     attr_reader keywords: Array[String]?
 

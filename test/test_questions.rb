@@ -82,7 +82,7 @@ class TestQuestions < Minitest::Test
 
     assert_nil gem.email
     assert_includes shown, "Email (- for none) [jane@example.com]: "
-    gem, = ask("my_gem", "--citation", answers: ["", "", "", "", "", "-", "", "", "", ""])
+    gem, = ask("my_gem", "--citation", answers: ["", "", "", "", "", "-", "", "", "", "", ""])
 
     assert_equal [nil, "Doe"], [gem.given_names, gem.family_names]
   end

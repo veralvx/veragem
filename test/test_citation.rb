@@ -10,7 +10,8 @@ class TestCitation < Minitest::Test
   def test_a_citation_is_opt_in
     gem = parse("my_gem")
 
-    assert_equal [false, nil, nil, nil, nil], [gem.citation, gem.given_names, gem.family_names, gem.orcid, gem.keywords]
+    assert_equal [false, nil, nil, nil, nil, nil],
+                 [gem.citation, gem.given_names, gem.family_names, gem.alias_name, gem.orcid, gem.keywords]
   end
 
   def test_with_a_citation_the_family_names_are_required_the_given_names_optional
@@ -26,8 +27,8 @@ class TestCitation < Minitest::Test
   end
 
   def test_a_citations_values_without_one_are_refused
-    [%w[--family-names=Doe], %w[--given-names=Jane], %w[--orcid=0000-0002-1825-0097], %w[--keywords=ruby],
-     %w[--no-citation --family-names=Doe]].each do |argv|
+    [%w[--family-names=Doe], %w[--given-names=Jane], %w[--alias=jdoe], %w[--orcid=0000-0002-1825-0097],
+     %w[--keywords=ruby], %w[--no-citation --family-names=Doe]].each do |argv|
       assert_equal NEEDED, assert_raises(Veragem::Error) { parse("my_gem", *argv) }.message
     end
   end
@@ -74,6 +75,20 @@ class TestCitation < Minitest::Test
       assert_equal "invalid gem name ab with --citation: Zenodo takes a title of 3 characters or more", error.message
       assert_equal %w[abc ab], [check.call("abc", true), check.call("ab", false)]
     end
+  end
+
+  # one line, a comma too: Zenodo's import reads no alias; without a terminal, none unless given
+  def test_an_alias_is_one_line
+    citing = %w[my_gem --citation --family-names=Doe]
+
+    aliases = [" jdoe ", "Doe, J."].map { parse(*citing, "--alias=#{it}").alias_name }
+
+    assert_equal ["jdoe", "Doe, J."], aliases
+    assert_nil parse(*citing).alias_name
+    assert_nil parse(*citing, "--no-alias").alias_name
+    error = assert_raises(Veragem::Error) { parse(*citing, "--alias=a\tb") }
+
+    assert_match(/\Ainvalid alias "a\\tb": one line/, error.message)
   end
 
   def test_no_given_names_is_none

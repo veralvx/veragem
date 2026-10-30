@@ -16,10 +16,11 @@ module Veragem
       orcid: "ORCID iD, CITATION.cff's",
       keywords: "Keywords, comma-separated, CITATION.cff's",
       email: "Email",
-      github: "GitHub user"
+      github: "GitHub user",
+      alias: "Alias, CITATION.cff's"
     }.freeze
     # The questions an empty answer may leave unanswered.
-    OPTIONAL = %i[email given_names orcid keywords].freeze
+    OPTIONAL = %i[email given_names alias orcid keywords].freeze
     private_constant :QUESTIONS, :OPTIONAL
 
     # Questions on +output+, answered on +input+, for a gem generated into +dir+.
@@ -47,7 +48,7 @@ module Veragem
     end
 
     # +given+ (the options) and the answers to the rest, +defaults+ offered; a citation's values asked
-    # only for a citation, the author's words offered for its names.
+    # only for a citation, the author's words offered for its names, the GitHub user for its alias.
     # @param name [String] the gem's, checked
     # @param given [Hash{Symbol => String, Boolean}] the options' values
     # @param defaults [Hash{Symbol => String}] git's and Options' own

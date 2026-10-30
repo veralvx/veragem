@@ -60,20 +60,21 @@ git commit -m "chore: initial commit from veragem"
 bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix develop`'s
 ```
 
-| Option                     | Default                                     | Goes into                                       |
-| -------------------------- | ------------------------------------------- | ----------------------------------------------- |
-| `NAME`                     | --                                          | the gem, its module, its files: as `bundle gem` |
-| `--[no-]exe`               | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/NAME/cli.rb`   |
-| `--license=LICENSE`        | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE |
-| `--author=NAME`            | `git config user.name` (required)           | the gemspec, the licence's copyright line       |
-| `--[no-]email=EMAIL`       | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                |
-| `--github=USER`            | `git config github.user` (required)         | the homepage, the repository's links            |
-| `--summary=TEXT`           | `A Ruby gem.`                               | the gemspec, the README, the module's comment   |
-| `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository" |
-| `--family-names=NAMES`     | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff` |
-| `--[no-]given-names=NAMES` | optional; `--no-given-names`: none          | with `--citation`: the author's, `CITATION.cff` |
-| `--orcid=ID`               | optional                                    | with `--citation`: the author's ORCID iD        |
-| `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated    |
+| Option                     | Default                                     | Goes into                                              |
+| -------------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| `NAME`                     | --                                          | the gem, its module, its files: as `bundle gem`        |
+| `--[no-]exe`               | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/NAME/cli.rb`          |
+| `--license=LICENSE`        | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE        |
+| `--author=NAME`            | `git config user.name` (required)           | the gemspec, the licence's copyright line              |
+| `--[no-]email=EMAIL`       | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                       |
+| `--github=USER`            | `git config github.user` (required)         | the homepage, the repository's links                   |
+| `--summary=TEXT`           | `A Ruby gem.`                               | the gemspec, the README, the module's comment          |
+| `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository"        |
+| `--family-names=NAMES`     | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff`        |
+| `--[no-]given-names=NAMES` | optional; `--no-given-names`: none          | with `--citation`: the author's, `CITATION.cff`        |
+| `--[no-]alias=ALIAS`       | optional; `--no-alias`: none                | with `--citation`: the author's handle, `CITATION.cff` |
+| `--orcid=ID`               | optional                                    | with `--citation`: the author's ORCID iD               |
+| `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated           |
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes
@@ -84,10 +85,12 @@ name, author, GitHub user or, with `--citation`, family names is refused.
 `CITATION.cff` (Citation File Format 1.2.0) is for software meant to be cited, research's: GitHub
 offers its "Cite this repository", and Zenodo, once the repository is enabled there (the generated
 CONTRIBUTING.md's first steps), archives each release with its values and gives it a DOI. Its
-author is a person, family names required, given names, ORCID iD and keywords optional. Asked at a
-terminal, the family names offer the author's last word, and the given names the words before the
-family names, where the author ends with them. Its values need a citation: without one they are
-refused, and at a terminal its question takes y alone.
+author is a person, family names required, given names, alias, ORCID iD and keywords optional.
+Asked at a terminal, the family names offer the author's last word, the given names the words before
+the family names, where the author ends with them, and the alias, asked last, the GitHub user. That
+user may be an organization, so it is only offered: without a terminal, there is no alias unless
+`--alias` gives one. Its values need a citation: without one they are refused, and at a terminal
+its question takes y alone.
 
 It holds what GitHub and Zenodo read, written as Zenodo's import takes it, narrower than CFF:
 
@@ -96,7 +99,8 @@ It holds what GitHub and Zenodo read, written as Zenodo's import takes it, narro
   so it takes the licence GitHub detects instead -- Apache-2.0 for veragem's own two files today,
   CC-BY-4.0 where GitHub detects none -- and the record's licences are yours to correct;
 - an ORCID iD Zenodo's check takes, its check digit and its block ORCID's, written as its URL;
-- names without a comma: Zenodo reads one as the end of the family names (`Smith, Jr.`);
+- names without a comma: Zenodo reads one as the end of the family names (`Smith, Jr.`); an alias
+  may hold one, as Zenodo reads no alias;
 - a name of 3 characters or more, Zenodo's least title;
 - the repository, RubyGems' page as its artifact, and its API documentation on rubydoc.info as
   its URL (there from the first release); no email (CFF's pattern is stricter than veragem's);
