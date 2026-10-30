@@ -170,9 +170,8 @@ bundle exec rake "bump[minor]"      # or major, or patch
 bundle exec rake release
 ```
 
-`rake bump` refuses a release with nothing in it -- the commits since the last tag must hold a
-change a user meets (`feat`, `fix`, `perf`, `build`...): `chore`, `ci` and `style` alone make
-none. It sets the version in `lib/<%= path %>/version.rb` (the first release keeps the version
+`rake bump` refuses a release with nothing in it: no commit since the last tag, merges and fixups
+aside, which the changelog leaves out. It sets the version in `lib/<%= path %>/version.rb` (the first release keeps the version
 declared, whatever the level), updates the lock, writes the changelog (git-cliff) and commits.
 <%- if citation -%>
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
