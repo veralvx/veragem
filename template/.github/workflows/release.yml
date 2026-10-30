@@ -1,13 +1,17 @@
-# A release tag, v<version> (`rake bump`, then `rake release`), publishes the gem: checked and built
-# once, pushed to RubyGems through Trusted Publishing (no API key stored), then its GitHub release
-# of the same file, its notes the release's section of CHANGELOG.md (release-notes.sh). Trusted
-# Publishing needs, once, a (pending) trusted publisher on rubygems.org naming this repository,
-# this workflow (release.yml) and the `release` environment.
+# A release tag, v<version> (`rake bump`, then `rake release`), publishes the gem: checked, then
+# built and signed once, pushed to RubyGems through Trusted Publishing (no API key stored) with its
+# Sigstore attestation, then its GitHub release of the same file, its notes the release's section of
+# CHANGELOG.md (release-notes.sh). Trusted Publishing needs, once, a (pending) trusted publisher on
+# rubygems.org naming this repository, this workflow (release.yml) and the `release` environment.
 #
 # Least privilege, as RubyGems' Trusted Publishing advises, after PyPI's security model: the
-# build, which runs the checks and the gemspec, writes nothing but its artifacts and mints no key;
-# only the RubyGems job can mint one, with nothing checked out and no Gemfile or Rakefile loaded;
-# only the release job can write the repository.
+# checks, which load the bundle's gems, write nothing; the build, apart from them, loads no bundle,
+# so no tool's gem touches the file published, and its digest, a job output no later job can
+# rewrite, is checked before the gem is pushed or released; the signing job, which runs
+# sigstore-cli's gems, signs as this workflow outside the environment the publisher names, so it
+# mints no key; only the RubyGems job can mint one, with nothing checked out, no Gemfile or Rakefile
+# loaded and no action but setup-ruby's and the credentials'; only the release job can write the
+# repository.
 name: Release
 
 on:
@@ -17,8 +21,8 @@ on:
 permissions: {}
 
 jobs:
-  build:
-    name: Check and build
+  check:
+    name: Check
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -35,7 +39,7 @@ jobs:
 
       - name: The gems, from Gemfile.lock
         # installed afresh, not restored from bundler-cache: a cache any run on main can write is
-        # never an input to the gem published
+        # never an input to a release
         env:
           BUNDLE_FROZEN: "true"
         run: bundle install
@@ -43,16 +47,44 @@ jobs:
       - name: RuboCop, Steep, the tests, yard-lint
         run: bundle exec rake
 
+  build:
+    name: Build
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      sha256: ${{ steps.build.outputs.sha256 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: "4.0"
+          bundler: none
+
       - name: Build the gem, and its notes
+        id: build
+        # RubyGems' own build, the gemspec alone: the same files as Bundler's `rake build`
         run: |
           set -euo pipefail
-          version="$(ruby -e 'puts Gem::Specification.load(Dir["*.gemspec"].first).version')"
+          gemspec="$(ruby -e 'print Dir["*.gemspec"].first')"
+          version="$(ruby -e 'print Gem::Specification.load(ARGV[0]).version' "$gemspec")"
           if [[ $GITHUB_REF_NAME != "v$version" ]]; then
             echo "::error::$GITHUB_REF_NAME, but the gemspec's version is $version" >&2
             exit 1
           fi
-          # into pkg/, as Bundler's gem tasks build it
-          bundle exec rake build
+          mkdir pkg
+          gem="pkg/${gemspec%.gemspec}-$version.gem"
+          gem build "$gemspec" --output "$gem"
+          # assigned first: a failing command substitution inside echo's arguments would not stop
+          # the step
+          sha256="$(sha256sum "$gem")"
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
           .github/release-notes.sh CHANGELOG.md "$version" > notes.md
 
       - name: Keep the gem
@@ -69,9 +101,43 @@ jobs:
           path: notes.md
           if-no-files-found: error
 
+  sign:
+    name: Sign
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Sigstore's certificate: this workflow's identity, which RubyGems checks
+    steps:
+      - name: The build's gem
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: gem
+          path: pkg/
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: "4.0"
+          bundler: none
+
+      - name: Sign
+        # as rubygems/release-gem signs: its version of sigstore-cli
+        run: |
+          set -euo pipefail
+          for gem in pkg/*.gem; do
+            gem exec sigstore-cli:0.2.3 sign "$gem" --bundle "$gem.sigstore.json"
+          done
+
+      - name: Keep the attestation
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: attestation
+          path: pkg/*.sigstore.json
+          if-no-files-found: error
+
   rubygems:
     name: RubyGems
-    needs: build
+    needs: [build, sign]
     runs-on: ubuntu-latest
     environment:
       name: release
@@ -84,16 +150,40 @@ jobs:
           name: gem
           path: pkg/
 
+      - name: Its attestation
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: attestation
+          path: pkg/
+
+      - name: The build's gem, unchanged
+        # its artifact replaceable by a later job of the run (the signing job's gems): its digest is
+        # the build's output
+        env:
+          SHA256: ${{ needs.build.outputs.sha256 }}
+        run: sha256sum --check --strict <<< "$SHA256"
+
+      - name: Set up Ruby
+        # the runner image's RubyGems predates `gem push --attestation`
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: "4.0"
+          bundler: none
+
       - name: Trusted Publishing's API key
         uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
 
       - name: Push
-        # the runner image's RubyGems: no other action in the one job that can mint a key
-        run: gem push pkg/*.gem
+        # RubyGems verifies the attestation, and shows the gem's provenance
+        run: |
+          set -euo pipefail
+          for gem in pkg/*.gem; do
+            gem push "$gem" --attestation "$gem.sigstore.json"
+          done
 
   release:
     name: GitHub release
-    needs: rubygems
+    needs: [build, rubygems]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -108,6 +198,12 @@ jobs:
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: notes
+
+      - name: The build's gem, unchanged
+        # as the RubyGems job checks it
+        env:
+          SHA256: ${{ needs.build.outputs.sha256 }}
+        run: sha256sum --check --strict <<< "$SHA256"
 
       - name: Release
         env:

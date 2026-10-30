@@ -10,10 +10,12 @@ require_relative "../<%= File.basename(path) %>"
   module CLI
     # Runs the command line with +argv+.
     # @param argv [Array<String>] the command's arguments
-    # @return [Integer] the exit status: 0, or 2 for an option refused
+    # @return [Integer] the exit status: 0, or 2 for an option refused, or more than one name
     def self.run(argv)
       options = { help: false, version: false }
       names = parser.parse(argv, into: options)
+      raise #{option_parser}::NeedlessArgument.new(*names.drop(1)) if names.size > 1
+
       puts output(options, names.first || "")
       0
     rescue #{option_parser}::ParseError => e
@@ -21,7 +23,7 @@ require_relative "../<%= File.basename(path) %>"
       2
     end
 
-    def self.output(options, name)
+    private_class_method def self.output(options, name)
       if options[:help]
         parser.help
       elsif options[:version]
@@ -30,10 +32,9 @@ require_relative "../<%= File.basename(path) %>"
         #{modules.last}.greeting(name)
       end
     end
-    private_class_method :output
 
     # --help as an option of its own: OptionParser's built-in one exits the process.
-    def self.parser
+    private_class_method def self.parser
       #{option_parser}.new("Usage: #{name} [options] [NAME]") do |opts|
         opts.program_name = "#{name}"
         opts.version = VERSION
@@ -41,7 +42,6 @@ require_relative "../<%= File.basename(path) %>"
         opts.on("--version", "Print the version")
       end
     end
-    private_class_method :parser
   end
 RUBY
 -%>

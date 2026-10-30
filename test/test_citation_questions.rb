@@ -12,7 +12,8 @@ class TestCitationQuestions < Minitest::Test
     gem, shown = ask("my_gem", "--license=mit", "--summary=Hi", answers: ["", "y", "", "", "", "", "", "", ""], config:)
 
     assert_equal [true, "Ana María de", "Souza"], [gem.citation, gem.given_names, gem.family_names]
-    assert_includes shown, "Family names, CITATION.cff's [Souza]: Given names, CITATION.cff's [Ana María de]: "
+    assert_includes shown, "Family names, CITATION.cff's [Souza]: " \
+                           "Given names, CITATION.cff's (- for none) [Ana María de]: "
   end
 
   # the given names offered: the author's words before the family names, whichever they are
@@ -23,7 +24,7 @@ class TestCitationQuestions < Minitest::Test
       gem, shown = ask("my_gem", "--citation", "--family-names=#{family}", answers:, config:)
 
       assert_equal [given, family], [gem.given_names, gem.family_names]
-      assert_includes shown, "Given names, CITATION.cff's#{" [#{given}]" if given}: ORCID iD"
+      assert_includes shown, "Given names, CITATION.cff's (- for none)#{" [#{given}]" if given}: ORCID iD"
     end
   end
 
@@ -32,7 +33,7 @@ class TestCitationQuestions < Minitest::Test
     gem, shown = ask("my_gem", "--citation", "--author=Plato", answers: [""] * 9)
 
     assert_equal [nil, "Plato"], [gem.given_names, gem.family_names]
-    assert_includes shown, "Family names, CITATION.cff's [Plato]: Given names, CITATION.cff's: "
+    assert_includes shown, "Family names, CITATION.cff's [Plato]: Given names, CITATION.cff's (- for none): "
   end
 
   def test_at_a_terminal_no_given_names_is_not_asked
@@ -58,8 +59,8 @@ class TestCitationQuestions < Minitest::Test
     gem, shown = ask("my_gem", "--citation", answers:)
 
     assert_equal [ORCID, %w[ruby gem]], [gem.orcid, gem.keywords]
-    assert_includes shown, "ORCID iD, CITATION.cff's: invalid ORCID iD"
-    assert_includes shown, "Keywords, comma-separated, CITATION.cff's: invalid keywords"
+    assert_includes shown, "ORCID iD, CITATION.cff's (- for none): invalid ORCID iD"
+    assert_includes shown, "Keywords, comma-separated, CITATION.cff's (- for none): invalid keywords"
     gem, = ask("my_gem", "--citation", answers: [""] * 10)
 
     assert_equal [nil, nil], [gem.orcid, gem.keywords]

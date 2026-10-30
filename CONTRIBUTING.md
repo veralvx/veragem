@@ -67,6 +67,10 @@ smoke test installs the plugin from this checkout, generates each kind, and runs
 finished when it passes. It needs the network: rubygems.org for the gems, GitHub and Nix's cache
 for the flake.
 
+One test file (`bundle exec ruby -Ilib -Itest test/test_names.rb`), or some tests
+(`bundle exec rake test N=/probe/`), runs fewer than the coverage gate counts: its exit fails,
+the tests' own verdict above it.
+
 ## Development Workflow
 
 [Conventional Commits](https://www.conventionalcommits.org/), enforced by `cog check` locally and
@@ -80,14 +84,20 @@ Open a pull request against `main`, titled as a conventional commit, once
 
 - Enable the repository settings the auto-merge workflow needs, listed at the top of
   `.github/workflows/dependabot-automerge.yml`, with every job of `ruby-ci.yml`, `nix.yml`,
-  `smoke.yml` and the style checks required.
+  `smoke.yml`, `security.yml` and the style checks required.
 - Enable private vulnerability reporting (Settings → Advanced Security; a public repository's
   alone).
 - Enable the dependency graph there too, if it is off: `dependency-review.yml` fails without it.
 - Add a pending trusted publisher on
   [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers) for the gem `veragem`:
-  this repository, the workflow `release.yml`, the environment `release`; if you limit that
-  environment's deployments, admit the tags `v*`.
+  this repository, the workflow `release.yml`, the environment `release` (a publisher without one
+  admits any of the workflow's jobs) -- and limit that environment's deployments to the tags `v*`
+  (Settings → Environments, a rule of ref type Tag): a trusted publisher names the environment, not
+  a ref, so without the rule a workflow pushed to any branch could publish. Limit who creates those
+  tags too (Settings → Rules → Rulesets, a tag ruleset on `v*`): a tag pushed on any commit runs
+  that commit's workflows in the environment.
+- An advisory with no fixed version yet fails `security.yml` on every pull request until weighed:
+  its ID under `ignore:` in `.bundler-audit.yml` (bundler-audit's own file) lets the checks pass.
 
 ### Releasing
 
@@ -101,5 +111,5 @@ bundle exec rake release
 
 `rake bump` sets the version, updates the lock, writes the changelog (git-cliff) and commits;
 `rake release`, Bundler's own, tags `v<version>` and pushes the branch and the tag. The tag runs
-`release.yml`: the checks and the build, the push to RubyGems by Trusted Publishing, then the
-GitHub release.
+`release.yml`: the Ruby checks (`rake`), then the build (`gem build`, no bundle loaded) and its
+Sigstore attestation, the push to RubyGems by Trusted Publishing, then the GitHub release.

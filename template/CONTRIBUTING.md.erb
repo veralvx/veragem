@@ -54,7 +54,9 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
   failure is shrunk to its smallest counterexample, with the seed that reproduces it.
 - **Regressions:** if you are fixing a bug, include a test that reproduces the previous failure.
 - **Coverage:** every line, branch and method of `lib/` (SimpleCov's `strict` profile,
-  `test/test_helper.rb`). Code a test cannot reach is questioned before it is excluded.
+  `test/test_helper.rb`). Code a test cannot reach is questioned before it is excluded. One test
+  file, or some tests (`bundle exec rake test N=/greets/`), runs fewer than the gate counts: its
+  exit fails, the tests' own verdict above it.
 
 ## Development Workflow
 
@@ -123,18 +125,24 @@ Then, in whichever order suits you:
   too, an organization's; without it, delete the workflow.
 - Add a pending trusted publisher on [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers)
   for the gem `<%= name %>`: this repository, the workflow `release.yml`, the environment
-  `release`. A release tag then publishes without a stored key, its first version too, and its
-  GitHub release follows RubyGems': without the publisher, neither is made.
-- If you limit the `release` environment's deployments (Settings → Environments), admit the
-  release tags, a rule of ref type Tag, `v*`: the RubyGems job runs on the tag, and an environment
-  that refuses it publishes nothing.
+  `release` (a publisher without one admits any of the workflow's jobs, its signing job's too). A
+  release tag then publishes without a stored key, its first version too, and its GitHub release
+  follows RubyGems': without the publisher, neither is made.
+- Limit the `release` environment's deployments to the release tags (Settings → Environments, a
+  rule of ref type Tag, `v*`): a trusted publisher names the environment, not a ref, so without the
+  rule a workflow pushed to any branch could publish the gem. And limit who creates the release tags
+  (Settings → Rules → Rulesets, a tag ruleset on `v*`): a tag pushed on any commit runs that
+  commit's workflows in the environment.
 <%- if exe -%>
 - After the first release, make the image public: GHCR publishes a new package as private (its
   page, Package settings → Change visibility).
+- Limit the `image` environment's deployments to the release tags as well (a rule of ref type Tag,
+  `v*`): its jobs push the image.
 - To publish the image to Docker Hub too: create its repository there, then set the repository
-  variable `DOCKERHUB_USERNAME` and the secret `DOCKERHUB_TOKEN` (an access token that writes) --
-  and the variable `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`.
-  A Docker Hub failure in the build (its login, its name, a push) holds GHCR's tag back too.
+  variable `DOCKERHUB_USERNAME` and the `image` environment's secret `DOCKERHUB_TOKEN` (an access
+  token that writes; only the environment's jobs, on a release tag, can read it) -- and the variable
+  `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`. A Docker Hub
+  failure in a push (its login, its name) holds GHCR's tag back too.
 <%- end -%>
 <%- if citation -%>
 - To archive each release with a DOI, enable the repository on [Zenodo](https://zenodo.org) (its
@@ -168,9 +176,10 @@ declared, whatever the level), updates the lock, writes the changelog (git-cliff
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
 <%- end -%>
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
-tag; it pushes no gem. The tag runs `release.yml`: the checks and the build, the push to RubyGems
-by Trusted Publishing, then the GitHub release of the same gem, its notes the changelog's new
-section.
+tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`), then the build
+(`gem build`, no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted
+Publishing, which shows the gem's provenance, then the GitHub release of the same gem, its notes
+the changelog's new section.
 <%- if exe -%>
 Beside `release.yml`, waiting for no RubyGems push, `image.yml` publishes the command's OCI image
 to GHCR (`nix build .#image` builds it here).
@@ -183,12 +192,11 @@ removes the tag (Bundler's doing): run `rake release` again once allowed.
 ## Updating the tools
 
 Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake's inputs
-monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass.
+monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass. An
+advisory with no fixed version yet fails `security.yml` on every pull request until you weigh it:
+its ID under `ignore:` in `.bundler-audit.yml` (bundler-audit's own file) lets the checks pass.
 dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
 brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
-A bump the new cops fail gets RuboCop's safe corrections as a commit on its branch
-(`rubocop-autocorrect.yml`). GitHub holds the workflows of a commit a workflow's token pushes
-until you approve them (the pull request's "Approve workflows to run"); corrected, the bump then
-merges as any bump. What safe corrections leave is yours to fix, in a pull request of yours too: a
-failed run's summary
-holds the corrections as a patch, to `git apply`.
+A bump the new cops fail stays unmerged: its failed run's summary holds RuboCop's safe corrections
+as a patch, to `git apply` on its branch (no workflow pushes code the bumped gems wrote); what
+they leave is yours to fix.

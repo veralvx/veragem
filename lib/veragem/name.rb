@@ -24,7 +24,8 @@ module Veragem
     # @return [String]
     def self.underscored(name) = name.tr("-", "_")
 
-    # +name+, or an Error saying why a gem cannot have it.
+    # +name+, or an Error saying why a gem cannot have it, as written: Generator.check adds what its
+    # modules and its kind decide.
     # @param name [String] a gem's name, as typed
     # @return [String] +name+
     # @raise [Veragem::Error] a gem cannot have it
@@ -40,8 +41,19 @@ module Veragem
       # lib/test_helper.rb would shadow the tests' own (Minitest's -Ilib:test)
       raise Error, "invalid gem name #{name}: its lib/test_helper.rb would shadow the tests'" if name == "test_helper"
 
-      check_modules(name)
       name
+    end
+
+    # The gem writes lib/<path>.rb, `module` for each of its modules, and tests that name the first:
+    # none may meet what its tools load.
+    # @param name [String] one Name.check takes
+    # @return [void]
+    # @raise [Veragem::Error] a module or its file would meet another, or they could not be checked
+    def self.check_modules(name)
+      nestings = nestings_of(name)
+      shadowed, found, *kinds = probe(library_of(name), path(name), nestings)
+      check_shadowing(name, shadowed.to_s, found.to_s)
+      check_defined(name, nestings.zip(kinds).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
     end
 
     # The child: no stdin, a scratch directory, its arguments cleared before the libraries load, their
@@ -69,36 +81,35 @@ module Veragem
       exit!(0)
     RUBY
     private_constant :PROBE
+    # Each probe's answers: a question asked once a process
+    @probed = {} #: Hash[[String, String, Array[String]], Array[String]]
 
     # The file +path+ already requires, what a Minitest::Test or Gem::Specification finds for the
     # first of +nestings+, then each nesting's class -- Module, Class... --, each "" when none, where
     # the gem meets them: in Bundler's CLI, which reads its gemspec (bin/setup's `bundle install`),
     # in Rake and Minitest, and with its top-level +library+ (`date-holidays`: date), which its tools
     # may require. Asked of a Ruby of its own, so the answer is the same however this one was
-    # started. Its answers come only once the libraries are loaded, then the child exits: one fewer
-    # is a failure.
+    # started -- RUBYOPT too, whose options would print before the answers -- and once a process:
+    # the same question's answer does not change. Its answers come only once the libraries are
+    # loaded, then the child exits: one fewer is a failure.
     # @param library [String] the gem's top-level library
     # @param path [String] the file the gem requires, lib/'s
     # @param nestings [Array<String>] its modules' full names, outermost first
     # @return [Array<String>] the shadowed file, what is found, then each nesting's class
     # @raise [Veragem::Error] the child did not answer them all
     def self.probe(library, path, nestings)
+      @probed[[library, path, nestings]] ||= answers(library, path, nestings)
+    end
+
+    private_class_method def self.answers(library, path, nestings)
       command = [RbConfig.ruby, "-e", PROBE, library, path, *nestings]
+      env = Bundler.unbundled_env.except("RUBYOPT")
       answers = Dir.mktmpdir do |dir|
-        IO.popen(Bundler.unbundled_env, command, unsetenv_others: true, in: File::NULL, err: File::NULL, chdir: dir,
-                 &:readlines)
+        IO.popen(env, command, unsetenv_others: true, in: File::NULL, err: File::NULL, chdir: dir, &:readlines)
       end
       raise Error, "could not check #{library}'s modules" unless answers.size == nestings.size + 2
 
-      answers.map(&:chomp)
-    end
-
-    # The gem writes lib/<path>.rb, `module` for each of its modules, and tests that name the first.
-    private_class_method def self.check_modules(name)
-      nestings = nestings_of(name)
-      shadowed, found, *kinds = probe(library_of(name), path(name), nestings)
-      check_shadowing(name, shadowed.to_s, found.to_s)
-      check_defined(name, nestings.zip(kinds).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
+      answers.map(&:chomp).freeze
     end
 
     # Its lib/<path>.rb, first on the load path, must not shadow a library its tools require

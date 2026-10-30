@@ -22,7 +22,7 @@ module Veragem
     OPTIONAL = %i[email given_names orcid keywords].freeze
     private_constant :QUESTIONS, :OPTIONAL
 
-    # Generating into +dir+.
+    # Questions on +output+, answered on +input+, for a gem generated into +dir+.
     # @param input [#gets, #tty?] where the answers are typed
     # @param output [#print, #puts] where the questions are shown
     # @param dir [String] where the gem is to be generated
@@ -67,13 +67,7 @@ module Veragem
 
     private
 
-    def check_name(name, exe, citation)
-      Name.check(name).tap do |checked|
-        Generator.check_name(checked, exe)
-        Citation.check_name(checked, citation)
-        Generator.check_target(File.join(@dir, checked))
-      end
-    end
+    def check_name(name, exe, citation) = Generator.check(name, exe:, citation:, target: File.join(@dir, name))
 
     def answer(key, text, name, values)
       case key
@@ -89,14 +83,14 @@ module Veragem
     end
 
     # The answer, or the default, through +check+; asked again when there is neither, or the check
-    # fails, but an +optional+ one is nil.
+    # fails, but an +optional+ one is nil -- and "-" its none, which a default would take otherwise.
     def ask(question, default = nil, check:, optional: false)
       default = offered(question, default, check)
       loop do
-        answer = read(question, default) || default
-        return if optional && answer.nil?
+        reply = read(question, default, optional) || default
+        return if optional && [nil, "-"].include?(reply)
 
-        value = answer && checked(question, answer, check)
+        value = reply && checked(question, reply, check)
         return value unless value.nil?
       end
     end
@@ -105,9 +99,9 @@ module Veragem
     def offered(question, default, check) = (default unless default.nil? || checked(question, default, check).nil?)
 
     # A line's text, nil when empty; one its encoding cannot read as bytes, as an argument's.
-    def read(question, default)
+    def read(question, default, optional)
       line = terminal(question) do
-        @output.print "#{question}#{" [#{default}]" if default}: "
+        @output.print "#{question}#{" (- for none)" if optional}#{" [#{default}]" if default}: "
         @input.gets.tap { @output.puts unless it }
       end
       raise Error, "no answer to #{question}" unless line

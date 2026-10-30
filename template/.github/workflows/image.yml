@@ -5,13 +5,19 @@
 # <version>-arm64) stay, the multi-architecture tag's parts. It runs beside release.yml, not after
 # it: the image does not wait for the gem's push to RubyGems.
 #
-# The job's token pushes: no secret stored. A first push is private (GHCR's default): make the
-# package public in its settings once.
+# The jobs' token pushes to GHCR: no secret stored. A first push is private (GHCR's default): make
+# the package public in its settings once.
 #
 # Docker Hub too, the same tags, once vars.DOCKERHUB_USERNAME and secrets.DOCKERHUB_TOKEN (an
 # access token that writes) are set: as vars.DOCKERHUB_REPOSITORY, else <username>/<repository>. A
-# Docker Hub failure in the build (its login, its name, a push) holds GHCR's multi-architecture tag
-# back too; a re-run, once fixed, completes both.
+# Docker Hub failure in a push (its login, its name) holds GHCR's multi-architecture tag back too;
+# once fixed, a re-run of the failed jobs within a day (the image's artifact kept so long), or of
+# all of them, completes both.
+#
+# The build, which runs the image, holds no write and no secret, and passes on the image it ran;
+# the jobs that push, which build nothing, run in the `image` environment, which holds
+# DOCKERHUB_TOKEN and which the generated CONTRIBUTING.md's first steps limit to the release tags: a
+# job of no other ref can read it.
 #
 # Run by hand (workflow_dispatch) on a branch, it builds and runs the image on both architectures,
 # pushing nothing: a rehearsal before the first release; on a tag, it publishes that release again.
@@ -37,8 +43,8 @@ jobs:
             arch: arm64
     permissions:
       contents: read
-      packages: write
     outputs:
+      image: ${{ steps.build.outputs.image }}
       description: ${{ steps.build.outputs.description }}
     steps:
       - name: Checkout
@@ -59,9 +65,10 @@ jobs:
             echo "::error::$GITHUB_REF_NAME, but version.rb declares $version" >&2
             exit 1
           fi
-          # streamed into docker: no compressed copy of the closure in the store
+          # streamed: no compressed copy of the closure in the store
           stream="$(nix build --no-link --print-out-paths .#image.stream)"
-          "$stream" | docker load
+          "$stream" > image.tar
+          docker load --input image.tar
           loaded="$(nix eval --raw .#image.imageName):$version"
           # the image as a user runs it: its entrypoint, as its user
           expected="$(nix eval --raw .#image.imageName) $version"
@@ -73,10 +80,52 @@ jobs:
           # assigned first: a failing command substitution inside echo's arguments would not stop
           # the step
           description="$(nix eval --raw .#default.meta.description)"
-          echo "description=$description" >> "$GITHUB_OUTPUT"
+          {
+            echo "image=$loaded"
+            echo "description=$description"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Keep the image
+        if: github.ref_type == 'tag'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-${{ matrix.arch }}
+          path: image.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  push:
+    name: Push (${{ matrix.arch }})
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ${{ matrix.runner }}
+    environment:
+      name: image
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: The build's image
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-${{ matrix.arch }}
+
+      - name: Load it
+        run: docker load --input image.tar
 
       - name: Push
-        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
           # Docker Hub too, when both are set (.github/image-registries.sh): an unset variable or
@@ -86,22 +135,24 @@ jobs:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           DOCKERHUB_REPOSITORY: ${{ vars.DOCKERHUB_REPOSITORY }}
           ARCH: ${{ matrix.arch }}
+          LOADED: ${{ needs.build.outputs.image }}
         run: |
           set -euo pipefail
           repositories="$(.github/image-registries.sh)"
           version="${GITHUB_REF_NAME#v}"
-          loaded="$(nix eval --raw .#image.imageName):$version"
           # the list on its own descriptor: no command in the loop can read it away
           while read -r repository <&3; do
-            docker tag "$loaded" "$repository:$version-$ARCH"
+            docker tag "$LOADED" "$repository:$version-$ARCH"
             docker push "$repository:$version-$ARCH"
           done 3<<< "$repositories"
 
   publish:
     name: Multi-architecture tag
-    needs: build
+    needs: [build, push]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
+    environment:
+      name: image
     permissions:
       contents: read
       packages: write

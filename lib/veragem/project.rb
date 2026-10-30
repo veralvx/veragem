@@ -9,10 +9,19 @@ module Veragem
     GITHUB = /\A[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\z/i
     # Each choice's SPDX identifiers: the gemspec's licenses, the LICENSE-* files.
     LICENSES = { "mit" => ["MIT"], "apache" => ["Apache-2.0"], "dual" => ["MIT", "Apache-2.0"] }.freeze
-    # What yard-lint (.yard-lint.yml) takes for a tag written informally, first in a comment.
-    INFORMAL_TAG = /\A(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since|returns
-                     |raises|example):/xi
-    private_constant :GITHUB, :INFORMAL_TAG
+    # What YARD reads as a tag first in a comment: its own (`@param`, `(see`), and those yard-lint
+    # (.yard-lint.yml) takes for one written informally.
+    TAG = /\A(?:@|\(see\b|(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since
+            |returns|raises|example):)/xi
+    # A RuboCop annotation, no documentation, as its AnnotationComment reads one: a keyword first, then
+    # a colon, spaces before it or not, or a space -- but a sentence's capitalized first word, a word
+    # after it.
+    ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)\b(\s*:)?(\s+)?(\S+)?/i
+    # A magic comment as RuboCop reads one -- an encoding's anywhere, lower-case (Ruby's rule), a
+    # frozen string literal's first, in any case -- or a RuboCop directive, which would turn its cops
+    # off, or fail them.
+    MAGIC = /\b(?:en)?coding\s*[:=]|\A(?i:frozen[_-]string[_-]literal):|(?i:\brubocop\s*:)/
+    private_constant :GITHUB, :TAG, :ANNOTATION, :MAGIC
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
                 :orcid, :keywords
@@ -141,11 +150,14 @@ module Veragem
       line
     end
 
-    # +summary+, which is the module's comment too: one the gem's own yard-lint takes, no informal tag
-    # first and no backtick or bold left open -- a `**` outside code with a non-space beside it, as
-    # yard-lint counts (`x ** 2` is no bold).
+    # +summary+, which is the module's comment too: one the gem's own yard-lint and RuboCop take as its
+    # documentation, no tag, annotation or magic comment, and no backtick or bold left open -- a `**`
+    # outside code with a non-space beside it, as yard-lint counts (`x ** 2` is no bold).
     private_class_method def self.documented(summary)
-      raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(INFORMAL_TAG)
+      raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(TAG)
+      if annotation?(summary) || summary.match?(MAGIC)
+        raise Error, "invalid summary #{summary.inspect}: RuboCop would read an annotation or a directive"
+      end
 
       bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size
       if summary.count("`").odd? || bold.odd?
@@ -155,13 +167,19 @@ module Veragem
       summary
     end
 
+    private_class_method def self.annotation?(summary)
+      keyword, colon, space, note = summary.match(ANNOTATION)&.captures
+      return false unless keyword && (colon || space)
+
+      !(keyword == keyword.capitalize && !colon && note)
+    end
+
     private
 
     # What the gem holds beyond the library: a command line, a citation.
     def extras(values)
       @exe, @citation = values.values_at(:exe, :citation).map { it == true }
       Citation.check_values(values, citation)
-      Citation.check_name(name, citation)
       cite(values) if citation
     end
 

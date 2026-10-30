@@ -20,9 +20,14 @@ module Veragem
   # What the tests share: a project's values, and a directory to generate into.
   module TestSupport
     VALUES = { author: "Jane Doe", github: "jane", summary: "A Ruby gem.", license: "dual" }.freeze
+    # git's config, as `config:` reads it
+    CONFIG = { "user.name" => "Jane Doe", "user.email" => "jane@example.com", "github.user" => "jane" }.freeze
 
     # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
     def project(name = "my_gem", **values) = Project.new(name, VALUES.merge(values))
+
+    # not a terminal: nothing asked
+    def parse(*argv, config: CONFIG) = Options.parse(argv, config: config.method(:[]), input: StringIO.new)
 
     def in_tmpdir(&) = Dir.mktmpdir("veragem-test", &)
 
@@ -38,8 +43,6 @@ module Veragem
   # What the questions' tests share: a terminal, and what it was asked.
   module TerminalSupport
     include TestSupport
-
-    CONFIG = { "user.name" => "Jane Doe", "user.email" => "jane@example.com", "github.user" => "jane" }.freeze
 
     # +answers+ typed at a terminal, one a line
     def terminal(*answers) = StringIO.new(answers.map { "#{it}\n" }.join).tap { |io| def io.tty? = true }

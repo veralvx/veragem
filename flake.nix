@@ -1,6 +1,6 @@
 # The development shell, the gem as a package, and the checks that need no gem from the bundle:
 #
-#   nix develop      Ruby 4.0 and every tool `rake checks` runs besides the gems (Bundler's, from
+#   nix develop      Ruby 4.0 and every tool the Rakefile runs besides the gems (Bundler's, from
 #                    Gemfile.lock: `bin/setup`): cocogitto, git-cliff, dprint, shellcheck, shfmt,
 #                    actionlint, zizmor, nixfmt
 #   nix build        the gem, built from its gemspec and installed (nixpkgs' buildRubyGem);

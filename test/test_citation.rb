@@ -4,10 +4,8 @@ require "test_helper"
 
 # CITATION.cff's values, as options give them: a citation's alone, checked as Zenodo's import takes them.
 class TestCitation < Minitest::Test
-  include Veragem::TerminalSupport
+  include Veragem::TestSupport
   include Veragem::CitationSupport
-
-  def parse(*argv) = Veragem::Options.parse(argv, config: CONFIG.method(:[]), input: StringIO.new)
 
   def test_a_citation_is_opt_in
     gem = parse("my_gem")
@@ -69,11 +67,13 @@ class TestCitation < Minitest::Test
 
   # its title the name: Zenodo's import refuses one under 3 characters
   def test_a_name_under_three_characters_cannot_have_a_citation
-    error = assert_raises(Veragem::Error) { parse("ab", "--citation", "--family-names=Doe") }
+    in_tmpdir do |dir|
+      check = ->(name, citation) { Veragem::Generator.check(name, exe: false, citation:, target: File.join(dir, name)) }
+      error = assert_raises(Veragem::Error) { check.call("ab", true) }
 
-    assert_equal "invalid gem name ab with --citation: Zenodo takes a title of 3 characters or more", error.message
-    assert_equal "abc", parse("abc", "--citation", "--family-names=Doe").name
-    assert_equal "ab", parse("ab").name
+      assert_equal "invalid gem name ab with --citation: Zenodo takes a title of 3 characters or more", error.message
+      assert_equal %w[abc ab], [check.call("abc", true), check.call("ab", false)]
+    end
   end
 
   def test_no_given_names_is_none

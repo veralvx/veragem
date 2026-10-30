@@ -11,7 +11,9 @@ class TestRefusals < Minitest::Test
       link = File.join(dir, "my_gem")
       File.symlink(File.join(dir, "nowhere"), link)
 
-      assert_raises(Veragem::Error) { Veragem::Generator.generate(project, link) }
+      error = assert_raises(Veragem::Error) { Veragem::Generator.generate(project, link) }
+
+      assert_equal "#{link} already exists", error.message
       assert File.symlink?(link)
     end
   end
@@ -54,12 +56,23 @@ class TestRefusals < Minitest::Test
     assert_nil Veragem::Generator.check_name("c_l_i-x", true)
   end
 
-  def test_a_name_of_the_gemfiles_tools_is_refused
-    %w[rubocop-rake rubocop-minitest rubocop-performance].each do |name|
+  # its lock's gems, those the tools load too (RuboCop's parser): Bundler would resolve them to the
+  # new gem itself
+  def test_a_gem_the_gemfiles_tools_load_is_refused
+    %w[rubocop-rake parser].each do |name|
       error = assert_raises(Veragem::Error) { Veragem::Generator.check_name(name, false) }
 
-      assert_equal "invalid gem name #{name}: the Gemfile's own tool", error.message
+      assert_equal "invalid gem name #{name}: a gem the Gemfile's tools load", error.message
     end
+  end
+
+  # a lock checked out with CRLF line ends (git's core.autocrlf) lists the same gems
+  def test_the_tools_are_read_whatever_the_locks_line_ends
+    lock = File.read(File.join(__dir__, "../Gemfile.lock"))
+    tools = Veragem::Generator.send(:tools, lock)
+
+    assert_includes tools, "parser"
+    assert_equal tools, Veragem::Generator.send(:tools, lock.gsub("\n", "\r\n"))
   end
 
   # git's own complaint goes to the user's terminal; here, nowhere
@@ -82,12 +95,24 @@ class TestRefusals < Minitest::Test
       other = File.join(dir, "other")
       system("git", "init", "--quiet", other, exception: true)
       git = File.join(other, ".git")
-      with_env("GIT_DIR" => git, "GIT_INDEX_FILE" => File.join(git, "index")) do
+      with_env("GIT_DIR" => git, "GIT_WORK_TREE" => other, "GIT_INDEX_FILE" => File.join(git, "index")) do
         Veragem::Generator.generate(project, File.join(dir, "my_gem"))
       end
 
       assert_path_exists File.join(dir, "my_gem/.git")
       assert_empty IO.popen(%w[git ls-files], chdir: other, &:read)
+    end
+  end
+
+  # the user's own excludes (core.excludesFile) keep none of the gem's files out of its repository
+  def test_every_file_is_added_whatever_the_users_excludes
+    in_tmpdir do |dir|
+      excludes = File.join(dir, "excludes")
+      File.write(excludes, "*.gemspec\nbin/\n.github/\n")
+      target = File.join(dir, "my_gem")
+      with_git_config(dir, "[core]\n  excludesFile = #{excludes}\n") { Veragem::Generator.generate(project, target) }
+
+      assert_includes IO.popen(%w[git ls-files], chdir: target, &:read).lines(chomp: true), "my_gem.gemspec"
     end
   end
 

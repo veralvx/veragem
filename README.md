@@ -11,20 +11,22 @@ and the rest:
 - **Lint and format**: RuboCop with every new cop, rubocop-minitest, rubocop-packaging,
   rubocop-performance and rubocop-rake; the project is indexed first (rubydex), so the cops that see
   across files do. In CI, offences are annotated on the pull request and a failed run's summary
-  holds the safe corrections as a patch; a Dependabot bump the new cops fail gets them as a commit,
-  then merges as any bump once you approve its runs (`rubocop-autocorrect.yml`, no token to set).
+  holds the safe corrections as a patch, to `git apply`: a Dependabot bump the new cops fail stays
+  unmerged until you apply it, no workflow pushing code the bumped gems wrote.
 - **Documentation**: YARD, every object of `lib/` documented, held by yard-lint at 100% coverage
   (`rake yard` writes it to `doc/`).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered.
-- **Security**: bundler-audit over `Gemfile.lock`, daily in CI; a pull request's new gems and
-  actions reviewed for their licences and advisories (`dependency-review.yml`, advisory, as in the
-  Python and Rust templates); zizmor over the workflows and Dependabot's configuration; Dependabot
-  for the gems, the actions and the flake, a release proposed once a week old.
+- **Security**: bundler-audit over `Gemfile.lock`, daily and on every pull request; a pull request's
+  new gems and actions reviewed for their licences and advisories (`dependency-review.yml`,
+  advisory, as in the Python and Rust templates); zizmor over the workflows and Dependabot's
+  configuration; Dependabot for the gems, the actions and the flake, a release proposed once a week
+  old.
 - **Commits and releases**: Conventional Commits (cocogitto, in CI and opt-in git hooks), a
   changelog written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own
-  `rake release`; the tag publishes to RubyGems by Trusted Publishing, no API key stored, and makes
-  the GitHub release.
+  `rake release`; the tag publishes to RubyGems by Trusted Publishing, no API key stored, the gem
+  built apart from the tools' gems and signed (its Sigstore attestation, RubyGems' provenance), and
+  makes the GitHub release.
 - **Nix**: a flake with the development shell (Ruby and every tool the checks run), the gem as a
   package (`nix build`), `nix fmt`, and checks for the Nix, the shell scripts, the workflows and
   the package. With `--exe`, `nix run` runs the command, and its OCI image (`nix build .#image`)
@@ -37,7 +39,7 @@ In the generated gem, `bundle exec rake` runs the Ruby checks, as CI does;
 
 ## Install
 
-Ruby 4.0 or later, then:
+Ruby 4.0 or later and git, then:
 
 ```sh
 bundle plugin install veragem
@@ -75,9 +77,9 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes
-it, and a refused answer is asked again. With other input (CI, a pipe, `< /dev/null` to skip the
-questions) nothing is asked: the defaults apply, and a missing name, author, GitHub user or, with
-`--citation`, family names is refused.
+it, an optional one takes `-` for none, and a refused answer is asked again. With other input (CI,
+a pipe, `< /dev/null` to skip the questions) nothing is asked: the defaults apply, and a missing
+name, author, GitHub user or, with `--citation`, family names is refused.
 
 `CITATION.cff` (Citation File Format 1.2.0) is for software meant to be cited, research's: GitHub
 offers its "Cite this repository", and Zenodo, once the repository is enabled there (the generated
@@ -112,7 +114,8 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 - whose module its tests or `gem build` would take for Minitest's or RubyGems' own
   (`lifecycle_hooks`, `date_like`);
 - that `bundle gem` would refuse or mangle (`1gem`, `my--gem`);
-- one of the Gemfile's own tools (`rubocop-rake`);
+- a gem the Gemfile's tools load, theirs included (`rubocop-rake`, `parser`): the tools' bundle
+  would resolve it to the new gem;
 - `test_helper`, whose lib/test_helper.rb would shadow the tests', or one that would write a
   template file twice (`helper`: test/test_helper.rb);
 - longer than 40 characters or deeper than 4 modules (the generated code's lines fit RuboCop's);
@@ -120,8 +123,10 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
   first).
 
 The summary is plain text: written into the README as given, Markdown in it is dprint's to check.
-It is the module's YARD comment too, so one the gem's yard-lint would refuse is refused: a tag
-written informally first (`Note:`, `See also:`), a backtick or `**` left open.
+It is the module's comment too, so one the gem's yard-lint or RuboCop would not take as its
+documentation is refused: a tag first, YARD's (`@param`, `(see`) or written informally (`Note:`,
+`See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic comment (`encoding:`), a
+backtick or `**` left open.
 As `bundle gem` does, veragem makes the git repository and adds the files, and runs no
 `bundle install`: `bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists
 the first steps: the repository's settings, RubyGems' pending trusted publisher.
@@ -129,7 +134,8 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 ## What you get
 
 ```
-NAME.gemspec          the gem: its version from lib/NAME/version.rb, its files lib/, sig/, exe/
+NAME.gemspec          the gem: its version from lib/PATH/version.rb (`my-gem`'s lib/my/gem/), its
+                      files lib/, sig/, exe/
 Gemfile               the gemspec, then the tools; Gemfile.lock pins them (written by bin/setup)
 Rakefile              `rake`: RuboCop, Steep, the tests, yard-lint; `rake checks`: what CI runs;
                       `rake "bump[level]"`, `rake release`; `rake -T` lists them all
@@ -142,8 +148,8 @@ flake.nix, flake.lock the dev shell, the package (and the command's image), `nix
 cliff.toml, cog.toml  git-cliff's changelog, cocogitto's commit checks
 dprint.json, .editorconfig
 .github/              CI, the flake, bundler-audit, the dependency review, the release (and the
-                      image), the style checks, Dependabot, its auto-merge and its bumps'
-                      RuboCop corrections; issue and pull request templates
+                      image), the style checks, Dependabot and its auto-merge; issue and pull
+                      request templates
 README, CONTRIBUTING, AGENTS, SECURITY, CODE_OF_CONDUCT, LICENSE-MIT / LICENSE-APACHE
 CITATION.cff          with --citation: the citation, its version and date `rake bump`'s
 ```
@@ -160,11 +166,13 @@ packages few of them, and older).
   property), the options, every file of each kind and licence rendered, parsed and kept executable,
   the gemspec read back, the values written as given whatever the locale.
 - The harness here is the template's: this repository's Gemfile, Rakefile, workflows, hooks, flake
-  and tools' configuration are the template's own files, byte for byte (`test/test_sync.rb`), so
+  and tools' configuration are the template's own files, byte for byte (`test/test_sync.rb`; but
+  `dependabot.yml`, whose directories differ, and the smoke test's workflow, the plugin's alone), so
   the template's are checked in place by this repository's checks, and a command line's own
   (`image.yml`) by the smoke test's command gem.
 - The smoke test (`dev/smoke.sh`, `smoke.yml`, weekly too): the plugin installed from this checkout
-  generates a gem of each kind and licence, and each passes its own `rake checks` and builds.
+  generates a gem of each kind and licence, and each passes its own `rake checks` and builds; the
+  citation's gem releases twice (`rake bump`), a patch and a minor.
 
 ## Contributing
 

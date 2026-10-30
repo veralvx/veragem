@@ -1,1 +1,2 @@
 --query 'object.visibility == :public'
+lib/**/*.rb

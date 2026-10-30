@@ -48,7 +48,7 @@ jobs:
 
       - name: RuboCop's safe corrections, as a patch
         # a failed run's: what `rake rubocop:autocorrect` changes, in the run's summary, to
-        # `git apply` (a Dependabot bump's, rubocop-autocorrect.yml commits)
+        # `git apply` -- a Dependabot bump's too, which a failed run keeps from auto-merging
         if: failure()
         run: |
           bundle exec rake rubocop:autocorrect || true

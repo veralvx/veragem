@@ -34,7 +34,7 @@ class TestNames < Minitest::Test
     { "set" => "Set", "comparable" => "Comparable",
       "bundler-thor" => "Bundler::Thor", "option_parser" => "OptionParser" }
       .each do |name, defined|
-        error = assert_raises(Veragem::Error) { project(name) }
+        error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
         assert_equal "invalid gem name #{name}: #{defined} is already defined", error.message
       end
@@ -43,7 +43,7 @@ class TestNames < Minitest::Test
   # lib/json.rb, first on the load path, would be every tool's `require "json"`
   def test_a_name_whose_library_would_shadow_another_is_refused
     %w[json logger bundler bundler-plugin].each do |name|
-      error = assert_raises(Veragem::Error) { project(name) }
+      error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
       path = name.tr("-", "/")
 
@@ -57,7 +57,7 @@ class TestNames < Minitest::Test
     { "lifecycle_hooks" => "its tests would find Minitest::Test::LifecycleHooks",
       "u_n_d_e_f_i_n_e_d" => "its tests would find Minitest::Assertions::UNDEFINED",
       "date_like" => "gem build would find Gem::Specification::DateLike" }.each do |name, found|
-      error = assert_raises(Veragem::Error) { project(name) }
+      error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
       assert_equal "invalid gem name #{name}: #{found} for its module", error.message
     end
@@ -66,30 +66,22 @@ class TestNames < Minitest::Test
   # `module Set` cannot reopen the class Set; nor `module Date`, once a tool requires date
   def test_a_name_nested_in_a_class_is_refused
     { "set-extras" => "Set", "string-utils" => "String", "date-holidays" => "Date" }.each do |name, outer|
-      error = assert_raises(Veragem::Error) { project(name) }
+      error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
       assert_equal "invalid gem name #{name}: #{outer} is a Class, not a module", error.message
     end
   end
 
-  # in a Ruby of its own: nothing the library prints is taken for an answer, and it loads with no
-  # arguments, in an empty directory
-  def test_the_probe_requires_the_top_level_library_alone
-    assert_equal ["", "", "Module", "Class"], Veragem::Name.probe("date", "my_gem", %w[Comparable Date])
+  # Project checks the name as written alone; Generator.check, the rest
+  def test_a_project_is_checked_as_written_its_generation_the_rest
+    assert_equal "set-extras", project("set-extras").name
     in_tmpdir do |dir|
-      noisy = File.join(dir, "noisy.rb")
-      File.write(noisy, "puts 'Class'\nwarn 'Class'\nNoisy = 1\nCleared = 1 if ARGV.empty?\n" \
-                        "Scratch = 1 if Dir.empty?('.')\n")
+      error = assert_raises(Veragem::Error) do
+        Veragem::Generator.check("set-extras", exe: false, citation: false, target: File.join(dir, "set-extras"))
+      end
 
-      assert_equal ["", "", "Integer", "", "Integer", "Integer"],
-                   Veragem::Name.probe(noisy, "my_gem", %w[Noisy Quiet Cleared Scratch])
+      assert_equal "invalid gem name set-extras: Set is a Class, not a module", error.message
     end
-  end
-
-  def test_a_failing_probe_refuses
-    error = assert_raises(Veragem::Error) { Veragem::Name.probe("set", "my_gem", ["not a constant"]) }
-
-    assert_equal "could not check set's modules", error.message
   end
 
   def test_a_name_nested_in_a_module_reopens_it
