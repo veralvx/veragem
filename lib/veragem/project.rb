@@ -10,6 +10,7 @@ module Veragem
     # What yard-lint (.yard-lint.yml) takes for a tag written informally, first in a comment.
     INFORMAL_TAG = /\A(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since|returns
                      |raises|example):/xi
+    private_constant :GITHUB, :INFORMAL_TAG
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe
 

@@ -35,45 +35,44 @@ class TestRefusals < Minitest::Test
 
   def test_a_name_that_would_overwrite_a_template_file_is_refused
     [["helper", false], ["cli", true]].each do |name, exe|
-      error = assert_raises(Veragem::Error) { Veragem::Generator.files(project(name, exe:)) }
+      error = assert_raises(Veragem::Error) { Veragem::Generator.check_name(name, exe) }
 
       assert_match(%r{it would write test/test_#{name}\.rb twice}, error.message)
     end
-    refute_empty Veragem::Generator.files(project("cli"))
+    assert_nil Veragem::Generator.check_name("cli", false)
   end
 
   # in X::CLI::CLI, CLI is itself; in X::VERSION::CLI, VERSION is the version
   def test_a_command_line_of_a_module_cli_or_version_is_refused
     { "c_l_i" => "CLI", "x-c_l_i" => "CLI", "x-v_e_r_s_i_o_n" => "VERSION" }.each do |name, innermost|
-      error = assert_raises(Veragem::Error) { Veragem::Generator.files(project(name, exe: true)) }
+      error = assert_raises(Veragem::Error) { Veragem::Generator.check_name(name, true) }
 
       assert_equal "invalid gem name #{name}: its command line would find another #{innermost} before its module",
                    error.message
     end
-    refute_empty Veragem::Generator.files(project("c_l_i"))
-    refute_empty Veragem::Generator.files(project("c_l_i-x", exe: true))
+    assert_nil Veragem::Generator.check_name("c_l_i", false)
+    assert_nil Veragem::Generator.check_name("c_l_i-x", true)
   end
 
   def test_a_name_of_the_gemfiles_tools_is_refused
     %w[rubocop-rake rubocop-minitest rubocop-performance].each do |name|
-      error = assert_raises(Veragem::Error) { Veragem::Generator.files(project(name)) }
+      error = assert_raises(Veragem::Error) { Veragem::Generator.check_name(name, false) }
 
       assert_equal "invalid gem name #{name}: the Gemfile's own tool", error.message
     end
   end
 
+  # git's own complaint goes to the user's terminal; here, nowhere
   def test_a_failing_git_is_refused
     in_tmpdir do |dir|
-      ["/nonexistent", dir].each do |where|
-        error = nil
-        # git's own complaint goes to the user's terminal; here, nowhere
-        _, err = capture_subprocess_io do
-          error = assert_raises(Veragem::Error) { Veragem::Generator.git(where, "frobnicate") }
-        end
+      target = File.join(dir, "my_gem")
+      _, err = with_git_config(dir, "not a [valid config\n") do
+        error = assert_raises(Veragem::Error) { Veragem::Generator.generate(project, target) }
 
-        assert_equal "git frobnicate failed in #{where}", error.message
-        assert_match(/frobnicate/, err) if where == dir
+        assert_equal "git init --quiet --initial-branch=main failed in #{target}", error.message
       end
+
+      assert_match(/bad config/, err)
     end
   end
 
@@ -102,5 +101,14 @@ class TestRefusals < Minitest::Test
 
       refute_path_exists target
     end
+  end
+
+  private
+
+  # the block run with +text+ as git's global config: what git prints
+  def with_git_config(dir, text, &)
+    config = File.join(dir, "gitconfig")
+    File.write(config, text)
+    capture_subprocess_io { with_env("GIT_CONFIG_GLOBAL" => config, &) }
   end
 end

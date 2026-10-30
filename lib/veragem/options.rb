@@ -13,6 +13,7 @@ module Veragem
     # --help's first lines.
     BANNER = "Usage: bundle veragem NAME [options]\n" \
              "With a terminal for input, what no option gives (the name too) is asked for."
+    private_constant :GIT_CONFIG, :DEFAULTS, :BANNER
 
     # +dir+, where the gem is to be generated; the questions on +output+, as a prompt is.
     # @param argv [Array<String>] the command's arguments
@@ -35,10 +36,6 @@ module Veragem
 
     # The names and the options given, each option refused as OptionParser refuses a licence: before
     # the name, and any question.
-    # @param argv [Array<String>] the command's arguments
-    # @return [Array(Array<String>, Hash{Symbol => String, Boolean})] the names, and the options' values
-    # @raise [OptionParser::ParseError] OptionParser refuses an argument
-    # @raise [Veragem::Error] an option's value is refused
     def self.arguments(argv)
       given = {} #: Hash[Symbol, String | bool]
       # an argument of invalid UTF-8 as bytes, as git's values are: OptionParser's matching raises on
@@ -47,41 +44,29 @@ module Veragem
       given.each { |key, value| Project.check(key, value) if value.is_a?(String) }
       [names, given]
     end
+    private_class_method :arguments
 
     # From a terminal: the names counted, as without one, then the name checked before any question.
-    # @param names [Array<String>] the arguments not options
-    # @param given [Hash{Symbol => String, Boolean}] the options' values
-    # @param defaults [Hash{Symbol => String}] git's and DEFAULTS
-    # @param questions [Veragem::Questions] the terminal's
-    # @return [Veragem::Project]
-    # @raise [Veragem::Error] a name or a value is refused, or a question has no answer
     def self.ask(names, given, defaults, questions)
       name = questions.name((name_of(names) unless names.empty?), exe: given[:exe] == true)
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
       Project.new(name, questions.values(name, given, defaults))
     end
+    private_class_method :ask
 
-    # The one name of +names+.
-    # @param names [Array<String>] the arguments not options
-    # @return [String]
-    # @raise [Veragem::Error] there is not one
     def self.name_of(names)
       return names.fetch(0) if names.size == 1
 
       raise Error, "one gem name, not #{names.size} (bundle veragem --help)"
     end
+    private_class_method :name_of
 
-    # The values set, the author and the GitHub user required.
-    # @param values [Hash{Symbol => String, Boolean, nil}] the defaults, the options' over them
-    # @return [Hash{Symbol => String, Boolean}]
-    # @raise [Veragem::Error] the author or the GitHub user is missing
     def self.required(values)
       %i[author github].each { raise Error, "no #{it}: --#{it}, or git config #{GIT_CONFIG[it]}" unless values[it] }
       values.compact
     end
+    private_class_method :required
 
-    # The options, their --help.
-    # @return [OptionParser]
     def self.parser
       OptionParser.new(BANNER) do |opts|
         opts.program_name = "bundle veragem"
@@ -94,11 +79,10 @@ module Veragem
         opts.on("--summary=TEXT", "The gem's summary (default: A Ruby gem.)")
       end
     end
+    private_class_method :parser
 
     # A git config value, nil when unset or git is missing: its bytes, which Project reads as UTF-8
     # whatever the locale.
-    # @param key [String] user.name, user.email or github.user
-    # @return [String, nil]
     def self.git_config(key)
       command = ["git", "config", "--get", key]
       value = IO.popen(command, err: File::NULL, external_encoding: Encoding::BINARY, &:read).strip
@@ -106,5 +90,6 @@ module Veragem
     rescue SystemCallError
       nil
     end
+    private_class_method :git_config
   end
 end
