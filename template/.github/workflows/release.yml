@@ -40,7 +40,7 @@ jobs:
           BUNDLE_FROZEN: "true"
         run: bundle install
 
-      - name: RuboCop, Steep, the tests
+      - name: RuboCop, Steep, the tests, yard-lint
         run: bundle exec rake
 
       - name: Build the gem, and its notes

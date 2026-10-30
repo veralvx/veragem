@@ -7,6 +7,9 @@ module Veragem
     GITHUB = /\A[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\z/i
     # Each choice's SPDX identifiers: the gemspec's licenses, the LICENSE-* files.
     LICENSES = { "mit" => ["MIT"], "apache" => ["Apache-2.0"], "dual" => ["MIT", "Apache-2.0"] }.freeze
+    # What yard-lint (.yard-lint.yml) takes for a tag written informally, first in a comment.
+    INFORMAL_TAG = /\A(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since|returns
+                     |raises|example):/xi
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe
 
@@ -25,45 +28,10 @@ module Veragem
       case key
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
       when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
+      when :summary then documented(text("summary", value))
       else text(key.name, value)
       end
     end
-
-    # +value+, if the block takes it.
-    # @param field [String] its name in the refusal
-    # @param value [Object] as given
-    # @yieldparam value [Object] as given
-    # @yieldreturn [Boolean] whether it is valid
-    # @return [Object] +value+
-    # @raise [Veragem::Error] the block refuses it
-    def self.valid(field, value)
-      raise Error, "invalid #{field} #{value.inspect}" unless yield value
-
-      value
-    end
-    private_class_method :valid
-
-    # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped (Unicode's too),
-    # short enough for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as
-    # unfinished.
-    # @param field [String] its name in the refusal
-    # @param value [String] as given, in any encoding
-    # @return [String] stripped, in UTF-8
-    # @raise [Veragem::Error] it is not such a line
-    def self.text(field, value)
-      value = value.dup.force_encoding(Encoding::UTF_8)
-      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029]/)
-      line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
-      raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
-      raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
-      if line.match?(/\A(TODO|FIXME)/)
-        raise Error,
-              "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
-      end
-
-      line
-    end
-    private_class_method :text
 
     # +name+, and +values+: the author, email, github, summary and license (strings, but an email false,
     # --no-email's, or nil for none), exe (true for a command line), as Options reads them.
@@ -122,6 +90,57 @@ module Veragem
         "#{"# The namespace of #{constant}.\n" if doc}module #{mod}\n#{indent(nested)}end\n"
       end
     end
+
+    # +value+, if the block takes it.
+    # @param field [String] its name in the refusal
+    # @param value [Object] as given
+    # @yieldparam value [Object] as given
+    # @yieldreturn [Boolean] whether it is valid
+    # @return [Object] +value+
+    # @raise [Veragem::Error] the block refuses it
+    def self.valid(field, value)
+      raise Error, "invalid #{field} #{value.inspect}" unless yield value
+
+      value
+    end
+    private_class_method :valid
+
+    # A value a file quotes: one line of valid UTF-8, its surrounding spaces stripped (Unicode's too),
+    # short enough for the gemspec's line (RuboCop's 120 columns), which RubyGems does not refuse as
+    # unfinished.
+    # @param field [String] its name in the refusal
+    # @param value [String] as given, in any encoding
+    # @return [String] stripped, in UTF-8
+    # @raise [Veragem::Error] it is not such a line
+    def self.text(field, value)
+      value = value.dup.force_encoding(Encoding::UTF_8)
+      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029]/)
+      line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
+      raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
+      raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
+      if line.match?(/\A(TODO|FIXME)/)
+        raise Error,
+              "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
+      end
+
+      line
+    end
+    private_class_method :text
+
+    # +summary+, which is the module's comment too: one the gem's own yard-lint takes, no informal tag
+    # first and no backtick or bold left open.
+    # @param summary [String] a text, checked
+    # @return [String] +summary+
+    # @raise [Veragem::Error] yard-lint would refuse it
+    def self.documented(summary)
+      raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(INFORMAL_TAG)
+      if summary.count("`").odd? || summary.scan("**").size.odd?
+        raise Error, "invalid summary #{summary.inspect}: a backtick or ** left open"
+      end
+
+      summary
+    end
+    private_class_method :documented
 
     private
 

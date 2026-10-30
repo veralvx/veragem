@@ -86,6 +86,7 @@ module Veragem
     # @param check [Proc] an answer's value, raising an Error to refuse it
     # @param optional [Boolean] whether no answer at all may be
     # @return [String, Boolean, nil] what +check+ makes of the answer, nil for none
+    # @raise [Veragem::Error] no line comes, or the terminal cannot be asked
     def ask(question, default = nil, check:, optional: false)
       default = offered(question, default, check)
       loop do
@@ -102,6 +103,7 @@ module Veragem
     # @param default [String, nil] git's, or Options', to offer
     # @param check [Proc] an answer's value, raising an Error to refuse it
     # @return [String, nil]
+    # @raise [Veragem::Error] the terminal cannot show why
     def offered(question, default, check) = (default unless default.nil? || checked(question, default, check).nil?)
 
     # A line's text, nil when empty; one its encoding cannot read as bytes, as an argument's.
@@ -137,7 +139,7 @@ module Veragem
     # check's own failure.
     # @param question [String] its prompt
     # @yield reads or writes the terminal
-    # @yieldreturn [Object] what is read
+    # @yieldreturn [Object] what is read, if anything
     # @return [Object] the block's value
     # @raise [Veragem::Error] the terminal fails
     def terminal(question)

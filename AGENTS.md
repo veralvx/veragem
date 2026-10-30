@@ -7,9 +7,9 @@ and in every gem veragem generates: `template/AGENTS.md.erb` is their source.
 
 ## 1. Lints and Types
 
-RuboCop runs with its defaults and every new cop as it ships (`NewCops: enable`), its Minitest,
-packaging, performance and Rake extensions on, and the project indexed first (`UseProjectIndex`, the
-rubydex gem) for the cops that look across files (`.rubocop.yml`). Steep checks `lib/` against the
+RuboCop runs with its defaults, a few cops beyond them, and every new cop as it ships (`NewCops:
+enable`), its Minitest, packaging, performance and Rake extensions on, and the project indexed first
+(`UseProjectIndex`, the rubydex gem) for the cops that look across files (`.rubocop.yml`). Steep checks `lib/` against the
 signatures in `sig/`, its strictest diagnostics on (`Steepfile`): every method of `lib/` is declared
 in `sig/`, and a warning fails as an error does. Gemfile.lock pins both, so the verdict is the same
 locally and in CI. YARD documents `lib/`, and yard-lint holds it (`.yard-lint.yml`).

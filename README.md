@@ -91,6 +91,8 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
   first).
 
 The summary is plain text: written into the README as given, Markdown in it is dprint's to check.
+It is the module's YARD comment too, so one the gem's yard-lint would refuse is refused: a tag
+written informally first (`Note:`, `See also:`), a backtick or `**` left open.
 As `bundle gem` does, veragem makes the git repository and adds the files, and runs no
 `bundle install`: `bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists
 the first steps: the repository's settings, RubyGems' pending trusted publisher.
