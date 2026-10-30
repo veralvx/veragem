@@ -1,7 +1,8 @@
 # git-cliff: CHANGELOG.md from the Conventional Commits, written by `rake bump` (never by hand).
 #
-# It names no project: the Rakefile passes the repository the headings' compare links need
-# (`--github-repo`, from the gemspec's source_code_uri). Run bare, the headings carry no link.
+# It names no project: the Rakefile passes the repository the links need (`--github-repo`, from
+# the gemspec's source_code_uri). Run bare, it takes the current branch's upstream remote where that
+# is GitHub's, and writes no link otherwise.
 
 [changelog]
 header = """
@@ -31,9 +32,10 @@ body = """
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim }}
     {% for commit in commits %}
+        {# the description as its author wrote it: a name keeps its case (RuboCop, v0.1.0) -#}
         {% set short = commit.id | truncate(length=7, end="") -%}
         - {% if commit.scope %}{{ commit.scope }}: {% endif %}\
-          {{ commit.message | split(pat="\n") | first | upper_first | trim }} \
+          {{ commit.message | split(pat="\n") | first | trim }} \
           ({% if url %}[{{ short }}]({{ url }}/commit/{{ commit.id }}){% else %}{{ short }}{% endif %})\
     {% endfor %}
 {% endfor %}\n
