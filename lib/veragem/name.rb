@@ -10,17 +10,17 @@ module Veragem
     PATTERN = /\A[a-z][a-z0-9]*(?:_[a-z0-9]+)*(?:-[a-z][a-z0-9]*(?:_[a-z0-9]+)*)*\z/
 
     # Its modules, as `bundle gem` names them: `my-gem_tools`' My, GemTools.
-    # @param name [String] one .check takes
+    # @param name [String] one PATTERN matches
     # @return [Array<String>] outermost first
     def self.modules(name) = name.split("-").map { |word| word.split("_").map(&:capitalize).join }
 
     # The file the gem requires: `my-gem`'s is my/gem.
-    # @param name [String] one .check takes
+    # @param name [String] one PATTERN matches
     # @return [String]
     def self.path(name) = name.tr("-", "/")
 
     # Its words joined by `_` alone: `my-gem`'s my_gem, its test's and its CLI's file names.
-    # @param name [String] one .check takes
+    # @param name [String] one PATTERN matches
     # @return [String]
     def self.underscored(name) = name.tr("-", "_")
 
@@ -45,7 +45,7 @@ module Veragem
     end
 
     # The gem writes lib/<path>.rb, `module` for each of its modules, and tests that name the first.
-    # @param name [String] a gem's name, `bundle gem`'s
+    # @param name [String] one PATTERN matches
     # @return [void]
     # @raise [Veragem::Error] its file or a module would meet another's
     def self.check_modules(name)
@@ -59,7 +59,7 @@ module Veragem
     # (lib/json.rb, JSON's); its tests' classes, Minitest::Test's, and its gemspec, which `gem build`
     # evaluates in Gem::Specification, must find its module, not one of theirs (`lifecycle_hooks`:
     # Minitest::Test::LifecycleHooks).
-    # @param name [String] a gem's name, `bundle gem`'s
+    # @param name [String] one PATTERN matches
     # @param shadowed [String] the library its file would shadow, "" when none
     # @param found [String] what its tests or `gem build` would find for its module, "" when nothing
     # @return [void]
@@ -72,7 +72,7 @@ module Veragem
     # The +defined+ nestings, outermost first, each with its class: the gem's own module, +innermost+,
     # one defined already (Comparable) would reopen; an outer one that is a class (Set, Logger), it
     # could not open.
-    # @param name [String] a gem's name, `bundle gem`'s
+    # @param name [String] one PATTERN matches
     # @param defined [Array<Array(String, String)>] each nesting already defined, with its class's name
     # @param innermost [String, nil] the gem's own module
     # @return [void]
@@ -85,12 +85,12 @@ module Veragem
     end
 
     # The gem's top-level library: `date-holidays`' date
-    # @param name [String] one .check takes
+    # @param name [String] one PATTERN matches
     # @return [String]
     def self.library_of(name) = name.split("-").fetch(0)
 
     # Each of its modules' full names, outermost first: `my-gem`'s My, My::Gem.
-    # @param name [String] one .check takes
+    # @param name [String] one PATTERN matches
     # @return [Array<String>]
     def self.nestings_of(name) = modules(name).then { |modules| (1..modules.size).map { modules.first(it).join("::") } }
 

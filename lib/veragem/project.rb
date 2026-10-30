@@ -128,13 +128,16 @@ module Veragem
     private_class_method :text
 
     # +summary+, which is the module's comment too: one the gem's own yard-lint takes, no informal tag
-    # first and no backtick or bold left open.
+    # first and no backtick or bold left open -- a `**` outside code with a non-space beside it, as
+    # yard-lint counts (`x ** 2` is no bold).
     # @param summary [String] a text, checked
     # @return [String] +summary+
     # @raise [Veragem::Error] yard-lint would refuse it
     def self.documented(summary)
       raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(INFORMAL_TAG)
-      if summary.count("`").odd? || summary.scan("**").size.odd?
+
+      bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size
+      if summary.count("`").odd? || bold.odd?
         raise Error, "invalid summary #{summary.inspect}: a backtick or ** left open"
       end
 

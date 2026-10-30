@@ -6,12 +6,13 @@ Adding a dependency or a tool, the tests' rules and the release are
 
 ## 1. Lints and Types
 
-RuboCop runs with its defaults, a few cops beyond them, and every new cop as it ships (`NewCops:
-enable`), its Minitest, packaging, performance and Rake extensions on, and the project indexed first
-(`UseProjectIndex`, the rubydex gem) for the cops that look across files (`.rubocop.yml`). Steep checks `lib/` against the
-signatures in `sig/`, its strictest diagnostics on (`Steepfile`): every method of `lib/` is declared
-in `sig/`, and a warning fails as an error does. Gemfile.lock pins both, so the verdict is the same
-locally and in CI. YARD documents `lib/`, and yard-lint holds it (`.yard-lint.yml`).
+RuboCop runs with its defaults, a few cops beyond them, and every new cop as it ships
+(`NewCops: enable`), its Minitest, packaging, performance and Rake extensions on, and the project
+indexed first (`UseProjectIndex`, the rubydex gem) for the cops that look across files
+(`.rubocop.yml`). Steep checks `lib/` against the signatures in `sig/`, its strictest diagnostics on
+(`Steepfile`): every method of `lib/` is declared in `sig/`, and a warning fails as an error does.
+Gemfile.lock pins both, so the verdict is the same locally and in CI. YARD documents `lib/`, and
+yard-lint holds it (`.yard-lint.yml`).
 
 The shell is held as the code is: shfmt formats it (`.editorconfig` holds its style) and it passes
 ShellCheck. The Nix is nixfmt's. The workflows pass actionlint and, with Dependabot's

@@ -26,7 +26,8 @@ class TestProject < Minitest::Test
     ["Note: a fork.", "see also: foo.", "EXAMPLE: x", "Parses `foo files.", "Bold **text."].each do |summary|
       assert_raises(Veragem::Error, summary.inspect) { project(summary:) }
     end
-    ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too."].each do |summary|
+    ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.", "Squares: x ** 2.",
+     "Code `a **b` too."].each do |summary|
       assert_equal summary, project(summary:).summary
     end
   end

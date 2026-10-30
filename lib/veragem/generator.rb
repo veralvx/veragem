@@ -7,7 +7,7 @@ module Veragem
   # Writes a Project's gem from template/: each `.erb` file rendered, every other copied, each with
   # its mode; then a git repository, its files added, as `bundle gem` leaves one.
   module Generator
-    # The gem's files, its ERB and its plain ones. (Steep: __dir__ is nil only in code evaluated
+    # template/: a generated gem's files, ERB and plain. (Steep: __dir__ is nil only in code evaluated
     # from a string, never in a required file.)
     TEMPLATE = File.expand_path("../../template", __dir__) # steep:ignore ArgumentTypeMismatch
     # The files a command line alone needs: its code, its test, its OCI image's workflow.
@@ -116,6 +116,7 @@ module Veragem
     # @param destination [String] its path in the gem
     # @param project [Veragem::Project] what the ERB reads
     # @return [void]
+    # @raise [SystemCallError] a file cannot be read or written
     def self.write(source, destination, project)
       FileUtils.mkdir_p(File.dirname(destination))
       File.binwrite(destination, source.end_with?(".erb") ? render(source, project) : File.binread(source))
@@ -130,6 +131,7 @@ module Veragem
     # @param source [String] an ERB file, UTF-8
     # @param project [Veragem::Project] what the ERB reads
     # @return [String]
+    # @raise [SystemCallError] +source+ cannot be read
     def self.render(source, project)
       ERB.new(File.read(source, encoding: Encoding::UTF_8), trim_mode: "-").result(project.instance_eval { binding })
     end
