@@ -104,6 +104,13 @@ class TestQuestions < Minitest::Test
     assert_includes shown, "invalid author"
   end
 
+  # a valid answer is read as text, not bytes: a refusal shows it as typed
+  def test_a_refused_answer_is_shown_as_typed
+    _, shown = ask(answers: ["caf\u00E9", "my_gem", "", "", "", "", "", "", ""])
+
+    assert_includes shown, "Gem name: invalid gem name #{"caf\u00E9".inspect}: lower-case words"
+  end
+
   def test_a_name_the_generator_refuses_is_asked_again
     in_tmpdir do |dir|
       Dir.mkdir(File.join(dir, "taken"))

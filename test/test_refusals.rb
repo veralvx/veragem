@@ -42,6 +42,7 @@ class TestRefusals < Minitest::Test
       assert_match(%r{it would write test/test_#{name}\.rb twice}, error.message)
     end
     assert_nil Veragem::Generator.check_name("cli", false)
+    in_tmpdir { |dir| Veragem::Generator.generate(project("cli"), File.join(dir, "cli")) }
   end
 
   # in X::CLI::CLI, CLI is itself; in X::VERSION::CLI, VERSION is the version

@@ -31,6 +31,7 @@ class TestOptions < Minitest::Test
       "--given-names=-" => "given names \"-\": a question's none; for none, --no-given-names",
       "--alias= - " => "alias \"-\": a question's none; for none, --no-alias",
       "--alias=\u00A0-\u3000" => "alias \"-\": a question's none; for none, --no-alias",
+      "--alias=\u00A0-".b => "alias \"-\": a question's none; for none, --no-alias",
       "--orcid=-" => "orcid \"-\": a question's none; for none, leave --orcid out",
       "--keywords=-" => "keywords \"-\": a question's none; for none, leave --keywords out" }.each do |option, why|
       error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", option) }
@@ -39,11 +40,14 @@ class TestOptions < Minitest::Test
     end
   end
 
-  # within a value, as an answer can give it
-  def test_a_dash_within_an_options_value_is_kept
+  # within a value, as an answer can give it; and a value that cannot be none
+  def test_a_dash_within_an_options_value_or_of_a_required_one_is_kept
     gem = parse("my_gem", "--citation", "--family-names=Doe", "--alias=-x", "--keywords=ruby,-")
 
     assert_equal ["-x", %w[ruby -]], [gem.alias_name, gem.keywords]
+    gem = parse("my_gem", "--author=-", "--summary=-")
+
+    assert_equal %w[- -], [gem.author, gem.summary]
   end
 
   def test_the_author_and_the_github_user_are_required
@@ -92,6 +96,13 @@ class TestOptions < Minitest::Test
     with_env("POSIXLY_CORRECT" => "1") { assert parse("--exe", "my_gem").exe }
     with_env("POSIXLY_CORRECT" => "1") { assert parse("my_gem", "--exe").exe }
     refute parse("my_gem", "--no-exe").exe
+  end
+
+  def test_the_help_says_what_each_option_does
+    help, = capture_io { assert_raises(SystemExit) { parse("--help") } }
+
+    ["--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)", "--license=LICENSE",
+     "mit, apache or dual (MIT OR Apache-2.0, the default)", "--[no-]alias=ALIAS"].each { assert_includes help, it }
   end
 
   def test_version

@@ -14,7 +14,8 @@ class TestProject < Minitest::Test
                        "Frozen_string_literal: true", "frozen-string-literal: x", "rubocop:disable all",
                        "Parses C# rubocop:disable all", "Rubocop:disable all"].freeze
   TAKEN_SUMMARIES = ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.",
-                     "Squares: x ** 2.", "Code `a **b` too.", "Review the code", "Todo later", "Notebook support",
+                     "Squares: x ** 2.", "Code `a **b` too.", "Code `a`** b.", "Review the code", "Todo later",
+                     "Notebook support",
                      "Decoding: utf-8 fast", "see the docs", "Note-taking app", "Hack's toolkit", "Note.", "Review",
                      "note-taking app", "Notes: x", "Encoding: helpers", "Coding: kata", "Encoding=x",
                      "Frozen string literal: x", "A frozen_string_literal: true"].freeze
@@ -44,6 +45,16 @@ class TestProject < Minitest::Test
   end
 
   # ARGV under the C locale is binary: the bytes are taken as UTF-8.
+  # the whole message: what is refused, as given, and why
+  def test_a_refused_summary_says_why
+    { "x" * 99 => "invalid summary: too long, its Ruby string at most 100 characters",
+      "@param x" => 'invalid summary "@param x": YARD would read a tag',
+      "Hack: a fix" => 'invalid summary "Hack: a fix": RuboCop would read an annotation or a directive',
+      "Parses `foo" => 'invalid summary "Parses `foo": a backtick or ** left open' }.each do |summary, why|
+      assert_equal why, assert_raises(Veragem::Error) { Veragem::Project.check(:summary, summary) }.message
+    end
+  end
+
   def test_a_text_is_taken_as_utf8
     author = project(author: "Jos\xC3\xA9".b).author
 
@@ -92,6 +103,8 @@ class TestProject < Minitest::Test
   def test_code_nests_in_the_gems_modules
     assert_equal "# Doc.\nmodule MyGem\n  X = 1\n\n  Y = 2\nend\n", project.nest("X = 1\n\nY = 2\n", doc: "Doc.")
     assert_equal "module My\n  module Gem\n    X = 1\n  end\nend\n", project("my-gem").nest("X = 1\n")
+    assert_equal "module A\n  module B\n    module C\n      X = 1\n    end\n  end\nend\n",
+                 project("a-b-c").nest("X = 1\n")
     assert_equal "# The namespace of My::Gem.\nmodule My\n  # Doc.\n  module Gem\n    X = 1\n  end\nend\n",
                  project("my-gem").nest("X = 1\n", doc: "Doc.")
   end
