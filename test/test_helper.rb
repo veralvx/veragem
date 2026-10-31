@@ -1,17 +1,5 @@
 # frozen_string_literal: true
 
-# Coverage first, before lib/ loads: every line, branch and method of it, a file the tests never
-# load included (`cover`). But version.rb: the gemspec requires it, as Bundler reads the gemspec
-# before any test runs -- a constant alone.
-# `rake mutation` runs each mutant against the tests that reach it alone: no coverage there.
-unless ENV["MUTATION"]
-  require "simplecov"
-  SimpleCov.start "strict" do
-    cover "lib/**/*.rb"
-    skip "lib/veragem/version.rb"
-  end
-end
-
 require "veragem"
 
 require "minitest/autorun"

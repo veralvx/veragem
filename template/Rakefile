@@ -11,7 +11,8 @@ require "rubocop/rake_task"
 require "steep/rake_task"
 require "yard"
 
-Minitest::TestTask.create
+# Coverage, `rake test`'s alone: started in the tests' process before they load lib/ (.simplecov)
+Minitest::TestTask.create { self.test_prelude = %(require "simplecov"; SimpleCov.start) }
 RuboCop::RakeTask.new
 Steep::RakeTask.new
 Bundler::Audit::Task.new
@@ -38,12 +39,11 @@ task :graph do
 end
 
 # Every test file but test_helper.rb, which every test requires and holds none: mutineer pairs
-# lib/a/b.rb with test/a/test_b.rb alone, and a test may reach any file. SimpleCov off, as a mutant
-# runs only the tests that reach it (test_helper.rb).
+# lib/a/b.rb with test/a/test_b.rb alone, and a test may reach any file.
 desc "Mutate lib/ and run the tests against each change: what none catches (mutineer, .mutineer.yml)"
 task :mutation do
   tests = FileList["test/test_*.rb"].exclude("test/test_helper.rb").flat_map { ["--test", it] }
-  sh({ "MUTATION" => "1" }, "mutineer", "run", *FileList["lib/**/*.rb"], *tests)
+  sh "mutineer", "run", *FileList["lib/**/*.rb"], *tests
 end
 
 desc "Lint the YARD documentation of lib/ (yard-lint, .yard-lint.yml)"
