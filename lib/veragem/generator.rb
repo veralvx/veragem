@@ -98,7 +98,7 @@ module Veragem
 
     # The template's files a kind takes (+exe+, a command line's too), each licence's included.
     private_class_method def self.templates(exe)
-      files = Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).sort
+      files = Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE)
       files.reject { File.directory?(File.join(TEMPLATE, it)) || (!exe && EXE.include?(it)) }
     end
 
