@@ -22,6 +22,7 @@ module Veragem
       ["--[no-]citation", "Add CITATION.cff, the citation GitHub and Zenodo read (default: --no-citation)"],
       ["--family-names=NAMES", "With --citation: the author's family names (required)"],
       ["--[no-]given-names=NAMES", "With --citation: the author's given names (--no-given-names: none, unasked)"],
+      ["--[no-]alias=ALIAS", "With --citation: the author's alias, as a handle (--no-alias: none, unasked)"],
       ["--orcid=ID", "With --citation: the author's ORCID iD"],
       ["--keywords=LIST", "With --citation: keywords, comma-separated"]
     ].freeze #: Array[[String, String]]
@@ -59,9 +60,20 @@ module Veragem
       given.transform_keys! { it.name.tr("-", "_").to_sym }
       # each value as Project checks it (a text's UTF-8 and stripped): the questions compare them with
       # their answers
-      checked = given.to_h { |key, value| [key, value.is_a?(String) ? Project.check(key, value) : value] }
+      checked = given.to_h { |key, value| [key, value.is_a?(String) ? checked(key, value) : value] }
       Citation.check_values(checked, checked[:citation] == true) if checked.key?(:citation)
       [names, checked]
+    end
+
+    # +value+ as Project checks it; but "-", a question's none, is no option's value, as no answer
+    # can give it.
+    private_class_method def self.checked(key, value)
+      none = Project::OPTIONAL[key]
+      if none && Questions.none?(value)
+        raise Error, %(invalid #{key.name.tr("_", " ")} "-": a question's none; for none, #{none})
+      end
+
+      Project.check(key, value)
     end
 
     # From a terminal: the names counted, as without one, then the name checked before any question.

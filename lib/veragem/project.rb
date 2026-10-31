@@ -21,10 +21,13 @@ module Veragem
     # frozen string literal's first, in any case -- or a RuboCop directive, which would turn its cops
     # off, or fail them.
     MAGIC = /\b(?:en)?coding\s*[:=]|\A(?i:frozen[_-]string[_-]literal):|(?i:\brubocop\s*:)/
+    # The values that may be none, and how an option gives none: a question takes "-".
+    OPTIONAL = { email: "--no-email", given_names: "--no-given-names", alias: "--no-alias",
+                 orcid: "leave --orcid out", keywords: "leave --keywords out" }.freeze
     private_constant :GITHUB, :TAG, :ANNOTATION, :MAGIC
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
-                :orcid, :keywords
+                :alias_name, :orcid, :keywords
 
     # +value+ as a Ruby string literal, as written whatever the locale (String#inspect escapes
     # what the locale cannot show): a quote, a backslash and an interpolation escaped.
@@ -34,7 +37,7 @@ module Veragem
 
     # The value +key+ takes, an option's or an answer's: checked, or an Error saying why not.
     # @param key [Symbol] :author, :email, :github, :summary, :license, :given_names, :family_names,
-    #   :orcid or :keywords
+    #   :alias, :orcid or :keywords
     # @param value [String] as given
     # @return [String] the value a file writes: an ORCID iD its URL, keywords joined by ", "
     # @raise [Veragem::Error] +key+ cannot take it
@@ -44,17 +47,15 @@ module Veragem
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
       when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
       when :summary then documented(text("summary", value))
-      when :given_names, :family_names then Citation.names(field, line(field, value))
-      when :orcid then Citation.orcid(value)
-      when :keywords then Citation.keywords(value) { line("keyword", it) }.join(", ")
+      when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
       else text(field, value)
       end
     end
 
     # +name+, and +values+: the author, email, github, summary, license and a citation's given and
-    # family names, ORCID iD and keywords (strings, but an email or given names false, --no-email's,
-    # --no-given-names', or nil for none), exe and citation (true for a command line, for
-    # CITATION.cff), as Options reads them.
+    # family names, alias, ORCID iD and keywords (strings, but an email, given names or alias false,
+    # --no-email's, --no-given-names', --no-alias', or nil for none), exe and citation (true for a
+    # command line, for CITATION.cff), as Options reads them.
     # @param name [String] the gem's name, as given
     # @param values [Hash{Symbol => String, Boolean, nil}] the rest, as given
     # @return [void]
@@ -185,11 +186,12 @@ module Veragem
 
     # CITATION.cff's author is a person: the family names it needs, the rest it may have.
     def cite(values)
-      given, family, orcid, keywords = values.values_at(:given_names, :family_names, :orcid, :keywords)
+      given, family, aka, orcid, keywords = values.values_at(:given_names, :family_names, :alias, :orcid, :keywords)
       raise Error, "no family names: --family-names, CITATION.cff's author" unless family
 
       @given_names = (Project.check(:given_names, given) if given)
       @family_names = Project.check(:family_names, family)
+      @alias_name = (Project.check(:alias, aka) if aka)
       @orcid = (Project.check(:orcid, orcid) if orcid)
       @keywords = (Project.check(:keywords, keywords).split(", ") if keywords)
     end

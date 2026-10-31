@@ -16,11 +16,19 @@ module Veragem
       orcid: "ORCID iD, CITATION.cff's",
       keywords: "Keywords, comma-separated, CITATION.cff's",
       email: "Email",
-      github: "GitHub user"
+      github: "GitHub user",
+      alias: "Alias, CITATION.cff's"
     }.freeze
-    # The questions an empty answer may leave unanswered.
-    OPTIONAL = %i[email given_names orcid keywords].freeze
-    private_constant :QUESTIONS, :OPTIONAL
+    private_constant :QUESTIONS
+
+    # Whether +text+ is "-", an optional question's none: spaces around it stripped, Unicode's too, as
+    # a value's are.
+    # @param text [String] an answer or an option's value, its bytes as given
+    # @return [Boolean]
+    def self.none?(text)
+      text = text.dup.force_encoding(Encoding::UTF_8)
+      text.valid_encoding? && text.match?(/\A[[:space:]]*-[[:space:]]*\z/)
+    end
 
     # Questions on +output+, answered on +input+, for a gem generated into +dir+.
     # @param input [#gets, #tty?] where the answers are typed
@@ -47,7 +55,7 @@ module Veragem
     end
 
     # +given+ (the options) and the answers to the rest, +defaults+ offered; a citation's values asked
-    # only for a citation, the author's words offered for its names.
+    # only for a citation, the author's words offered for its names, the GitHub user for its alias.
     # @param name [String] the gem's, checked
     # @param given [Hash{Symbol => String, Boolean}] the options' values
     # @param defaults [Hash{Symbol => String}] git's and Options' own
@@ -60,7 +68,7 @@ module Veragem
 
         check = -> { answer(key, it, name, values) }
         offer = default(key, defaults, values)
-        values[key] = ask(format(question, name:), offer, optional: OPTIONAL.include?(key), check:)
+        values[key] = ask(format(question, name:), offer, optional: Project::OPTIONAL.key?(key), check:)
       end
       values
     end
@@ -88,7 +96,7 @@ module Veragem
       default = offered(question, default, check)
       loop do
         reply = read(question, default, optional) || default
-        return if optional && [nil, "-"].include?(reply)
+        return if optional && (reply.nil? || Questions.none?(reply))
 
         value = reply && checked(question, reply, check)
         return value unless value.nil?

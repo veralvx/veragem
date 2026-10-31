@@ -16,6 +16,7 @@ class TestQuestionsRefused < Minitest::Test
     %w[my_gem --github=-x] => /\Ainvalid GitHub user "-x"\z/,
     %w[--github=-x] => /\Ainvalid GitHub user "-x"\z/,
     %w[--author=TODO] => /\Ainvalid author "TODO"/,
+    %w[my_gem --alias=-] => /\Ainvalid alias "-": a question's none; for none, --no-alias\z/,
     %w[1gem --github=-x] => /\Ainvalid GitHub user "-x"\z/,
     %w[one two] => /\Aone gem name, not 2/
   }.freeze

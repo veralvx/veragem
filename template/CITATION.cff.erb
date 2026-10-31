@@ -9,6 +9,9 @@ authors:
 <%- if given_names -%>
     given-names: <%= yaml(given_names) %>
 <%- end -%>
+<%- if alias_name -%>
+    alias: <%= yaml(alias_name) %>
+<%- end -%>
 <%- if orcid -%>
     orcid: "<%= orcid %>"
 <%- end -%>
