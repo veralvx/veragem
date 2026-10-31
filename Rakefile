@@ -37,6 +37,14 @@ task :graph do
   sh "yard", "graph", "--protected", "--private", "--full", "--dependencies"
 end
 
+# Every test file, as mutineer pairs a source with its tests by name alone; SimpleCov off, as a
+# mutant runs only the tests that reach it (test_helper.rb).
+desc "Mutate lib/ and run the tests against each change: what none catches (mutineer, .mutineer.yml)"
+task :mutation do
+  tests = FileList["test/test_*.rb"].exclude("test/test_helper.rb").flat_map { ["--test", it] }
+  sh({ "MUTATION" => "1" }, "mutineer", "run", *FileList["lib/**/*.rb"], *tests)
+end
+
 desc "Lint the YARD documentation of lib/ (yard-lint, .yard-lint.yml)"
 task :yard_lint do
   sh "yard-lint", "lib", "--stats"

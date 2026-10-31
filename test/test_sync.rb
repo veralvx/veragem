@@ -8,8 +8,8 @@ require "test_helper"
 class TestSync < Minitest::Test
   ROOT = File.expand_path("..", __dir__)
   TEMPLATE = Veragem::Generator::TEMPLATE
-  # Dependabot here moves the template's copies too.
-  DIFFERENT = %w[.github/dependabot.yml].freeze
+  # Dependabot here moves the template's copies too; mutineer's ignores this repository's mutants.
+  DIFFERENT = %w[.github/dependabot.yml .mutineer.yml].freeze
 
   def plain_files
     Dir.glob("**/*", File::FNM_DOTMATCH, base: TEMPLATE).reject do |file|

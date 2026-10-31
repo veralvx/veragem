@@ -16,7 +16,8 @@ and the rest:
 - **Documentation**: YARD, every public object of `lib/` documented, held by yard-lint at 100%
   coverage (`rake yard` writes it to `doc/`).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
-  `strict` profile: every line, branch and method of `lib/` covered.
+  `strict` profile: every line, branch and method of `lib/` covered. `rake mutation` mutates
+  `lib/` with [mutineer](https://github.com/davidteren/mutineer) and lists what no test catches.
 - **Security**: bundler-audit over `Gemfile.lock`, daily and on every pull request; a pull request's
   new gems and actions reviewed for their licences and advisories (`dependency-review.yml`,
   advisory, as in the Python and Rust templates); zizmor over the workflows and Dependabot's

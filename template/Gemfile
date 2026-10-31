@@ -9,6 +9,7 @@ gem "irb"
 gem "rake"
 
 gem "minitest"
+gem "mutineer"
 gem "pbt"
 gem "simplecov"
 
