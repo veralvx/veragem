@@ -59,8 +59,8 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
   exit fails, the tests' own verdict above it.
 - **Mutations:** `bundle exec rake mutation` changes `lib/` a mutant at a time (mutineer,
   `.mutineer.yml`) and lists each one no test catches: a test missing, or a change that keeps the
-  behaviour, which `.mutineer.yml`'s `ignore:` holds with its reason. It takes minutes, and is no
-  check.
+  behaviour, which `.mutineer.yml`'s `ignore:` holds with its reason. It takes minutes:
+  `rake checks` leaves it out.
 
 ## Development Workflow
 

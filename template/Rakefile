@@ -37,8 +37,9 @@ task :graph do
   sh "yard", "graph", "--protected", "--private", "--full", "--dependencies"
 end
 
-# Every test file, as mutineer pairs a source with its tests by name alone; SimpleCov off, as a
-# mutant runs only the tests that reach it (test_helper.rb).
+# Every test file but test_helper.rb, which every test requires and holds none: mutineer pairs
+# lib/a/b.rb with test/a/test_b.rb alone, and a test may reach any file. SimpleCov off, as a mutant
+# runs only the tests that reach it (test_helper.rb).
 desc "Mutate lib/ and run the tests against each change: what none catches (mutineer, .mutineer.yml)"
 task :mutation do
   tests = FileList["test/test_*.rb"].exclude("test/test_helper.rb").flat_map { ["--test", it] }
