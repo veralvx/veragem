@@ -8,7 +8,7 @@ RBS
   module CLI
     def self.run: (::Array[::String] argv) -> ::Integer
 
-    private def self.output: (::Hash[::Symbol, bool] options, ::String name) -> ::String?
+    private def self.output: (::Hash[::Symbol, bool] options, ::String name) -> (::OptionParser | ::String)?
 
     private def self.parser: () -> ::OptionParser
   end

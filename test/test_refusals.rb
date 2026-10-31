@@ -42,6 +42,7 @@ class TestRefusals < Minitest::Test
       assert_match(%r{it would write test/test_#{name}\.rb twice}, error.message)
     end
     assert_nil Veragem::Generator.check_name("cli", false)
+    in_tmpdir { |dir| Veragem::Generator.generate(project("cli"), File.join(dir, "cli")) }
   end
 
   # in X::CLI::CLI, CLI is itself; in X::VERSION::CLI, VERSION is the version
@@ -66,13 +67,13 @@ class TestRefusals < Minitest::Test
     end
   end
 
-  # a lock checked out with CRLF line ends (git's core.autocrlf) lists the same gems
-  def test_the_tools_are_read_whatever_the_locks_line_ends
-    lock = File.read(File.join(__dir__, "../Gemfile.lock"))
-    tools = Veragem::Generator.send(:tools, lock)
+  # the GEM section's specs alone: not a PATH section's (this gem's), a line ending GEM before it no
+  # header, nor a dependency no spec is (bundler, the one running); whatever the line ends (git's
+  # core.autocrlf)
+  def test_the_tools_are_the_gem_sections_specs
+    lock = "PATH\n  remote: GEM\n  specs:\n    local (0.1)\n\nGEM\n  specs:\n    audit (1.0)\n      bundler (>= 1)\n\n"
 
-    assert_includes tools, "parser"
-    assert_equal tools, Veragem::Generator.send(:tools, lock.gsub("\n", "\r\n"))
+    [lock, lock.gsub("\n", "\r\n")].each { assert_equal %w[audit], Veragem::Generator.send(:tools, it) }
   end
 
   # git's own complaint goes to the user's terminal; here, nowhere

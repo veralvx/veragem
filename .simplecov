@@ -1,0 +1,10 @@
+# frozen_string_literal: true
+
+# `rake test`'s coverage, started before the tests load lib/ (the Rakefile): every line, branch and
+# method of lib/, a file the tests never load included (`cover`). But version.rb: the gemspec
+# requires it, as Bundler reads the gemspec before coverage starts -- a constant alone.
+SimpleCov.configure do
+  load_profile "strict"
+  cover "lib/**/*.rb"
+  skip "lib/veragem/version.rb"
+end

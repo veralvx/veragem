@@ -10,12 +10,13 @@ class TestGenerator < Minitest::Test
 
   EXECUTABLES = %w[bin/console bin/setup .githooks/commit-msg .githooks/pre-commit .githooks/pre-push
                    .github/release-notes.sh].freeze
-  RUBY = %r{\.(rb|gemspec)\z|\A(Gemfile|Rakefile|Steepfile|bin/console|bin/setup|exe/.*)\z}
+  RUBY = %r{\.(rb|gemspec)\z|\A(Gemfile|Rakefile|Steepfile|\.simplecov|bin/console|bin/setup|exe/.*)\z}
 
   def test_a_gem_has_its_files
     each_kind do |gem, _, files|
       expected = %W[#{gem.name}.gemspec lib/#{gem.path}.rb lib/#{gem.path}/version.rb sig/#{gem.path}.rbs
-                    test/test_#{gem.underscored}.rb Rakefile Gemfile Steepfile flake.nix flake.lock README.md]
+                    test/test_#{gem.underscored}.rb Rakefile Gemfile Steepfile .simplecov flake.nix
+                    flake.lock README.md]
 
       assert_empty expected - files
     end

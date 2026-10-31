@@ -44,6 +44,15 @@ class TestCitation < Minitest::Test
     end
   end
 
+  def test_a_refused_orcid_id_or_keyword_list_says_why
+    { "--orcid=orcid" => 'invalid ORCID iD "orcid": 0000-0002-1825-0097, or its https://orcid.org/ URL',
+      "--keywords=," => 'invalid keywords ",": one or more, comma-separated' }.each do |option, why|
+      error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", option) }
+
+      assert_equal why, error.message
+    end
+  end
+
   def test_an_orcid_id_zenodo_refuses_is_refused
     refused = ["0000-0002-1825-0098", "0000-0001-4999-9992", "0000-0003-5000-001X", "0009-0010-0000-0011",
                "0000000218250097", "orcid", "https://isni.org/0000-0002-1825-0097", "0000-0002-1825-0097\nx",
@@ -74,6 +83,7 @@ class TestCitation < Minitest::Test
 
       assert_equal "invalid gem name ab with --citation: Zenodo takes a title of 3 characters or more", error.message
       assert_equal %w[abc ab], [check.call("abc", true), check.call("ab", false)]
+      Veragem::Generator.generate(project("ab"), File.join(dir, "ab"))
     end
   end
 
@@ -108,6 +118,13 @@ class TestCitation < Minitest::Test
       assert_match message, error.message
     end
     assert_equal "TODO", parse("my_gem", "--citation", "--family-names=TODO").family_names
+  end
+
+  # read as bytes: invalid UTF-8 refused, not raised on
+  def test_an_orcid_id_of_invalid_utf8_is_refused
+    error = assert_raises(Veragem::Error) { Veragem::Project.check(:orcid, (+"0000-0002-1825-009\xFF").force_encoding(Encoding::UTF_8)) }
+
+    assert_match(/\Ainvalid ORCID iD /, error.message)
   end
 
   # as bytes, as a locale not UTF-8's gives them: a blank of Unicode's dropped, invalid UTF-8 refused

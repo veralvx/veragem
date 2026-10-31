@@ -11,4 +11,6 @@
 /result*
 /.direnv
 /.ruby-lsp/
+# mutineer's coverage map (`rake mutation`)
+/.mutineer/
 /.yardoc/

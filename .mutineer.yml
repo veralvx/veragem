@@ -1,0 +1,64 @@
+# mutineer (`rake mutation`): every operator, not its default five; a minute a mutant, as a test that
+# starts a process can take tens of seconds, and a mutant over the limit counts as neither caught
+# nor survived.
+operators:
+  - arithmetic
+  - comparison
+  - boolean_connector
+  - boolean_literal
+  - statement_removal
+  - return_nil
+  - literal_mutation
+  - condition_negation
+  - string_literal
+  - regex
+  - collection_method
+  - safe_navigation
+  - range
+  - negation_removal
+  - chain_link
+  - call_to_receiver
+  - operand_removal
+  - array_literal
+  - condition_true
+  - condition_false
+  - operator_assignment
+timeout: 60
+# The mutants that change no behaviour (equivalent), each with why: this repository's alone, as an id
+# hashes its method's name and file.
+ignore:
+  # a conversion that narrows a type for Steep, of a value that never needs it
+  - { id: 72a760198a48, reason: "citation.rb: the author, required, is asked before the names that read it" }
+  - { id: 10a7fed4111f, reason: "citation.rb: the family names, required, are asked before the given names" }
+  - { id: b295db2a52c7, reason: "citation.rb: the GitHub user, required, is asked before the alias" }
+  - { id: dab754339cb6, reason: "name.rb: answers raises unless the probe gives every String" }
+  - { id: aebef202ac5a, reason: "name.rb: answers raises unless the probe gives every String" }
+  - { id: 1feb2c391304, reason: "options.rb: a nil default reads as an absent one ([]); compact keeps it String" }
+  - { id: 47e342edb057, reason: "options.rb: Project reads a nil value as an absent one ([]); compact narrows it" }
+  - { id: 61fd2024fe65, reason: "project.rb: the keyword is nil only with no match, so no colon nor space either" }
+  - { id: 44f1d178fd51, reason: "project.rb: the field is only interpolated, and a Symbol interpolates as its name" }
+  # an exception's text is its message: puts, interpolation and raise read it alike
+  - { id: 2cb248365d33, reason: "generator.rb: Error.new(e) reads e's message" }
+  - { id: cc1eb3267ae2, reason: "options.rb: an OptionParser error's to_s is its message" }
+  - { id: 62fb6a2f158c, reason: "questions.rb: puts writes an exception's message" }
+  - { id: bfd117f2227d, reason: "questions.rb: a SystemCallError's or IOError's to_s is its message" }
+  # each and map alike: the block's value unused
+  - { id: ee4f430cab44, reason: "citation.rb: force_encoding changes each word in place and returns it" }
+  - { id: 86076ad21783, reason: "generator.rb: the files are written for their effect" }
+  - { id: 999b1d290446, reason: "options.rb: the block raises or returns nothing used" }
+  - { id: b653f69cef85, reason: "options.rb: OptionParser.new ignores its block's value" }
+  - { id: 0d350157b54f, reason: "questions.rb: each question is asked for its effect" }
+  # identities
+  - { id: 055cc7bb2a07, reason: "citation.rb: ISO 7064's (12 - r) % 11 is (1 - r) % 11, 12 and 1 alike mod 11" }
+  - { id: 68846607f55e, reason: "generator.rb: a GEM section is never empty: Bundler writes its remote first" }
+  - { id: 4b014462f593, reason: "generator.rb: a spec's line names its gem" }
+  - { id: 5a9f582c0451, reason: "generator.rb: done, assigned later, reads nil, as false, until set" }
+  # mutineer reports one of 5a14112d8554 and 3337825deb93, the same change, as either operator
+  - { id: b050e5a42798, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
+  - { id: a4c5e291bd52, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
+  - { id: 5a14112d8554, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
+  - { id: 3337825deb93, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
+  - { id: ba90a04a446b, reason: "generator.rb: >> 2 drops the 0o001 bit 0o445 adds to 0o444" }
+  - { id: 43ae3b2bfcd2, reason: "project.rb: removing an empty match changes nothing" }
+  - { id: 7a0160fe9e3d, reason: "project.rb: removing an empty match changes nothing" }
+  - { id: 8b03ab9b9e1d, reason: "project.rb: its one caller reads nil as false" }

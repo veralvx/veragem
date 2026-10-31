@@ -86,6 +86,7 @@ class TestNames < Minitest::Test
 
   def test_a_name_nested_in_a_module_reopens_it
     assert_equal "Bundler::Extras", project("bundler-extras").constant
+    assert_nil Veragem::Name.check_modules("bundler-extras")
   end
 
   def test_a_name_is_at_most_40_characters_and_4_modules_deep
@@ -96,6 +97,20 @@ class TestNames < Minitest::Test
 
   def test_test_helper_would_shadow_the_tests_helper
     assert_raises(Veragem::Error) { project("test_helper") }
+  end
+
+  # the whole message: what is refused, as given, and the rule
+  def test_a_refused_name_says_why
+    { "My_gem" => "invalid gem name \"My_gem\": lower-case words of letters and digits, each a letter first " \
+                  "after a dash, joined by _ or - (my_gem, my-gem)",
+      # as String#inspect shows it under this locale: not as bytes
+      "caf\u00E9" => "invalid gem name #{"caf\u00E9".inspect}: lower-case words of letters and digits, each a " \
+                     "letter first after a dash, joined by _ or - (my_gem, my-gem)",
+      "a-b-c-d-e" => "invalid gem name a-b-c-d-e: at most 40 characters and 4 modules deep",
+      "test_helper" => "invalid gem name test_helper: its lib/test_helper.rb would shadow the tests'" }
+      .each do |name, why|
+        assert_equal why, assert_raises(Veragem::Error) { parse(name) }.message
+      end
   end
 
   # Over names of a few letters, digits, underscores and dashes: one accepted is bundle gem's

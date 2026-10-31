@@ -58,6 +58,7 @@ takes, a GitHub user GitHub takes.
 bundle exec rake          # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
 bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the flake's checks
 nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
+bundle exec rake mutation # lib/ mutated: what no test catches (mutineer), minutes, not in checks
 ```
 
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
@@ -67,9 +68,10 @@ smoke test installs the plugin from this checkout, generates each kind, and runs
 finished when it passes. It needs the network: rubygems.org for the gems, GitHub and Nix's cache
 for the flake.
 
-One test file (`bundle exec ruby -Ilib -Itest test/test_names.rb`), or some tests
-(`bundle exec rake test N=/probe/`), runs fewer than the coverage gate counts: its exit fails,
-the tests' own verdict above it.
+Coverage is measured by `rake test` alone (`.simplecov`). Some tests
+(`bundle exec rake test N=/probe/`) run fewer than its gate counts: their exit fails, the tests'
+own verdict above it. One file run alone (`bundle exec ruby -Ilib -Itest test/test_names.rb`) is
+not measured.
 
 ## Development Workflow
 

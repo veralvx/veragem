@@ -13,19 +13,19 @@ require_relative "../<%= File.basename(path) %>"
     # @return [Integer] the exit status: 0, or 2 for an option refused, or more than one name
     def self.run(argv)
       options = { help: false, version: false }
-      names = parser.parse(argv, into: options)
-      raise #{option_parser}::NeedlessArgument.new(*names.drop(1)) if names.size > 1
+      name, *others = parser.parse(argv, into: options)
+      raise #{option_parser}::NeedlessArgument.new(*others) unless others.empty?
 
-      puts output(options, names.first || "")
+      puts output(options, name.to_s)
       0
     rescue #{option_parser}::ParseError => e
-      warn e.message, parser.help
+      warn e, parser
       2
     end
 
     private_class_method def self.output(options, name)
       if options[:help]
-        parser.help
+        parser
       elsif options[:version]
         parser.ver
       else

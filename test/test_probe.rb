@@ -36,6 +36,19 @@ class TestProbe < Minitest::Test
     assert_equal %(["", "", ""]\n), IO.popen(env, command, unsetenv_others: true, &:read).lines.last
   end
 
+  # the child takes unbundled Ruby's environment alone, without its RUBYOPT, and none of this
+  # process's: no RUBYOPT from either
+  def test_the_probe_takes_no_rubyopt
+    rubyopt = ENV.fetch("RUBYOPT", nil)
+    original = Bundler::ORIGINAL_ENV["RUBYOPT"]
+    ENV["RUBYOPT"] = Bundler::ORIGINAL_ENV["RUBYOPT"] = "-v"
+
+    assert_equal ["", "", ""], Veragem::Name.probe("date", "my_gem", %w[NoRubyopt])
+  ensure
+    ENV["RUBYOPT"] = rubyopt
+    original ? Bundler::ORIGINAL_ENV["RUBYOPT"] = original : Bundler::ORIGINAL_ENV.delete("RUBYOPT")
+  end
+
   def test_a_failing_probe_refuses
     error = assert_raises(Veragem::Error) { Veragem::Name.probe("set", "my_gem", ["not a constant"]) }
 

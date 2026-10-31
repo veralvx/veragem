@@ -12,7 +12,7 @@ CI (nixpkgs packages few of them, and older).
 
 - **[Ruby](https://www.ruby-lang.org) 4.0** or later, with Bundler (Ruby's own). `bin/setup`
   installs the gems `Gemfile.lock` pins: Rake, RuboCop, its extensions and rubydex (its project
-  index), Steep, TypeProf, Minitest, SimpleCov, pbt, YARD, yard-lint, bundler-audit, IRB.
+  index), Steep, TypeProf, Minitest, SimpleCov, pbt, mutineer, YARD, yard-lint, bundler-audit, IRB.
 - **[ShellCheck](https://www.shellcheck.net/)** and **[shfmt](https://github.com/mvdan/sh)** --
   the shell's linter and formatter (its style is `.editorconfig`'s).
 - **[actionlint](https://github.com/rhysd/actionlint)** -- lints the workflows (and, through
@@ -54,9 +54,14 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
   failure is shrunk to its smallest counterexample, with the seed that reproduces it.
 - **Regressions:** if you are fixing a bug, include a test that reproduces the previous failure.
 - **Coverage:** every line, branch and method of `lib/` (SimpleCov's `strict` profile,
-  `test/test_helper.rb`). Code a test cannot reach is questioned before it is excluded. One test
-  file, or some tests (`bundle exec rake test N=/greets/`), runs fewer than the gate counts: its
-  exit fails, the tests' own verdict above it.
+  configured in `.simplecov`, started by `rake test`). Code a test cannot reach is questioned
+  before it is excluded. Some tests (`bundle exec rake test N=/greets/`) run fewer than the gate
+  counts: their exit fails, the tests' own verdict above it. One file run alone
+  (`bundle exec ruby -Ilib -Itest test/test_cli.rb`) is not measured.
+- **Mutations:** `bundle exec rake mutation` changes `lib/` a mutant at a time (mutineer,
+  `.mutineer.yml`) and lists each one no test catches: a test missing, or a change that keeps the
+  behaviour, which `.mutineer.yml`'s `ignore:` holds with its reason. It takes minutes:
+  `rake checks` leaves it out.
 
 ## Development Workflow
 

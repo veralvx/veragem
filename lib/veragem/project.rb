@@ -15,8 +15,8 @@ module Veragem
             |returns|raises|example):)/xi
     # A RuboCop annotation, no documentation, as its AnnotationComment reads one: a keyword first, then
     # a colon, spaces before it or not, or a space -- but a sentence's capitalized first word, a word
-    # after it.
-    ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)\b(\s*:)?(\s+)?(\S+)?/i
+    # after it (a summary, stripped, has one after a space).
+    ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)\b(\s*:)?(\s+)?/i
     # A magic comment as RuboCop reads one -- an encoding's anywhere, lower-case (Ruby's rule), a
     # frozen string literal's first, in any case -- or a RuboCop directive, which would turn its cops
     # off, or fail them.
@@ -42,13 +42,12 @@ module Veragem
     # @return [String] the value a file writes: an ORCID iD its URL, keywords joined by ", "
     # @raise [Veragem::Error] +key+ cannot take it
     def self.check(key, value)
-      field = key.name.tr("_", " ")
       case key
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
       when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
       when :summary then documented(text("summary", value))
       when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
-      else text(field, value)
+      else text(key.name, value)
       end
     end
 
@@ -169,10 +168,10 @@ module Veragem
     end
 
     private_class_method def self.annotation?(summary)
-      keyword, colon, space, note = summary.match(ANNOTATION)&.captures
+      keyword, colon, space = summary.match(ANNOTATION)&.captures
       return false unless keyword && (colon || space)
 
-      !(keyword == keyword.capitalize && !colon && note)
+      !(keyword == keyword.capitalize && !colon)
     end
 
     private
