@@ -14,8 +14,8 @@ class TestProject < Minitest::Test
                        "Frozen_string_literal: true", "frozen-string-literal: x", "rubocop:disable all",
                        "Parses C# rubocop:disable all", "Rubocop:disable all"].freeze
   TAKEN_SUMMARIES = ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.",
-                     "Squares: x ** 2.", "Code `a **b` too.", "Code `a`** b.", "Review the code", "Todo later",
-                     "Notebook support",
+                     "Squares: x ** 2.", "Code `a **b` too.", "Code `a`** b.", "Code ``** b.", "Review the code",
+                     "Todo later", "Notebook support",
                      "Decoding: utf-8 fast", "see the docs", "Note-taking app", "Hack's toolkit", "Note.", "Review",
                      "note-taking app", "Notes: x", "Encoding: helpers", "Coding: kata", "Encoding=x",
                      "Frozen string literal: x", "A frozen_string_literal: true"].freeze
@@ -44,7 +44,6 @@ class TestProject < Minitest::Test
     TAKEN_SUMMARIES.each { assert_equal it, Veragem::Project.check(:summary, it) }
   end
 
-  # ARGV under the C locale is binary: the bytes are taken as UTF-8.
   # the whole message: what is refused, as given, and why
   def test_a_refused_summary_says_why
     { "x" * 99 => "invalid summary: too long, its Ruby string at most 100 characters",
@@ -55,6 +54,7 @@ class TestProject < Minitest::Test
     end
   end
 
+  # ARGV under the C locale is binary: the bytes are taken as UTF-8.
   def test_a_text_is_taken_as_utf8
     author = project(author: "Jos\xC3\xA9".b).author
 
