@@ -48,6 +48,7 @@ ignore:
   - { id: ee4f430cab44, reason: "citation.rb: force_encoding changes each word in place and returns it" }
   - { id: 86076ad21783, reason: "generator.rb: the files are written for their effect" }
   - { id: 999b1d290446, reason: "options.rb: the block raises or returns nothing used" }
+  - { id: 989d946a7491, reason: "options.rb: the block raises or returns nothing used" }
   - { id: b653f69cef85, reason: "options.rb: OptionParser.new ignores its block's value" }
   - { id: 0d350157b54f, reason: "questions.rb: each question is asked for its effect" }
   # identities

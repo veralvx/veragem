@@ -20,6 +20,19 @@ class TestGit < Minitest::Test
     end
   end
 
+  # read as text, a Latin-1 locale's would transcode the UTF-8 bytes to "JosÃ©"
+  def test_git_config_is_its_bytes_whatever_the_locale
+    in_git_home do |home|
+      system("git", "config", "--global", "user.name", "José", exception: true)
+
+      gem = with_encodings(Encoding::ISO_8859_1, Encoding::UTF_8) do
+        Dir.chdir(home) { Veragem::Options.parse(["my_gem", "--github=ada"], input: StringIO.new) }
+      end
+
+      assert_equal "José", gem.author
+    end
+  end
+
   # git's reason, not a value unset, nor an email silently none
   def test_a_config_git_cannot_read_is_refused_with_gits_reason
     in_git_home do |home|
@@ -59,6 +72,19 @@ class TestGit < Minitest::Test
   end
 
   private
+
+  # Ruby warns of a default external encoding set, which the tests would count as their own
+  def with_encodings(external, internal)
+    verbose = $VERBOSE
+    $VERBOSE = nil
+    saved = [Encoding.default_external, Encoding.default_internal]
+    Encoding.default_external = external
+    Encoding.default_internal = internal
+    yield
+  ensure
+    Encoding.default_external, Encoding.default_internal = saved
+    $VERBOSE = verbose
+  end
 
   def in_git_home
     Dir.mktmpdir do |home|
