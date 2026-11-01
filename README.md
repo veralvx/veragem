@@ -101,12 +101,13 @@ user may be an organization, so it is only offered: without a terminal, there is
 `--alias` gives one. Its values need a citation: without one they are refused, and at a terminal
 its question takes y alone.
 
-It holds what GitHub and Zenodo read, written as Zenodo's import takes it, narrower than CFF:
+It holds what GitHub and Zenodo read, written as Zenodo's import takes it, narrower than CFF, but
+for the licences, written as CFF has them:
 
-- one licence as its SPDX identifier, and none for `dual`: CFF writes an OR as a list, and Zenodo
-  refuses the whole file for one ([zenodo/zenodo#2515](https://github.com/zenodo/zenodo/issues/2515)),
-  so it takes the licence GitHub detects instead -- Apache-2.0 for veragem's own two files today,
-  CC-BY-4.0 where GitHub detects none -- and the record's licences are yours to correct;
+- one licence as its SPDX identifier, and `dual`'s two as a list, CFF's OR: Zenodo's import refuses
+  a list, so it archives no release of a dual-licensed gem until
+  [zenodo/zenodo-rdm#1509](https://github.com/zenodo/zenodo-rdm/issues/1509) is fixed (first
+  reported as [zenodo/zenodo#2515](https://github.com/zenodo/zenodo/issues/2515));
 - an ORCID iD Zenodo's check takes, its check digit and its block ORCID's, written as its URL;
 - names without a comma: Zenodo reads one as the end of the family names (`Smith, Jr.`); an alias
   may hold one, as Zenodo reads no alias;

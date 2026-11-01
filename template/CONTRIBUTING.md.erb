@@ -162,6 +162,11 @@ Then, in whichever order suits you:
   `CITATION.cff` and set them: the concept DOI, which names every version (Zenodo's "Cite all
   versions") and which GitHub's citation then links, and a release's own, which Zenodo mints only
   after its tag, so the file can name an earlier version's alone.
+<%- unless licenses.one? -%>
+  Zenodo's import refuses `CITATION.cff`'s list of licences, the Citation File Format's OR, so
+  it archives no release until
+  [zenodo/zenodo-rdm#1509](https://github.com/zenodo/zenodo-rdm/issues/1509) is fixed.
+<%- end -%>
 <%- end -%>
 - Run `bundle exec rake checks` once to confirm your tools are complete: a step that stops on a
   missing command names it ([Prerequisites](#prerequisites) lists them; `nix develop` has them

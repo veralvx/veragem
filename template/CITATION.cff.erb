@@ -26,8 +26,12 @@ date-released: "<%= today %>"
 <%- if licenses.one? -%>
 license: <%= licenses.first %>
 <%- else -%>
-# no license: CFF writes MIT OR Apache-2.0 as a list, which Zenodo's import refuses
-# (zenodo/zenodo#2515); Zenodo takes the licence GitHub detects
+# MIT OR Apache-2.0, as CFF writes an OR; Zenodo's import refuses a list, so it archives no release
+# until zenodo/zenodo-rdm#1509 is fixed
+license:
+<%- licenses.each do |spdx| -%>
+  - <%= spdx %>
+<%- end -%>
 <%- end -%>
 repository-code: "https://github.com/<%= github %>/<%= name %>"
 repository-artifact: "https://rubygems.org/gems/<%= name %>"
