@@ -26,3 +26,6 @@ operators:
   - operator_assignment
 timeout: 60
 threshold: 100
+# the constants' redefinition warnings, each mutant's, dropped
+require:
+  - test/mutineer_helper.rb

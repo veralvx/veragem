@@ -26,6 +26,9 @@ operators:
   - operator_assignment
 timeout: 60
 threshold: 100
+# the constants' redefinition warnings, each mutant's, dropped
+require:
+  - test/mutineer_helper.rb
 # The mutants that change no behaviour (equivalent), each with why: this repository's alone, as an id
 # hashes its method's name and file.
 ignore:
