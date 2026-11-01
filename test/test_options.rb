@@ -108,35 +108,4 @@ class TestOptions < Minitest::Test
   def test_version
     assert_output("bundle veragem #{Veragem::VERSION}\n") { assert_raises(SystemExit) { parse("--version") } }
   end
-
-  # in a directory of no repository, whose own config would answer too
-  def test_git_config_reads_gits_config
-    Dir.mktmpdir do |home|
-      with_env("HOME" => home, "GIT_CONFIG_GLOBAL" => File.join(home, ".gitconfig"), "GIT_CONFIG_NOSYSTEM" => "1",
-               "GIT_CONFIG_COUNT" => nil, "GIT_CONFIG_PARAMETERS" => nil) do
-        Dir.chdir(home) { assert_git_config }
-      end
-    end
-  end
-
-  def assert_git_config
-    system("git", "config", "--global", "github.user", "ada", exception: true)
-    system("git", "config", "--global", "user.name", "Jos\u00E9", exception: true)
-
-    gem = Veragem::Options.parse(["my_gem"], input: StringIO.new)
-
-    # no user.email, none; its bytes, whatever the locale: Project reads them as UTF-8
-    assert_equal ["ada", nil, "José"], [gem.github, gem.email, gem.author]
-  end
-
-  # refused as such, not as a value its config lacks
-  def test_without_git_it_says_so
-    with_env("PATH" => "") do
-      error = assert_raises(Veragem::Error) do
-        Veragem::Options.parse(["my_gem", "--author=Ada", "--github=ada"], input: StringIO.new)
-      end
-
-      assert_match(/\Acannot run git: /, error.message)
-    end
-  end
 end

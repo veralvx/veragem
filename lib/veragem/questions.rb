@@ -106,8 +106,10 @@ module Veragem
       end
     end
 
-    # +default+ if it passes +check+: one refused, said why, is not offered.
-    def offered(question, default, check) = (default unless default.nil? || checked(question, default, check).nil?)
+    # +default+ if it passes +check+: one refused, said why and that it is the default, is not offered.
+    def offered(question, default, check)
+      default unless default.nil? || checked(question, default, check, " (the default, not offered)").nil?
+    end
 
     # A line's text, nil when empty; one its encoding cannot read as bytes, as an argument's.
     def read(question, default, optional)
@@ -121,10 +123,10 @@ module Veragem
       answer unless answer.empty?
     end
 
-    def checked(question, answer, check)
+    def checked(question, answer, check, refused = "")
       check.call(answer)
     rescue Error => e
-      terminal(question) { @output.puts e.message }
+      terminal(question) { @output.puts "#{e.message}#{refused}" }
       nil
     end
 

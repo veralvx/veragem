@@ -66,7 +66,8 @@ class TestQuestions < Minitest::Test
     gem, shown = ask("my_gem", answers: ["", "", "", "", "", "Ada", "", ""], config:)
 
     assert_equal "Ada", gem.author
-    assert_match(/invalid author "Jos\\xE9": one line of text\nAuthor: an answer is required\nAuthor: Email/, shown)
+    assert_includes shown, %(invalid author "Jos\\xE9": one line of text (the default, not offered)\n)
+    assert_match(/not offered\)\nAuthor: an answer is required\nAuthor: Email/, shown)
   end
 
   def test_with_no_default_an_empty_answer_is_asked_again_but_an_email_may_be_none

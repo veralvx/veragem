@@ -122,7 +122,7 @@ module Veragem
     def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?optional: bool) -> (String | bool | nil)
     def offered: (String question, String? default, ^(String) -> (String | bool) check) -> String?
     def read: (String question, String? default, bool optional) -> String?
-    def checked: (String question, String answer, ^(String) -> (String | bool) check) -> (String | bool | nil)
+    def checked: (String question, String answer, ^(String) -> (String | bool) check, ?String refused) -> (String | bool | nil)
     def terminal: [T] (String question) { () -> T } -> T
     def yes?: (String answer) -> bool
   end
@@ -140,7 +140,7 @@ module Veragem
     private def self.ask: (Array[String] names, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults,
                            Questions questions) -> Project
     private def self.name_of: (Array[String] names) -> String
-    private def self.required: (Hash[Symbol, String | bool | nil] values) -> Hash[Symbol, String | bool]
+    private def self.required: (Hash[Symbol, String] defaults, Hash[Symbol, String | bool] given) -> Hash[Symbol, String | bool]
     private def self.parser: () -> OptionParser
     private def self.git_config: (String key) -> String?
   end
