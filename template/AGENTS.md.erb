@@ -66,8 +66,8 @@ noise, and it goes stale. A change that falsifies a comment rewrites it.
 
 [Conventional Commits](https://www.conventionalcommits.org/) are enforced by `cog check` locally
 and in CI. The changelog is generated from the commits (`cliff.toml`), so the subject line is
-user-facing text; it lists every one, `chore` and `ci` as Miscellaneous Tasks, and `!` or a
-`BREAKING CHANGE` footer lists a commit first:
+user-facing text; it lists every one but the release's own, `chore` and `ci` as Miscellaneous
+Tasks, and `!` or a `BREAKING CHANGE` footer lists a commit first:
 
 ```
 feat: accept the name as a symbol too

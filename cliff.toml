@@ -64,6 +64,9 @@ commit_parsers = [
     { field = "merge_commit", pattern = "true", skip = true },
     # what else cog lets through unconventional (ignore_fixup_commits)
     { message = "^(fixup|squash|amend)!", skip = true },
+    # the release commit (`rake bump`'s), tagged: in its own section, which a later bump would
+    # rewrite once published
+    { message = "^chore\\(release\\): ", skip = true },
     { message = "^[a-zA-Z]+(\\([^)]*\\))?!:", group = "<!-- 00 -->Breaking changes" },
     { footer = "^BREAKING[ -]CHANGE", group = "<!-- 00 -->Breaking changes" },
     { message = "(?i)^feat", group = "<!-- 01 -->Features" },
@@ -75,7 +78,6 @@ commit_parsers = [
     { message = "(?i)^test", group = "<!-- 07 -->Tests" },
     { message = "(?i)^revert", group = "<!-- 08 -->Reverts" },
     { message = "(?i)^style", group = "<!-- 09 -->Styling" },
-    # the release commit too, in the next version's section
     { message = "(?i)^(chore|ci)", group = "<!-- 10 -->Miscellaneous Tasks" },
     # any other type cog takes
     { message = ".*", group = "<!-- 11 -->Other" },
