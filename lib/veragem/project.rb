@@ -140,8 +140,8 @@ module Veragem
     # A value a file quotes, which RubyGems does not refuse as unfinished.
     private_class_method def self.text(field, value)
       line = line(field, value)
-      unfinished = "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
-      raise Error, unfinished if line.match?(/\A(TODO|FIXME)/)
+      unfinished = line.match?(/\A(TODO|FIXME)/)
+      raise Error, "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME" if unfinished
 
       line
     end

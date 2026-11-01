@@ -68,7 +68,9 @@ class TestGit < Minitest::Test
       .each do |argv, message|
         assert_equal message, assert_raises(Veragem::Error) { parse("my_gem", *argv, config:) }.message
       end
-    assert_equal(["Ada", nil], parse("my_gem", "--author=Ada", "--no-email", config:).then { [it.author, it.email] })
+    gem = parse("my_gem", "--author=Ada", "--no-email", config:)
+
+    assert_equal ["Ada", nil], [gem.author, gem.email]
   end
 
   private

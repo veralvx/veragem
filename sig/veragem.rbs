@@ -122,7 +122,8 @@ module Veragem
     def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?optional: bool) -> (String | bool | nil)
     def offered: (String question, String? default, ^(String) -> (String | bool) check) -> String?
     def read: (String question, String? default, bool optional) -> String?
-    def checked: (String question, String answer, ^(String) -> (String | bool) check, ?String refused) -> (String | bool | nil)
+    def unanswered: (String question) -> nil
+    def checked: (String question, String answer, ^(String) -> (String | bool) check, ?String note) -> (String | bool | nil)
     def terminal: [T] (String question) { () -> T } -> T
     def yes?: (String answer) -> bool
   end

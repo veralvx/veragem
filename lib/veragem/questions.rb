@@ -98,10 +98,7 @@ module Veragem
         reply = read(question, default, optional) || default
         return if optional && (reply.nil? || Questions.none?(reply))
 
-        # neither an answer nor a default: said so, as a refusal is
-        next terminal(question) { @output.puts "an answer is required" } if reply.nil?
-
-        value = checked(question, reply, check)
+        value = reply.nil? ? unanswered(question) : checked(question, reply, check)
         return value unless value.nil?
       end
     end
@@ -123,10 +120,16 @@ module Veragem
       answer unless answer.empty?
     end
 
-    def checked(question, answer, check, refused = "")
+    # neither an answer nor a default: said so, and nil, as a refusal is
+    def unanswered(question)
+      terminal(question) { @output.puts "an answer is required" }
+      nil
+    end
+
+    def checked(question, answer, check, note = "")
       check.call(answer)
     rescue Error => e
-      terminal(question) { @output.puts "#{e.message}#{refused}" }
+      terminal(question) { @output.puts "#{e.message}#{note}" }
       nil
     end
 
