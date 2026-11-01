@@ -60,10 +60,10 @@ class TestOptions < Minitest::Test
   end
 
   def test_one_name_is_required
-    [[], %w[one two]].each do |argv|
+    { [] => "no gem name", %w[one two] => "one gem name, not 2" }.each do |argv, why|
       error = assert_raises(Veragem::Error) { parse(*argv) }
 
-      assert_equal "one gem name, not #{argv.size} (bundle veragem --help)", error.message
+      assert_equal "#{why} (bundle veragem --help)", error.message
     end
   end
 

@@ -87,6 +87,7 @@ module Veragem
 
     private_class_method def self.name_of(names)
       return names.fetch(0) if names.size == 1
+      raise Error, "no gem name (bundle veragem --help)" if names.empty?
 
       raise Error, "one gem name, not #{names.size} (bundle veragem --help)"
     end
