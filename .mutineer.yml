@@ -64,3 +64,4 @@ ignore:
   - { id: 43ae3b2bfcd2, reason: "project.rb: removing an empty match changes nothing" }
   - { id: 7a0160fe9e3d, reason: "project.rb: removing an empty match changes nothing" }
   - { id: 8b03ab9b9e1d, reason: "project.rb: its one caller reads nil as false" }
+  - { id: 7807ddb6172c, reason: "project.rb: first and last of one licence are the same" }

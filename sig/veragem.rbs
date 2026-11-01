@@ -76,6 +76,7 @@ module Veragem
     def nest: (String body, ?doc: String?) -> String
     def self.quote: (String value) -> String
     def self.check: (Symbol key, String value) -> String
+    private def self.completed: (String value) -> String
     private def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     private def self.text: (String field, String value) -> String
     private def self.line: (String field, String value) -> String
@@ -124,7 +125,6 @@ module Veragem
     def checked: (String question, String answer, ^(String) -> (String | bool) check) -> (String | bool | nil)
     def terminal: [T] (String question) { () -> T } -> T
     def yes?: (String answer) -> bool
-    def completed: (String answer) -> String
   end
 
   module Options

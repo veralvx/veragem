@@ -101,7 +101,7 @@ module Veragem
         opts.program_name = "bundle veragem"
         opts.version = VERSION
         opts.on("--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)")
-        opts.on("--license=LICENSE", Project::LICENSES.keys, "mit, apache or dual (MIT OR Apache-2.0, the default)")
+        opts.on("--license=LICENSE", "mit, apache or dual (MIT OR Apache-2.0, the default)")
         OPTIONS.each { |switch, help| opts.on(switch, help) }
       end
     end

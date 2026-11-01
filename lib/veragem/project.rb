@@ -44,7 +44,7 @@ module Veragem
     def self.check(key, value)
       case key
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
-      when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
+      when :license then valid("license (mit, apache or dual)", completed(value)) { LICENSES.key?(it) }
       when :summary then documented(text("summary", value))
       when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
       else text(key.name, value)
@@ -121,6 +121,12 @@ module Veragem
       end
     end
 
+    # A licence abbreviated, in any case (`MIT`, `a`): the one licence it starts, else +value+. ASCII's
+    # case alone: a value of invalid UTF-8 is refused, not raised on.
+    private_class_method def self.completed(value)
+      LICENSES.keys.select { it.start_with?(value.downcase(:ascii)) }.then { it.one? ? it.first : value }
+    end
+
     private_class_method def self.valid(field, value)
       raise Error, "invalid #{field} #{value.inspect}" unless yield value
 
@@ -130,10 +136,8 @@ module Veragem
     # A value a file quotes, which RubyGems does not refuse as unfinished.
     private_class_method def self.text(field, value)
       line = line(field, value)
-      if line.match?(/\A(TODO|FIXME)/)
-        raise Error,
-              "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
-      end
+      unfinished = "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
+      raise Error, unfinished if line.match?(/\A(TODO|FIXME)/)
 
       line
     end

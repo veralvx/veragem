@@ -74,7 +74,7 @@ class TestOptions < Minitest::Test
   end
 
   def test_a_bad_option_is_refused_with_the_usage
-    [["--nope"], ["--license=gpl"], ["--author"]].each do |argv|
+    [["--nope"], ["--author"]].each do |argv|
       error = assert_raises(Veragem::Error) { parse("my_gem", *argv) }
 
       assert_match(/\A(invalid option|invalid argument|missing argument): .* \(bundle veragem --help\)\z/,

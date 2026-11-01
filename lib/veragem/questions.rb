@@ -85,7 +85,6 @@ module Veragem
           Citation.check_values(values, cited)
           Citation.check_name(name, cited)
         end
-      when :license then Project.check(key, completed(text))
       else Project.check(key, text)
       end
     end
@@ -142,13 +141,5 @@ module Veragem
     end
 
     def default(key, defaults, values) = Citation.default(key, values) || { exe: "n", **defaults }[key]
-
-    # A licence abbreviated, completed as the option's is: when one licence alone starts so.
-    def completed(answer)
-      case Project::LICENSES.keys.select { it.start_with?(answer) }
-      in [licence] then licence
-      else answer
-      end
-    end
   end
 end
