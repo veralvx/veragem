@@ -1,19 +1,20 @@
 # frozen_string_literal: true
 
-# A warning from lib/ or the tests raises, failing the test that caused it; a gem's only prints. Every
-# category is on: `ruby -w` turns on the deprecations alone.
-module OwnWarnings
-  OURS = [File.expand_path("../lib", __dir__), __dir__].map { "#{it}/" }.freeze
+# A warning Ruby reports from lib/ or the tests raises, failing the test, or the run when they load;
+# a gem's only prints. Every category is on: `ruby -w` turns on the deprecations alone.
+ours = [File.expand_path("../lib", __dir__), __dir__].map { "#{it}/" }
+# Anonymous: a constant would meet a gem's own module (own_warnings: OwnWarnings)
+own_warnings = Module.new do
+  define_method(:warn) do |message, **options|
+    # "PATH:LINE: ..." or, evaluated code's, "(eval at PATH:LINE):LINE: ..."; PATH relative or
+    # absolute (Windows': C:/...)
+    path = message[/\A(?:\(eval at )*(.+?):\d+[:)]/, 1]
+    raise message if path && File.expand_path(path).start_with?(*ours)
 
-  def warn(message, category: nil, **)
-    # "PATH:LINE: ...", PATH relative or absolute (Windows': C:/...)
-    path = message[/\A(.+?):\d+: /, 1]
-    raise message if path && File.expand_path(path).start_with?(*OURS)
-
-    super
+    super(message, **options)
   end
 end
-Warning.singleton_class.prepend(OwnWarnings)
+Warning.singleton_class.prepend(own_warnings)
 Warning.categories.each { Warning[it] = true }
 
 require "veragem"
@@ -85,8 +86,8 @@ module Veragem
   module GeneratedSupport
     # The files git's index of +dir+ holds as executable (mode 100755), under +paths+
     def indexed_executables(dir, *paths)
-      IO.popen(["git", "ls-files", "--stage", "--", *paths], chdir: dir, &:readlines).filter_map do |entry|
-        mode, *, path = entry.chomp.split(/\s/, 4)
+      IO.popen(["git", "ls-files", "--stage", "-z", "--", *paths], chdir: dir, &:read).split("\0").filter_map do |entry|
+        mode, *, path = entry.split(/\s/, 4)
         path if mode == "100755"
       end
     end
