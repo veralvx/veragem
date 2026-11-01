@@ -1,6 +1,7 @@
 # mutineer (`rake mutation`): every operator, not its default five; a minute a mutant, as a test that
 # starts a process can take tens of seconds, and a mutant over the limit counts as neither caught
-# nor survived.
+# nor survived. A surviving mutant fails the run: the score, of the mutants the tests reach and
+# not ignored, is 100%.
 operators:
   - arithmetic
   - comparison
@@ -24,6 +25,7 @@ operators:
   - condition_false
   - operator_assignment
 timeout: 60
+threshold: 100
 # The mutants that change no behaviour (equivalent), each with why: this repository's alone, as an id
 # hashes its method's name and file.
 ignore:

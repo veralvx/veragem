@@ -22,6 +22,8 @@ CI (nixpkgs packages few of them, and older).
 - **[dprint](https://dprint.dev/)** -- formats the Markdown and TOML.
 - **[cocogitto](https://docs.cog.tools/)** (`cog`) -- enforces Conventional Commits.
 - **[git-cliff](https://git-cliff.org/)** -- writes the changelog at a release.
+- **[lychee](https://lychee.cli.rs/)** -- checks the links of the files git tracks, online
+  (`rake links`; `links.yml` monthly too).
 - **[Nix](https://nixos.org)** for the last of `rake checks`, the flake's checks (`rake nix`):
   without it, `rake checks` stops there, every other check passed.
 
@@ -58,10 +60,13 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
   before it is excluded. Some tests (`bundle exec rake test N=/greets/`) run fewer than the gate
   counts: their exit fails, the tests' own verdict above it. One file run alone
   (`bundle exec ruby -Ilib -Itest test/test_cli.rb`) is not measured.
+- **Warnings:** one from `lib/` or the tests fails the test that raised it, every category of
+  Ruby's on (`test/test_helper.rb`); a gem's only prints.
 - **Mutations:** `bundle exec rake mutation` changes `lib/` a mutant at a time (mutineer,
   `.mutineer.yml`) and lists each one no test catches: a test missing, or a change that keeps the
-  behaviour, which `.mutineer.yml`'s `ignore:` holds with its reason. It takes minutes:
-  `rake checks` leaves it out.
+  behaviour, which `.mutineer.yml`'s `ignore:` holds with its reason. One survivor fails it
+  (`threshold: 100`). It takes minutes: `rake checks` mutates the lines changed since `origin/main`
+  alone (`rake mutation:changed`; all of them where there is none), and `ruby-ci.yml` every line.
 
 ## Development Workflow
 
@@ -72,7 +77,8 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
 
 ```sh
 bundle exec rake          # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
-bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the flake's checks
+bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the links,
+                          # the changed lines' mutations, the flake's checks
 bundle exec rake format   # RuboCop's corrections, dprint and nixfmt, in place
 bundle exec rake typeprof # the signatures TypeProf infers from lib/, to start sig/ from
 bundle exec rake yard     # the documentation of lib/, in doc/

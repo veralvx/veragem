@@ -2,7 +2,7 @@
 #
 #   nix develop      Ruby 4.0 and every tool the Rakefile runs besides the gems (Bundler's, from
 #                    Gemfile.lock: `bin/setup`): cocogitto, git-cliff, dprint, shellcheck, shfmt,
-#                    actionlint, zizmor, nixfmt
+#                    actionlint, zizmor, nixfmt, lychee
 #   nix build        the gem, built from its gemspec and installed (nixpkgs' buildRubyGem);
 #                    with a command (exe/<name>): `nix run` runs it, and on Linux
 #                    `nix build .#image` builds it as an OCI image (image.yml publishes it)
@@ -205,6 +205,7 @@
               pkgs.actionlint
               pkgs.zizmor
               pkgs.nixfmt
+              pkgs.lychee
             ];
           };
         };

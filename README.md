@@ -5,7 +5,7 @@ the [templates](https://github.com/veralvx/templates) repository's Python and Ru
 `bundle gem` gives a gemspec, a Rakefile, Minitest and RuboCop; `bundle veragem NAME` gives that
 and the rest:
 
-- **Ruby 4.0** or later, `required_ruby_version` and CI alike.
+- **Ruby 4.0** or later, `required_ruby_version` and CI alike, on Linux and macOS.
 - **Types**: Steep checks `lib/` against the signatures in `sig/`, its strictest diagnostics on;
   TypeProf infers signatures to start them from, and its editor support is configured.
 - **Lint and format**: RuboCop with every new cop, rubocop-minitest, rubocop-packaging,
@@ -16,8 +16,12 @@ and the rest:
 - **Documentation**: YARD, every public object of `lib/` documented, held by yard-lint at 100%
   coverage (`rake yard` writes it to `doc/`).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
-  `strict` profile: every line, branch and method of `lib/` covered. `rake mutation` mutates
-  `lib/` with [mutineer](https://github.com/davidteren/mutineer) and lists what no test catches.
+  `strict` profile: every line, branch and method of `lib/` covered; a warning from `lib/` or the
+  tests fails them. [mutineer](https://github.com/davidteren/mutineer) mutates `lib/`, and one
+  mutant no test catches fails it: `rake checks` the lines changed since `origin/main`, CI every
+  line (`rake mutation`).
+- **Links**: lychee checks the links of the files git tracks (`rake links`), in `rake checks` and
+  monthly (`links.yml`).
 - **Security**: bundler-audit over `Gemfile.lock`, daily and on every pull request; a pull request's
   new gems and actions reviewed for their licences and advisories (`dependency-review.yml`,
   advisory, as in the Python and Rust templates); zizmor over the workflows and Dependabot's
@@ -176,7 +180,8 @@ packages few of them, and older).
   the gemspec read back, the values written as given whatever the locale.
 - The harness here is the template's: this repository's Gemfile, Rakefile, workflows, hooks, flake
   and tools' configuration are the template's own files, byte for byte (`test/test_sync.rb`; but
-  `dependabot.yml`, whose directories differ, and the smoke test's workflow, the plugin's alone), so
+  `dependabot.yml`, whose directories differ, `.mutineer.yml`, whose ignored mutants are the
+  plugin's, and the smoke test's workflow, the plugin's alone), so
   the template's are checked in place by this repository's checks, and a command line's own
   (`image.yml`) by the smoke test's command gem.
 - The smoke test (`dev/smoke.sh`, `smoke.yml`, weekly too): the plugin installed from this checkout

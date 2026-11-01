@@ -56,10 +56,16 @@ takes, a GitHub user GitHub takes.
 
 ```sh
 bundle exec rake          # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
-bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the flake's checks
+bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the links,
+                          # the changed lines' mutations, the flake's checks
 nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
-bundle exec rake mutation # lib/ mutated: what no test catches (mutineer), minutes, not in checks
+bundle exec rake mutation # every line of lib/ mutated: what no test catches (mutineer), minutes
 ```
+
+A warning from `lib/` or the tests fails the test that raised it (`test/test_helper.rb`). One
+surviving mutant fails mutineer (`.mutineer.yml`'s `threshold: 100`): `rake checks` mutates the
+lines changed since `origin/main` alone, `ruby-ci.yml` every line. `links.yml` runs `rake links`
+monthly.
 
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
 left unrendered, each file parsing, the executables' modes, the gemspec, the git repository. The

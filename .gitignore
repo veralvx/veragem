@@ -11,6 +11,7 @@
 /result*
 /.direnv
 /.ruby-lsp/
-# mutineer's coverage map (`rake mutation`)
+# mutineer's coverage map (`rake mutation`), lychee's cache (`rake links`)
 /.mutineer/
+/.lycheecache
 /.yardoc/
