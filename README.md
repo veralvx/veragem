@@ -67,6 +67,12 @@ git commit -m "chore: initial commit from veragem"
 bundle exec rake checks # the tools the generated CONTRIBUTING.md lists, or `nix develop`'s
 ```
 
+As `bundle gem` does, veragem makes the git repository and adds the files, and runs no
+`bundle install`: `bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists
+the first steps: the repository's settings, RubyGems' pending trusted publisher.
+
+### Options
+
 | Option                     | Default                                     | Goes into                                              |
 | -------------------------- | ------------------------------------------- | ------------------------------------------------------ |
 | `NAME`                     | --                                          | the gem, its module, its files: as `bundle gem`        |
@@ -84,8 +90,10 @@ bundle exec rake checks # the tools the generated CONTRIBUTING.md lists, or `nix
 | `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated           |
 
 A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
-expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, a value git's config gives that
-veragem refuses names its key and the option that replaces it.
+expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, a value git's
+config gives that veragem refuses names its key and the option that replaces it.
+
+### Questions
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes
@@ -94,6 +102,8 @@ asked again, saying why. `-` is no option's value, as no answer can give it: `--
 `--no-given-names` and `--no-alias` give none, and an `--orcid` or `--keywords` left out does.
 With other input (CI, a pipe, `< /dev/null` to skip the questions) nothing is asked: the defaults
 apply, and a missing name, author, GitHub user or, with `--citation`, family names is refused.
+
+### CITATION.cff
 
 `CITATION.cff` (Citation File Format 1.2.0) is for software meant to be cited, research's: GitHub
 offers its "Cite this repository", and Zenodo, once the repository is enabled there (the generated
@@ -124,6 +134,8 @@ for the licences, written as CFF has them:
 `rake bump` sets its version and date at each release, and `nix flake check` validates it against
 CFF's schema (cffconvert): a check of the schema alone, which passes files Zenodo's import refuses.
 
+### The name
+
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
 is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 
@@ -141,15 +153,13 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 - with `--exe`, whose module is CLI or VERSION (`my-c_l_i`: its command line would find another
   first).
 
+### The summary
+
 The summary is plain text: written into the README as given, Markdown in it is dprint's to check.
 It is the module's comment too, so one the gem's yard-lint or RuboCop would not take as its
 documentation is refused: a tag first, YARD's (`@param`, `(see`) or written informally (`Note:`,
 `See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic comment (`encoding:`), a
 backtick or `**` left open.
-
-As `bundle gem` does, veragem makes the git repository and adds the files, and runs no
-`bundle install`: `bin/setup` writes the lock, to commit. The generated `CONTRIBUTING.md` lists
-the first steps: the repository's settings, RubyGems' pending trusted publisher.
 
 ## What you get
 
