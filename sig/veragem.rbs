@@ -19,6 +19,7 @@ module Veragem
     def self.check_modules: (String name) -> void
     def self.probe: (String library, String path, Array[String] nestings) -> Array[String]
     private def self.answers: (String library, String path, Array[String] nestings) -> Array[String]
+    private def self.unchecked: (Array[String] nestings, String why) -> bot
     private def self.check_shadowing: (String name, String shadowed, String found) -> void
     private def self.check_defined: (String name, Array[[String, String?]] defined, String? innermost) -> void
     private def self.library_of: (String name) -> String

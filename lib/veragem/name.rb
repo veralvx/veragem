@@ -110,9 +110,17 @@ module Veragem
       answers = Dir.mktmpdir do |dir|
         IO.popen(env, command, unsetenv_others: true, in: File::NULL, err: File::NULL, chdir: dir, &:readlines)
       end
-      raise Error, "could not check #{library}'s modules" unless answers.size == nestings.size + 2
+      return answers.map(&:chomp).freeze if answers.size == nestings.size + 2
 
-      answers.map(&:chomp).freeze
+      # rubocop:disable-next Style/SpecialGlobalVars -- RBS types $?, and has no English for $CHILD_STATUS
+      unchecked(nestings, "their Ruby ended: #{$?}")
+    rescue SystemCallError => e
+      # a refusal, not a raw Errno, which Bundler would report as its own bug
+      unchecked(nestings, e.message)
+    end
+
+    private_class_method def self.unchecked(nestings, why)
+      raise Error, "could not check #{nestings.last} against its tools: #{why}"
     end
 
     # Its lib/<path>.rb, first on the load path, must not shadow a library its tools may require:
