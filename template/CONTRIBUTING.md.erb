@@ -84,7 +84,7 @@ bundle exec rake graph    # its classes and modules, for Graphviz: | dot -Tsvg -
 nix build                 # the gem, built and installed by Nix (flake.nix)
 ```
 
-`bundle exec rake -T` lists every task.
+`bundle exec rake -T` lists every task, and `bundle exec rake -D` describes each in full.
 
 A new dependency of the gem goes in the gemspec (`spec.add_dependency`), and, for the Nix package,
 its nixpkgs package in flake.nix's `dependencies` (`pkgs.rubyPackages_4_0.<gem>`): the flake's
