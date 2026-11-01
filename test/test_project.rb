@@ -23,7 +23,7 @@ class TestProject < Minitest::Test
   def test_the_github_user_follows_githubs_rule
     ["jane", "jane-doe", "J4ne", "a" * 39].each { assert_equal it, project(github: it).github }
 
-    ["-jane", "jane-", "jane--doe", "jane_doe", "a" * 40, nil].each do |github|
+    ["-jane", "jane-", "jane--doe", "jane_doe", "a" * 40, "ſam", "\u212Aate", nil].each do |github|
       assert_raises(Veragem::Error, github.inspect) { project(github:) }
     end
   end
@@ -78,12 +78,13 @@ class TestProject < Minitest::Test
     assert_raises(Veragem::Error) { project(license: "gpl") }
   end
 
-  # read as UTF-8 whatever its encoding, refused by its key unless valid, before any other check
+  # read as UTF-8 whatever its encoding, refused unless valid before any other check, named as elsewhere
   def test_a_value_is_utf8
-    %i[author email github summary license given_names family_names alias orcid keywords].each do |key|
+    { author: "author", given_names: "given names", github: "GitHub user", license: "license (mit, apache or dual)",
+      orcid: "ORCID iD" }.each do |key, field|
       error = assert_raises(Veragem::Error) { Veragem::Project.check(key, "a\xFF".b) }
 
-      assert_equal %(invalid #{key.name.tr("_", " ")} "a\\xFF": not UTF-8), error.message
+      assert_equal %(invalid #{field} "a\\xFF": not UTF-8), error.message
     end
     assert_equal "José", Veragem::Project.check(:author, "Jos\xC3\xA9".b)
   end

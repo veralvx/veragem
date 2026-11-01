@@ -5,8 +5,11 @@ require "json"
 module Veragem
   # The gem to generate: the values given, checked, and what follows from them.
   class Project
-    # GitHub's rule for a user or organization name.
-    GITHUB = /\A[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\z/i
+    # GitHub's rule for a user or organization name: ASCII's letters, which /i would widen to Unicode's
+    # (ſ, the Kelvin sign).
+    GITHUB = /\A[a-zA-Z\d](?:[a-zA-Z\d]|-(?=[a-zA-Z\d])){0,38}\z/
+    # Each value a refusal names otherwise than its key, as its other refusals do.
+    FIELDS = { github: "GitHub user", license: "license (#{License::CHOICES})", orcid: "ORCID iD" }.freeze
     # What YARD reads as a tag first in a comment: its own (`@param`, `(see`), and those yard-lint
     # (.yard-lint.yml) takes for one written informally.
     TAG = /\A(?:@|\(see\b|(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since
@@ -22,7 +25,7 @@ module Veragem
     # The values that may be none, and how an option gives none: a question takes "-".
     OPTIONAL = { email: "--no-email", given_names: "--no-given-names", alias: "--no-alias",
                  orcid: "leave --orcid out", keywords: "leave --keywords out" }.freeze
-    private_constant :GITHUB, :TAG, :ANNOTATION, :MAGIC
+    private_constant :GITHUB, :FIELDS, :TAG, :ANNOTATION, :MAGIC
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
                 :alias_name, :orcid, :keywords
@@ -36,14 +39,14 @@ module Veragem
     # The value +key+ takes, an option's or an answer's: checked, or an Error saying why not.
     # @param key [Symbol] :author, :email, :github, :summary, :license, :given_names, :family_names,
     #   :alias, :orcid or :keywords
-    # @param value [String] as given
+    # @param value [String, nil] as given; nil, none, is refused as "" is
     # @return [String] the value kept: a licence its choice (`MIT` mit, `Apache-2.0` apache), an ORCID
     #   iD its URL, keywords joined by ", "
     # @raise [Veragem::Error] +key+ cannot take it
     def self.check(key, value)
       value = utf8(key, value)
       case key
-      when :github then valid("GitHub user", value) { GITHUB.match?(it) }
+      when :github then valid(FIELDS[:github], value) { GITHUB.match?(it) }
       when :license then License.check(value)
       when :summary then documented(text("summary", value))
       when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
@@ -126,7 +129,8 @@ module Veragem
     # which each check refuses.
     private_class_method def self.utf8(key, value)
       value = value.to_s.dup.force_encoding(Encoding::UTF_8)
-      raise Error, "invalid #{key.name.tr("_", " ")} #{value.inspect}: not UTF-8" unless value.valid_encoding?
+      field = FIELDS.fetch(key) { key.name.tr("_", " ") }
+      raise Error, "invalid #{field} #{value.inspect}: not UTF-8" unless value.valid_encoding?
 
       value
     end

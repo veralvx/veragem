@@ -99,7 +99,7 @@ module Veragem
     # @param path [String] the file the gem requires, lib/'s
     # @param nestings [Array<String>] its modules' full names, outermost first
     # @return [Array<String>] the shadowed file, what is found, then each nesting's class
-    # @raise [Veragem::Error] the child did not answer them all
+    # @raise [Veragem::Error] the child did not answer them all, or could not be run
     def self.probe(library, path, nestings)
       @probed[[library, path, nestings]] ||= answers(library, path, nestings)
     end

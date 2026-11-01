@@ -104,7 +104,8 @@ class TestOptions < Minitest::Test
 
     ["--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)", "--license=LICENSE",
      "mit, apache or dual (MIT OR Apache-2.0, the default)", "--[no-]alias=ALIAS",
-     "(default: git config user.name, else required)"].each { assert_includes help, it }
+     "(default: git config user.name, else required)",
+     "(default: git config github.user, else required)"].each { assert_includes help, it }
   end
 
   def test_version
