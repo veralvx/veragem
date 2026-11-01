@@ -4,6 +4,6 @@
 target :lib do
   signature "sig"
   check "lib"
-  library "erb", "fileutils", "json", "optparse", "tmpdir"
+  library "erb", "fileutils", "json", "open3", "optparse", "tmpdir"
   configure_code_diagnostics(Steep::Diagnostic::Ruby.strict)
 end

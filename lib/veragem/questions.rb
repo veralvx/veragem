@@ -85,26 +85,28 @@ module Veragem
           Citation.check_values(values, cited)
           Citation.check_name(name, cited)
         end
-      when :license then Project.check(key, completed(text))
       else Project.check(key, text)
       end
     end
 
-    # The answer, or the default, through +check+; asked again when there is neither, or the check
-    # fails, but an +optional+ one is nil -- and "-" its none, which a default would take otherwise.
+    # The answer, or the default, through +check+; asked again, saying why, when there is neither, or
+    # the check fails, but an +optional+ one is nil -- and "-" its none, which a default would take
+    # otherwise.
     def ask(question, default = nil, check:, optional: false)
       default = offered(question, default, check)
       loop do
         reply = read(question, default, optional) || default
         return if optional && (reply.nil? || Questions.none?(reply))
 
-        value = reply && checked(question, reply, check)
+        value = reply.nil? ? unanswered(question) : checked(question, reply, check)
         return value unless value.nil?
       end
     end
 
-    # +default+ if it passes +check+: one refused, said why, is not offered.
-    def offered(question, default, check) = (default unless default.nil? || checked(question, default, check).nil?)
+    # +default+ if it passes +check+: one refused, said why and that it is the default, is not offered.
+    def offered(question, default, check)
+      default unless default.nil? || checked(question, default, check, " (the default, not offered)").nil?
+    end
 
     # A line's text, nil when empty; one its encoding cannot read as bytes, as an argument's.
     def read(question, default, optional)
@@ -118,10 +120,16 @@ module Veragem
       answer unless answer.empty?
     end
 
-    def checked(question, answer, check)
+    # neither an answer nor a default: said so, and nil, as a refusal is
+    def unanswered(question)
+      terminal(question) { @output.puts "an answer is required" }
+      nil
+    end
+
+    def checked(question, answer, check, note = "")
       check.call(answer)
     rescue Error => e
-      terminal(question) { @output.puts e.message }
+      terminal(question) { @output.puts "#{e.message}#{note}" }
       nil
     end
 
@@ -142,13 +150,5 @@ module Veragem
     end
 
     def default(key, defaults, values) = Citation.default(key, values) || { exe: "n", **defaults }[key]
-
-    # A licence abbreviated, completed as the option's is: when one licence alone starts so.
-    def completed(answer)
-      case Project::LICENSES.keys.select { it.start_with?(answer) }
-      in [licence] then licence
-      else answer
-      end
-    end
   end
 end

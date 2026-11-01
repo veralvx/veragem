@@ -123,7 +123,7 @@ class TestRefusals < Minitest::Test
 
       error = with_env("PATH" => "") { assert_raises(Veragem::Error) { Veragem::Generator.generate(project, target) } }
 
-      assert_equal "git init --quiet --initial-branch=main failed in #{target}", error.message
+      assert_equal "cannot run git in #{target}", error.message
 
       refute_path_exists target
     end

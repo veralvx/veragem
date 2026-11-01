@@ -17,7 +17,7 @@ class TestQuestions < Minitest::Test
   end
 
   def test_the_answers_are_taken_their_spaces_stripped
-    gem, = ask(answers: [" my-gem ", "y", " n ", " m ", "Greets.", "Ada", "ada@example.com", "ada"])
+    gem, = ask(answers: [" my-gem ", "y", " n ", " M ", "Greets.", "Ada", "ada@example.com", "ada"])
 
     assert_equal ["my-gem", true, "mit", "Greets.", "Ada", "ada@example.com", "ada"],
                  [gem.name, gem.exe, gem.license, gem.summary, gem.author, gem.email, gem.github]
@@ -47,12 +47,12 @@ class TestQuestions < Minitest::Test
   end
 
   def test_a_refused_answer_is_asked_again_saying_why
-    gem, shown = ask(answers: ["1gem", "my_gem", "maybe", "YES", "", "MIT", "apache", "TODO", "Greets.",
+    gem, shown = ask(answers: ["1gem", "my_gem", "maybe", "YES", "", "gpl", "apache", "TODO", "Greets.",
                                "\u00A0", "Ada", "a\tb", "ada@example.com", "-ada", "ada"])
 
     assert_equal ["my_gem", true, "apache", "Greets.", "Ada", "ada@example.com", "ada"],
                  [gem.name, gem.exe, gem.license, gem.summary, gem.author, gem.email, gem.github]
-    ["invalid gem name \"1gem\"", "y or n", "invalid license (mit, apache or dual) \"MIT\"",
+    ["invalid gem name \"1gem\"", "y or n", "invalid license (mit, apache or dual) \"gpl\"",
      "invalid summary \"TODO\"", "invalid author", "invalid email", "invalid GitHub user \"-ada\""].each do |why|
       assert_includes shown, why
     end
@@ -66,14 +66,15 @@ class TestQuestions < Minitest::Test
     gem, shown = ask("my_gem", answers: ["", "", "", "", "", "Ada", "", ""], config:)
 
     assert_equal "Ada", gem.author
-    assert_match(/\[A Ruby gem\.\]: invalid author "Jos\\xE9": one line of text\nAuthor: Author: Email/, shown)
+    assert_includes shown, %(invalid author "Jos\\xE9": one line of text (the default, not offered)\n)
+    assert_match(/not offered\)\nAuthor: an answer is required\nAuthor: Email/, shown)
   end
 
   def test_with_no_default_an_empty_answer_is_asked_again_but_an_email_may_be_none
     gem, shown = ask("my_gem", answers: ["", "", "", "", "", "Ada", "", "ada"], config: {})
 
     assert_equal ["Ada", nil, "ada"], [gem.author, gem.email, gem.github]
-    assert_match(/Author: Author: Email \(- for none\): GitHub user: \z/, shown)
+    assert_match(/Author: an answer is required\nAuthor: Email \(- for none\): GitHub user: \z/, shown)
   end
 
   # "-" for none, where Enter would take the default: git's email, the given names guessed

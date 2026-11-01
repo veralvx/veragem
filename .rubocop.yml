@@ -1,5 +1,4 @@
 AllCops:
-  EnabledByDefault: false
   Exclude:
     - "result*/**/*" # `nix build`'s links: the gem installed, which the project index would take for a second copy
   NewCops: enable # pending cops on now, not only at the next major release

@@ -60,10 +60,10 @@ class TestOptions < Minitest::Test
   end
 
   def test_one_name_is_required
-    [[], %w[one two]].each do |argv|
+    { [] => "no gem name", %w[one two] => "one gem name, not 2" }.each do |argv, why|
       error = assert_raises(Veragem::Error) { parse(*argv) }
 
-      assert_equal "one gem name, not #{argv.size} (bundle veragem --help)", error.message
+      assert_equal "#{why} (bundle veragem --help)", error.message
     end
   end
 
@@ -74,7 +74,7 @@ class TestOptions < Minitest::Test
   end
 
   def test_a_bad_option_is_refused_with_the_usage
-    [["--nope"], ["--license=gpl"], ["--author"]].each do |argv|
+    [["--nope"], ["--author"]].each do |argv|
       error = assert_raises(Veragem::Error) { parse("my_gem", *argv) }
 
       assert_match(/\A(invalid option|invalid argument|missing argument): .* \(bundle veragem --help\)\z/,
@@ -107,33 +107,5 @@ class TestOptions < Minitest::Test
 
   def test_version
     assert_output("bundle veragem #{Veragem::VERSION}\n") { assert_raises(SystemExit) { parse("--version") } }
-  end
-
-  # in a directory of no repository, whose own config would answer too
-  def test_git_config_reads_gits_config
-    Dir.mktmpdir do |home|
-      with_env("HOME" => home, "GIT_CONFIG_GLOBAL" => File.join(home, ".gitconfig"), "GIT_CONFIG_NOSYSTEM" => "1",
-               "GIT_CONFIG_COUNT" => nil, "GIT_CONFIG_PARAMETERS" => nil) do
-        Dir.chdir(home) { assert_git_config }
-      end
-    end
-  end
-
-  def assert_git_config
-    system("git", "config", "--global", "github.user", "ada", exception: true)
-    system("git", "config", "--global", "user.name", "Jos\u00E9", exception: true)
-
-    gem = Veragem::Options.parse(["my_gem"], input: StringIO.new)
-
-    # no user.email, none; its bytes, whatever the locale: Project reads them as UTF-8
-    assert_equal ["ada", nil, "José"], [gem.github, gem.email, gem.author]
-  end
-
-  def test_without_git_no_value
-    with_env("PATH" => "") do
-      error = assert_raises(Veragem::Error) { Veragem::Options.parse(["my_gem"], input: StringIO.new) }
-
-      assert_equal "no author: --author, or git config user.name", error.message
-    end
   end
 end

@@ -39,12 +39,13 @@ module Veragem
     # @param key [Symbol] :author, :email, :github, :summary, :license, :given_names, :family_names,
     #   :alias, :orcid or :keywords
     # @param value [String] as given
-    # @return [String] the value a file writes: an ORCID iD its URL, keywords joined by ", "
+    # @return [String] the value kept: a licence its choice (`MIT` mit, `Apache-2.0` apache), an ORCID
+    #   iD its URL, keywords joined by ", "
     # @raise [Veragem::Error] +key+ cannot take it
     def self.check(key, value)
       case key
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
-      when :license then valid("license (mit, apache or dual)", value) { LICENSES.key?(it) }
+      when :license then valid("license (mit, apache or dual)", completed(value)) { LICENSES.key?(it) }
       when :summary then documented(text("summary", value))
       when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
       else text(key.name, value)
@@ -121,6 +122,15 @@ module Veragem
       end
     end
 
+    # A licence as its SPDX expression, its ORs in either order, or abbreviated, in any case
+    # (`Apache-2.0`, `apache-2.0 or mit`, `a`): that licence, or the one it starts, else +value+. Its
+    # bytes: invalid UTF-8 is refused, not raised on.
+    private_class_method def self.completed(value)
+      given = value.b.strip.downcase
+      LICENSES.find { |_, ids| ids.map(&:downcase).sort == given.split(" or ").sort }&.first ||
+        LICENSES.keys.select { it.start_with?(given) }.then { it.one? ? it.first : value }
+    end
+
     private_class_method def self.valid(field, value)
       raise Error, "invalid #{field} #{value.inspect}" unless yield value
 
@@ -130,10 +140,8 @@ module Veragem
     # A value a file quotes, which RubyGems does not refuse as unfinished.
     private_class_method def self.text(field, value)
       line = line(field, value)
-      if line.match?(/\A(TODO|FIXME)/)
-        raise Error,
-              "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
-      end
+      unfinished = line.match?(/\A(TODO|FIXME)/)
+      raise Error, "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME" if unfinished
 
       line
     end
@@ -156,14 +164,13 @@ module Veragem
     # outside code with a non-space beside it, as yard-lint counts (`x ** 2` is no bold).
     private_class_method def self.documented(summary)
       raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(TAG)
-      if annotation?(summary) || summary.match?(MAGIC)
-        raise Error, "invalid summary #{summary.inspect}: RuboCop would read an annotation or a directive"
-      end
+
+      misread = annotation?(summary) || summary.match?(MAGIC)
+      raise Error, "invalid summary #{summary.inspect}: RuboCop would read an annotation or a directive" if misread
 
       bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size
-      if summary.count("`").odd? || bold.odd?
-        raise Error, "invalid summary #{summary.inspect}: a backtick or ** left open"
-      end
+      left_open = summary.count("`").odd? || bold.odd?
+      raise Error, "invalid summary #{summary.inspect}: a backtick or ** left open" if left_open
 
       summary
     end

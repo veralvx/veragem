@@ -76,6 +76,8 @@ class TestProject < Minitest::Test
     assert_equal([["MIT"], ["Apache-2.0"], ["MIT", "Apache-2.0"]],
                  %w[mit apache dual].map { project(license: it).licenses })
     assert_raises(Veragem::Error) { project(license: "gpl") }
+    # a direct caller may give invalid UTF-8; Options and Questions give such a value as bytes
+    assert_raises(Veragem::Error) { Veragem::Project.check(:license, "\xFFm") }
   end
 
   def test_exe_is_true_or_absent

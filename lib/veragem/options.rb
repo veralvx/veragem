@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "open3"
 require "optparse"
 
 module Veragem
@@ -42,15 +43,15 @@ module Veragem
       names, given = arguments(argv)
       defaults = { **DEFAULTS, **GIT_CONFIG.transform_values(&config).compact }
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
-      return Project.new(name_of(names), required(defaults.merge(given))) unless input.tty?
+      return Project.new(name_of(names), required(defaults, given)) unless input.tty?
 
       ask(names, given, defaults, Questions.new(input, output, dir))
     rescue OptionParser::ParseError => e
       raise Error, "#{e.message} (bundle veragem --help)"
     end
 
-    # The names and the options given, each option refused as OptionParser refuses a licence: before
-    # the name, and any question.
+    # The names and the options given, each value checked as Project checks it: before the name, and
+    # any question.
     private_class_method def self.arguments(argv)
       given = {} #: Hash[Symbol, String | bool]
       # an argument of invalid UTF-8 as bytes, as git's values are: OptionParser's matching raises on
@@ -87,11 +88,21 @@ module Veragem
 
     private_class_method def self.name_of(names)
       return names.fetch(0) if names.size == 1
+      raise Error, "no gem name (bundle veragem --help)" if names.empty?
 
       raise Error, "one gem name, not #{names.size} (bundle veragem --help)"
     end
 
-    private_class_method def self.required(values)
+    # The options' values, and git's where none is given: one of git's refused says so, and which
+    # option replaces it, as a missing author or GitHub user does.
+    private_class_method def self.required(defaults, given)
+      GIT_CONFIG.except(*given.keys).each do |key, name|
+        value = defaults[key] or next
+        Project.check(key, value)
+      rescue Error => e
+        raise Error, "#{e} (git config #{name}; --#{key} replaces it)"
+      end
+      values = defaults.merge(given)
       %i[author github].each { raise Error, "no #{it}: --#{it}, or git config #{GIT_CONFIG[it]}" unless values[it] }
       values.compact
     end
@@ -101,19 +112,21 @@ module Veragem
         opts.program_name = "bundle veragem"
         opts.version = VERSION
         opts.on("--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)")
-        opts.on("--license=LICENSE", Project::LICENSES.keys, "mit, apache or dual (MIT OR Apache-2.0, the default)")
+        opts.on("--license=LICENSE", "mit, apache or dual (MIT OR Apache-2.0, the default)")
         OPTIONS.each { |switch, help| opts.on(switch, help) }
       end
     end
 
-    # A git config value, nil when unset or git is missing: its bytes, which Project reads as UTF-8
-    # whatever the locale.
+    # A git config value, nil when unset (status 1): its bytes, which Project reads as UTF-8 whatever
+    # the locale. A git that cannot run, or cannot read its config, is refused here, with git's reason,
+    # before a missing value would be blamed on the config.
     private_class_method def self.git_config(key)
-      command = ["git", "config", "--get", key]
-      value = IO.popen(command, err: File::NULL, external_encoding: Encoding::BINARY, &:read).strip
-      value unless value.empty?
-    rescue SystemCallError
-      nil
+      value, error, status = Open3.capture3("git", "config", "--get", key, binmode: true)
+      raise Error, "git config --get #{key}: #{error.strip}" unless status.success? || status.exitstatus == 1
+
+      value.strip.then { it unless it.empty? }
+    rescue SystemCallError => e
+      raise Error, "cannot run git: #{e}"
     end
   end
 end
