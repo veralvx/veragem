@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-# `rake` runs the Ruby checks, as ruby-ci.yml does; `rake checks` runs everything CI runs.
+# `rake` runs the Ruby checks, as ruby-ci.yml does; `rake checks` runs CI's checks, the links too
+# (links.yml's, monthly), but mutates the changed lines alone (ruby-ci.yml: every line).
 # `rake -T` lists the tasks.
 
 require "bundler/audit/task"
@@ -48,8 +49,8 @@ end
 desc "Mutate lib/ and run the tests against each change: what none catches (mutineer, .mutineer.yml)"
 task(:mutation) { mutate }
 
-# The lines changed since the branch left origin/main, uncommitted ones too; every line where there
-# is no origin/main (a gem never pushed)
+# The lines changed since the branch left origin/main, uncommitted ones too, of the files git tracks
+# (not a new one before `git add`); every line where there is no origin/main (a gem never pushed)
 desc "Mutate the lines of lib/ changed since origin/main, as `rake mutation` does all of them"
 task "mutation:changed" do
   base = IO.popen(%w[git merge-base HEAD origin/main], err: File::NULL, &:read).chomp
@@ -101,7 +102,7 @@ task :nix do
   sh "nix", "flake", "check"
 end
 
-desc "Run every check CI runs"
+desc "Run CI's checks, the links too, mutating the changed lines alone"
 task checks: %i[default audit dprint cog shell workflows links mutation:changed nix]
 
 desc "Format the Ruby, the Markdown and TOML, and the Nix (modifies files)"
@@ -120,9 +121,10 @@ gemspec = Bundler::GemHelper.gemspec
 repository = gemspec.metadata.fetch("source_code_uri").delete_prefix("https://github.com/")
 cliff = ["git-cliff", "--offline", "--github-repo", repository]
 
-# Online, cached a day (.lycheecache), each retry at least 10 s after the last, so a host's brief
-# outage is waited out. Not the tests' links, made up; nor GitHub's bare address, read off those the
-# code builds; nor the gem's own pages, missing until it is pushed and published.
+# Online, a link that passed cached a day (.lycheecache); a refused connection or a 429 retried at
+# least 10 s apart, so a brief outage is waited out. Not the tests' links, made up; nor GitHub's
+# bare address, read off those the code builds; nor the gem's own pages, missing until it is pushed
+# and published.
 desc "Check the links of the files git tracks (lychee)"
 task :links do
   files = output("git", "ls-files", "-z").split("\0").select { File.file?(it) }.grep_v(%r{\Atest/})

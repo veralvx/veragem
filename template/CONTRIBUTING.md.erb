@@ -60,7 +60,7 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
   before it is excluded. Some tests (`bundle exec rake test N=/greets/`) run fewer than the gate
   counts: their exit fails, the tests' own verdict above it. One file run alone
   (`bundle exec ruby -Ilib -Itest test/test_cli.rb`) is not measured.
-- **Warnings:** one from `lib/` or the tests fails the test that raised it, every category of
+- **Warnings:** one from `lib/` or the tests fails them, every category of
   Ruby's on (`test/test_helper.rb`); a gem's only prints.
 - **Mutations:** `bundle exec rake mutation` changes `lib/` a mutant at a time (mutineer,
   `.mutineer.yml`) and lists each one no test catches: a test missing, or a change that keeps the

@@ -4,8 +4,8 @@ require "erb"
 require "fileutils"
 
 module Veragem
-  # Writes a Project's gem from template/: each `.erb` file rendered, every other copied, each with
-  # its mode; then a git repository, its files added, as `bundle gem` leaves one.
+  # Writes a Project's gem from template/: each `.erb` file rendered, every other copied, the
+  # executables executable; then a git repository, its files added, as `bundle gem` leaves one.
   module Generator
     # template/: a generated gem's files, ERB and plain. (Steep: __dir__ is nil only in code evaluated
     # from a string, never in a required file.)

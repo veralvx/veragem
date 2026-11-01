@@ -6,7 +6,7 @@ Thank you for considering contributing to `veragem`!
 
 Either **Nix** -- `nix develop` gives Ruby and every tool below at the versions `flake.lock` pins
 -- or, installed yourself: **Ruby 4.0** or later (with Bundler, Ruby's own), **ShellCheck**,
-**shfmt**, **actionlint**, **zizmor**, **dprint**, **cocogitto** (`cog`), **git-cliff**, and
+**shfmt**, **actionlint**, **zizmor**, **dprint**, **cocogitto** (`cog`), **git-cliff**, **lychee**, and
 **Nix** for the last of `rake checks`. `bin/setup` installs the gems `Gemfile.lock` pins.
 
 ## Setup
@@ -27,7 +27,7 @@ lib/veragem/questions.rb  a terminal's questions for what no option gives
 lib/veragem/name.rb     the gem's name, checked: bundle gem's rules, what its files and tools meet
 lib/veragem/citation.rb  CITATION.cff's rules: who may give its values, its title, its ORCID iD
 lib/veragem/project.rb  the values, checked, and what follows from them
-lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, modes kept; git
+lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, the executables' modes set; git
 template/               the generated gem
 sig/, test/, dev/smoke.sh
 ```
@@ -39,12 +39,14 @@ project its `self` (`lib/veragem/project.rb`: `name`, `path`, `constant`, `autho
 `nest`...); every other file is copied as is. In a path, `%name%`, `%path%` and `%underscored%`
 are the project's. The command line's files are the `--exe` kind's alone, each LICENSE file its
 licence's, and CITATION.cff a `--citation`'s (`Generator::EXE`, `Generator::LICENSE_FILES`,
-`Generator::CITATION`).
+`Generator::CITATION`). A file `Generator::EXECUTABLES` lists is executable, on the disk and in
+git's index (`test/test_sync.rb` holds the list to the template's modes).
 
 Keep a file plain unless it needs a value: a plain file is checked in place, as this repository's
 own. **This repository's harness is the template's**: each plain file of `template/` is here too,
 the same bytes and mode, and `test/test_sync.rb` fails on any drift -- but the files it names as
-different (Dependabot's configuration, which moves both), and the command line's own
+different (Dependabot's configuration, which moves both, and `.mutineer.yml`, whose ignored mutants
+are the plugin's), and the command line's own
 (`Generator::EXE`: this gem has none), which the smoke test's command gem checks. Change one,
 change both: edit the template's, then copy it here (or the other way round).
 
@@ -62,7 +64,7 @@ nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
 bundle exec rake mutation # every line of lib/ mutated: what no test catches (mutineer), minutes
 ```
 
-A warning from `lib/` or the tests fails the test that raised it (`test/test_helper.rb`). One
+A warning from `lib/` or the tests fails them (`test/test_helper.rb`). One
 surviving mutant fails mutineer (`.mutineer.yml`'s `threshold: 100`): `rake checks` mutates the
 lines changed since `origin/main` alone, `ruby-ci.yml` every line. `links.yml` runs `rake links`
 monthly.

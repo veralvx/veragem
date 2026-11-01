@@ -42,7 +42,7 @@ and the rest:
   `AGENTS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`), issue and pull request templates.
 
 In the generated gem, `bundle exec rake` runs the Ruby checks, as CI does;
-`bundle exec rake checks` runs everything CI runs.
+`bundle exec rake checks` runs CI's checks, the links too, but mutates the changed lines alone.
 
 ## Install
 
