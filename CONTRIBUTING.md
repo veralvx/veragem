@@ -6,8 +6,9 @@ Thank you for considering contributing to `veragem`!
 
 Either **Nix** -- `nix develop` gives Ruby and every tool below at the versions `flake.lock` pins
 -- or, installed yourself: **Ruby 4.0** or later (with Bundler, Ruby's own), **ShellCheck**,
-**shfmt**, **actionlint**, **zizmor**, **dprint**, **cocogitto** (`cog`), **git-cliff**, **lychee**, and
-**Nix** for the last of `rake checks`. `bin/setup` installs the gems `Gemfile.lock` pins.
+**shfmt**, **actionlint**, **zizmor**, **dprint**, **cocogitto** (`cog`), **git-cliff**,
+**lychee**, and **Nix** for the last of `rake checks`. `bin/setup` installs the gems
+`Gemfile.lock` pins.
 
 ## Setup
 
@@ -27,7 +28,7 @@ lib/veragem/questions.rb  a terminal's questions for what no option gives
 lib/veragem/name.rb     the gem's name, checked: bundle gem's rules, what its files and tools meet
 lib/veragem/citation.rb  CITATION.cff's rules: who may give its values, its title, its ORCID iD
 lib/veragem/project.rb  the values, checked, and what follows from them
-lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, the executables' modes set; git
+lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, executables marked; git
 template/               the generated gem
 sig/, test/, dev/smoke.sh
 ```
@@ -72,9 +73,9 @@ monthly.
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
 left unrendered, each file parsing, the executables' modes, the gemspec, the git repository. The
 smoke test installs the plugin from this checkout, generates each kind, and runs each one's
-`rake checks`, but the links (`links.yml`'s), and build, its tools the dev shell's (the template's): a change to the template is
-finished when it passes. It needs the network: rubygems.org for the gems, GitHub and Nix's cache
-for the flake.
+`rake checks`, but the links (`links.yml`'s), and build, its tools the dev shell's (the
+template's): a change to the template is finished when it passes. It needs the network:
+rubygems.org for the gems, GitHub and Nix's cache for the flake.
 
 Coverage is measured by `rake test` alone (`.simplecov`). Some tests
 (`bundle exec rake test N=/probe/`) run fewer than its gate counts: their exit fails, the tests'

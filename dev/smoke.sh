@@ -2,8 +2,8 @@
 # The plugin as a user meets it: installed from this checkout (`bundle plugin install --path`), it
 # generates a gem of each kind and licence, one with CITATION.cff, and each passes its own
 # `rake checks`, but the links, and builds, and the command's OCI image runs, on Linux where Docker
-# runs, and the citation's release bumps -- its gems from rubygems.org, its tools the dev shell's: run it in
-# `nix develop`. smoke.yml's.
+# runs, and the citation's release bumps -- its gems from rubygems.org, its tools the dev shell's:
+# run it in `nix develop`. smoke.yml's.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
