@@ -102,7 +102,8 @@ class TestOptions < Minitest::Test
     help, = capture_io { assert_raises(SystemExit) { parse("--help") } }
 
     ["--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)", "--license=LICENSE",
-     "mit, apache or dual (MIT OR Apache-2.0, the default)", "--[no-]alias=ALIAS"].each { assert_includes help, it }
+     "mit, apache or dual (MIT OR Apache-2.0, the default)", "--[no-]alias=ALIAS",
+     "(default: git config user.name, else required)"].each { assert_includes help, it }
   end
 
   def test_version
