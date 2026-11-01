@@ -84,7 +84,7 @@ bundle exec rake checks # the tools the generated CONTRIBUTING.md lists, or `nix
 | `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated           |
 
 A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
-expression (`Apache-2.0`, `MIT OR Apache-2.0`). Without a terminal, a value git's config gives that
+expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, a value git's config gives that
 veragem refuses names its key and the option that replaces it.
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,

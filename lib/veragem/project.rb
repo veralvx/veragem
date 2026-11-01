@@ -122,12 +122,12 @@ module Veragem
       end
     end
 
-    # A licence as its SPDX expression or abbreviated, in any case (`Apache-2.0`, `MIT OR Apache-2.0`,
-    # `a`): that licence, or the one it starts, else +value+. Its bytes: invalid UTF-8 is refused, not
-    # raised on.
+    # A licence as its SPDX expression, its ORs in either order, or abbreviated, in any case
+    # (`Apache-2.0`, `apache-2.0 or mit`, `a`): that licence, or the one it starts, else +value+. Its
+    # bytes: invalid UTF-8 is refused, not raised on.
     private_class_method def self.completed(value)
       given = value.b.strip.downcase
-      LICENSES.find { |_, ids| ids.join(" or ").downcase == given }&.first ||
+      LICENSES.find { |_, ids| ids.map(&:downcase).sort == given.split(" or ").sort }&.first ||
         LICENSES.keys.select { it.start_with?(given) }.then { it.one? ? it.first : value }
     end
 
