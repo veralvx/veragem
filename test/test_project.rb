@@ -112,4 +112,12 @@ class TestProject < Minitest::Test
   def test_the_year_is_this_one
     assert_equal Time.now.year, project.year
   end
+
+  # UTC's, as git-cliff dates the changelog: in the zones 14 hours ahead and 12 behind, one of them
+  # on another day whatever the hour
+  def test_today_is_utcs
+    %w[Etc/GMT-14 Etc/GMT+12].each do |zone|
+      with_env("TZ" => zone) { assert_equal Time.now.utc.strftime("%F"), project.today, zone }
+    end
+  end
 end

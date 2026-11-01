@@ -150,11 +150,12 @@ def next_version(current, level)
 end
 
 # CITATION.cff, where the gem has one (bundle veragem --citation): its text with the release's version
-# and date, or nil; read as UTF-8, as written, whatever the locale.
+# and date, or nil; read as UTF-8, as written, whatever the locale. The date is UTC's, as the
+# changelog's (git-cliff's `date` filter).
 def cited(version)
   return unless File.exist?("CITATION.cff")
 
-  released = { "version" => version, "date-released" => Time.now.strftime("%F") }
+  released = { "version" => version, "date-released" => Time.now.utc.strftime("%F") }
   released.reduce(File.read("CITATION.cff", encoding: Encoding::UTF_8)) do |cff, (key, value)|
     abort "error: CITATION.cff has no #{key}: line" unless cff.match?(/^#{key}: /)
 

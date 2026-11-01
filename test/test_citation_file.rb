@@ -30,8 +30,8 @@ class TestCitationFile < Minitest::Test
 
     assert_equal({ "cff-version" => "1.2.0", "title" => "my_gem", "abstract" => "A Ruby gem.",
                    "authors" => [{ "family-names" => "Doe", "given-names" => "Jane", "alias" => "jdoe",
-                                   "orcid" => ORCID }], "keywords" => %w[ruby gem],
-                   "version" => version, "date-released" => Time.now.strftime("%F"), "license" => %w[MIT Apache-2.0],
+                                   "orcid" => ORCID }], "keywords" => %w[ruby gem], "license" => %w[MIT Apache-2.0],
+                   "version" => version, "date-released" => Time.now.utc.strftime("%F"),
                    "repository-code" => "https://github.com/jane/my_gem",
                    "repository-artifact" => "https://rubygems.org/gems/my_gem",
                    "url" => "https://rubydoc.info/gems/my_gem" }, cff.except("message"))
