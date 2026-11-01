@@ -7,7 +7,7 @@ class TestProbe < Minitest::Test
   include Veragem::TestSupport
 
   # in a Ruby of its own: nothing the library prints is taken for an answer, and it loads with no
-  # arguments, in an empty directory
+  # arguments, in an empty directory; nothing is within a constant no module
   def test_the_probe_requires_the_top_level_library_alone
     assert_equal ["", "", "Module", "Class"], Veragem::Name.probe("date", "my_gem", %w[Comparable Date])
     in_tmpdir do |dir|
@@ -15,8 +15,8 @@ class TestProbe < Minitest::Test
       File.write(noisy, "puts 'Class'\nwarn 'Class'\nNoisy = 1\nCleared = 1 if ARGV.empty?\n" \
                         "Scratch = 1 if Dir.empty?('.')\n")
 
-      assert_equal ["", "", "Integer", "", "Integer", "Integer"],
-                   Veragem::Name.probe(noisy, "my_gem", %w[Noisy Quiet Cleared Scratch])
+      assert_equal ["", "", "Integer", "", "", "Integer", "Integer"],
+                   Veragem::Name.probe(noisy, "my_gem", %w[Noisy Quiet Noisy::Inner Cleared Scratch])
     end
   end
 
