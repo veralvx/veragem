@@ -1,6 +1,6 @@
 # The links of the files git tracks (`rake links`, lychee), monthly and on demand: a page moves or
 # goes with nothing changed here. In the dev shell, whose lychee is the flake's; GITHUB_TOKEN, so
-# GitHub's links are not rate-limited.
+# GitHub's links are not rate-limited, lychee's alone, not the gems' installs.
 name: Links
 
 on:
@@ -24,8 +24,12 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
 
-      - name: rake links
+      - name: Install the gems
         env:
           BUNDLE_FROZEN: "true"
+        run: nix develop --command bundle install
+
+      - name: rake links
+        env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: nix develop --command bash -c "bundle install && bundle exec rake links"
+        run: nix develop --command bundle exec rake links
