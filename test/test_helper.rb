@@ -1,5 +1,19 @@
 # frozen_string_literal: true
 
+# A warning from lib/ or the tests raises, failing the test that caused it; a gem's only prints. Every
+# category is on: `ruby -w` turns on the deprecations alone.
+module OwnWarnings
+  OURS = [File.expand_path("../lib", __dir__), __dir__].map { "#{it}/" }.freeze
+
+  def warn(message, category: nil, **)
+    raise message if File.expand_path(message[/\A[^:]*/]).start_with?(*OURS)
+
+    super
+  end
+end
+Warning.singleton_class.prepend(OwnWarnings)
+Warning.categories.each { Warning[it] = true }
+
 require "veragem"
 
 require "minitest/autorun"
