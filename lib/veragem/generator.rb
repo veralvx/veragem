@@ -148,8 +148,12 @@ module Veragem
       ERB.new(File.read(source, encoding: Encoding::UTF_8), trim_mode: "-").result(project.instance_eval { binding })
     end
 
+    # system's nil: git could not run; false: it failed
     private_class_method def self.git(dir, *args)
-      system(GIT_LOCAL, "git", *args, chdir: dir) or raise Error, "git #{args.join(" ")} failed in #{dir}"
+      case system(GIT_LOCAL, "git", *args, chdir: dir)
+      when nil then raise Error, "cannot run git in #{dir}"
+      when false then raise Error, "git #{args.join(" ")} failed in #{dir}"
+      end
     end
   end
 end

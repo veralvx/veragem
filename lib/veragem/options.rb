@@ -106,14 +106,14 @@ module Veragem
       end
     end
 
-    # A git config value, nil when unset or git is missing: its bytes, which Project reads as UTF-8
-    # whatever the locale.
+    # A git config value, nil when unset: its bytes, which Project reads as UTF-8 whatever the locale.
+    # A git that cannot run is refused here, before a missing value would be blamed on its config.
     private_class_method def self.git_config(key)
       command = ["git", "config", "--get", key]
       value = IO.popen(command, err: File::NULL, external_encoding: Encoding::BINARY, &:read).strip
       value unless value.empty?
-    rescue SystemCallError
-      nil
+    rescue SystemCallError => e
+      raise Error, "cannot run git: #{e}"
     end
   end
 end

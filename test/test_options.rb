@@ -129,11 +129,14 @@ class TestOptions < Minitest::Test
     assert_equal ["ada", nil, "José"], [gem.github, gem.email, gem.author]
   end
 
-  def test_without_git_no_value
+  # refused as such, not as a value its config lacks
+  def test_without_git_it_says_so
     with_env("PATH" => "") do
-      error = assert_raises(Veragem::Error) { Veragem::Options.parse(["my_gem"], input: StringIO.new) }
+      error = assert_raises(Veragem::Error) do
+        Veragem::Options.parse(["my_gem", "--author=Ada", "--github=ada"], input: StringIO.new)
+      end
 
-      assert_equal "no author: --author, or git config user.name", error.message
+      assert_match(/\Acannot run git: /, error.message)
     end
   end
 end
