@@ -120,14 +120,15 @@ gemspec = Bundler::GemHelper.gemspec
 repository = gemspec.metadata.fetch("source_code_uri").delete_prefix("https://github.com/")
 cliff = ["git-cliff", "--offline", "--github-repo", repository]
 
-# Online, cached a day (.lycheecache). Not the tests' links, made up; nor GitHub's bare address, read
-# off those the code builds; nor the gem's own pages, missing until it is pushed and published.
+# Online, cached a day (.lycheecache), each retry at least 10 s after the last, so a host's brief
+# outage is waited out. Not the tests' links, made up; nor GitHub's bare address, read off those the
+# code builds; nor the gem's own pages, missing until it is pushed and published.
 desc "Check the links of the files git tracks (lychee)"
 task :links do
   files = output("git", "ls-files", "-z").split("\0").select { File.file?(it) }.grep_v(%r{\Atest/})
   own = [gemspec.homepage, "https://rubygems.org/gems/#{gemspec.name}", "https://rubydoc.info/gems/#{gemspec.name}"]
   skip = ["^#{Regexp.escape("https://github.com/")}$", "^(#{own.map { Regexp.escape(it) }.join("|")})($|/)"]
-  sh "lychee", "--no-progress", "--cache", *skip.flat_map { ["--exclude", it] }, *files
+  sh "lychee", "--no-progress", "--cache", "--retry-wait-time", "10", *skip.flat_map { ["--exclude", it] }, *files
 end
 
 desc "Preview the changelog's next section"
