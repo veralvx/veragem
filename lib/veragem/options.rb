@@ -49,8 +49,8 @@ module Veragem
       raise Error, "#{e.message} (bundle veragem --help)"
     end
 
-    # The names and the options given, each option refused as OptionParser refuses a licence: before
-    # the name, and any question.
+    # The names and the options given, each value checked as Project checks it: before the name, and
+    # any question.
     private_class_method def self.arguments(argv)
       given = {} #: Hash[Symbol, String | bool]
       # an argument of invalid UTF-8 as bytes, as git's values are: OptionParser's matching raises on
