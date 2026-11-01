@@ -19,7 +19,7 @@ class TestCitationFile < Minitest::Test
       assert_path_exists File.join(dir, "my_cited/CITATION.cff")
       cited = %w[my_gem my_cited].map { read(dir, "#{it}/CONTRIBUTING.md").scan("CITATION.cff").size }
 
-      assert_equal [0, 3], cited
+      assert_equal [0, 4], cited
     end
   end
 
@@ -30,8 +30,8 @@ class TestCitationFile < Minitest::Test
 
     assert_equal({ "cff-version" => "1.2.0", "title" => "my_gem", "abstract" => "A Ruby gem.",
                    "authors" => [{ "family-names" => "Doe", "given-names" => "Jane", "alias" => "jdoe",
-                                   "orcid" => ORCID }],
-                   "keywords" => %w[ruby gem], "version" => version, "date-released" => Time.now.strftime("%F"),
+                                   "orcid" => ORCID }], "keywords" => %w[ruby gem],
+                   "version" => version, "date-released" => Time.now.strftime("%F"), "license" => %w[MIT Apache-2.0],
                    "repository-code" => "https://github.com/jane/my_gem",
                    "repository-artifact" => "https://rubygems.org/gems/my_gem",
                    "url" => "https://rubydoc.info/gems/my_gem" }, cff.except("message"))
@@ -51,13 +51,13 @@ class TestCitationFile < Minitest::Test
     end
   end
 
-  # one licence a string, and none for dual: CFF's list, its OR, fails Zenodo's import (zenodo/zenodo#2515)
-  def test_the_licence_is_one_spdx_identifier_or_none
-    { "mit" => { "license" => "MIT" }, "apache" => { "license" => "Apache-2.0" },
-      "dual" => {} }.each do |license, written|
-      cff, = generated(project(license:, citation: true, family_names: "Doe"))
+  # one licence a string, dual's a list, CFF's OR, which Zenodo's import refuses: CONTRIBUTING.md says so
+  def test_the_licences_are_spdx_identifiers
+    { "mit" => "MIT", "apache" => "Apache-2.0", "dual" => %w[MIT Apache-2.0] }.each do |license, written|
+      cff, _, contributing = generated(project(license:, citation: true, family_names: "Doe"))
 
-      assert_equal written, cff.slice("license")
+      assert_equal written, cff["license"]
+      assert_equal license == "dual", contributing.include?("zenodo-rdm/issues/1509"), license
     end
   end
 
@@ -75,7 +75,8 @@ class TestCitationFile < Minitest::Test
     in_tmpdir do |dir|
       target = File.join(dir, gem.name)
       Veragem::Generator.generate(gem, target)
-      [YAML.safe_load(read(target, "CITATION.cff")), read(target, "lib/#{gem.path}/version.rb")[/VERSION = "(.+)"/, 1]]
+      [YAML.safe_load(read(target, "CITATION.cff")), read(target, "lib/#{gem.path}/version.rb")[/VERSION = "(.+)"/, 1],
+       read(target, "CONTRIBUTING.md")]
     end
   end
 end
