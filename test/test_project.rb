@@ -21,7 +21,7 @@ class TestProject < Minitest::Test
                      "Frozen string literal: x", "A frozen_string_literal: true"].freeze
 
   def test_the_github_user_follows_githubs_rule
-    ["jane", "jane-doe", "J4ne", "a" * 39].each { assert_equal it, project(github: it).github }
+    ["jane", "jane-doe", "J4ne", "jAne-Doe", "a" * 39].each { assert_equal it, project(github: it).github }
 
     ["-jane", "jane-", "jane--doe", "jane_doe", "a" * 40, "ſam", "\u212Aate", nil].each do |github|
       assert_raises(Veragem::Error, github.inspect) { project(github:) }
