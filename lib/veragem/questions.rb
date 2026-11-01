@@ -89,15 +89,19 @@ module Veragem
       end
     end
 
-    # The answer, or the default, through +check+; asked again when there is neither, or the check
-    # fails, but an +optional+ one is nil -- and "-" its none, which a default would take otherwise.
+    # The answer, or the default, through +check+; asked again, saying why, when there is neither, or
+    # the check fails, but an +optional+ one is nil -- and "-" its none, which a default would take
+    # otherwise.
     def ask(question, default = nil, check:, optional: false)
       default = offered(question, default, check)
       loop do
         reply = read(question, default, optional) || default
         return if optional && (reply.nil? || Questions.none?(reply))
 
-        value = reply && checked(question, reply, check)
+        # neither an answer nor a default: said so, as a refusal is
+        next terminal(question) { @output.puts "an answer is required" } if reply.nil?
+
+        value = checked(question, reply, check)
         return value unless value.nil?
       end
     end

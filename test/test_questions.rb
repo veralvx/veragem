@@ -66,14 +66,14 @@ class TestQuestions < Minitest::Test
     gem, shown = ask("my_gem", answers: ["", "", "", "", "", "Ada", "", ""], config:)
 
     assert_equal "Ada", gem.author
-    assert_match(/\[A Ruby gem\.\]: invalid author "Jos\\xE9": one line of text\nAuthor: Author: Email/, shown)
+    assert_match(/invalid author "Jos\\xE9": one line of text\nAuthor: an answer is required\nAuthor: Email/, shown)
   end
 
   def test_with_no_default_an_empty_answer_is_asked_again_but_an_email_may_be_none
     gem, shown = ask("my_gem", answers: ["", "", "", "", "", "Ada", "", "ada"], config: {})
 
     assert_equal ["Ada", nil, "ada"], [gem.author, gem.email, gem.github]
-    assert_match(/Author: Author: Email \(- for none\): GitHub user: \z/, shown)
+    assert_match(/Author: an answer is required\nAuthor: Email \(- for none\): GitHub user: \z/, shown)
   end
 
   # "-" for none, where Enter would take the default: git's email, the given names guessed

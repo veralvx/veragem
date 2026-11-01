@@ -85,11 +85,11 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes
-it, an optional one takes `-` for none, and a refused answer is asked again. `-` is no option's
-value, as no answer can give it: `--no-email`, `--no-given-names` and `--no-alias` give none, and
-an `--orcid` or `--keywords` left out does. With other input (CI, a pipe, `< /dev/null` to skip
-the questions) nothing is asked: the defaults apply, and a missing name, author, GitHub user or,
-with `--citation`, family names is refused.
+it, an optional one takes `-` for none, and a refused answer, or none where there is no default, is
+asked again, saying why. `-` is no option's value, as no answer can give it: `--no-email`,
+`--no-given-names` and `--no-alias` give none, and an `--orcid` or `--keywords` left out does.
+With other input (CI, a pipe, `< /dev/null` to skip the questions) nothing is asked: the defaults
+apply, and a missing name, author, GitHub user or, with `--citation`, family names is refused.
 
 `CITATION.cff` (Citation File Format 1.2.0) is for software meant to be cited, research's: GitHub
 offers its "Cite this repository", and Zenodo, once the repository is enabled there (the generated
