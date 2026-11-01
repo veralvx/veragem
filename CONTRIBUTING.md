@@ -27,6 +27,7 @@ lib/veragem/options.rb  OptionParser, git config's defaults
 lib/veragem/questions.rb  a terminal's questions for what no option gives
 lib/veragem/name.rb     the gem's name, checked: bundle gem's rules, what its files and tools meet
 lib/veragem/citation.rb  CITATION.cff's rules: who may give its values, its title, its ORCID iD
+lib/veragem/license.rb  the licence's choices, their SPDX identifiers, the one a value names
 lib/veragem/project.rb  the values, checked, and what follows from them
 lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, executables marked; git
 template/               the generated gem

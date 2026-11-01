@@ -22,9 +22,9 @@ class TestLicenses < Minitest::Test
     end
   end
 
-  # what is refused names the choices; "", or a start several share, is no licence, nor invalid UTF-8
+  # what is refused names the choices; "", or a start several share, is no licence
   def test_one_refused_names_the_choices
-    ["gpl", "", "MITX", "MIT OR", "MIT OR MIT", "\xFFm"].each do |given|
+    ["gpl", "", "MITX", "MIT OR", "MIT OR MIT"].each do |given|
       error = assert_raises(Veragem::Error) { parse("my_gem", "--license=#{given}") }
 
       assert_equal "invalid license (mit, apache or dual) #{given.inspect}", error.message

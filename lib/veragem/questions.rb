@@ -8,7 +8,7 @@ module Veragem
     QUESTIONS = {
       exe: "A command line, exe/%<name>s (y/n)",
       citation: "A citation file, CITATION.cff (y/n)",
-      license: "License (mit, apache or dual)",
+      license: "License (#{License::CHOICES})",
       summary: "Summary",
       author: "Author",
       family_names: "Family names, CITATION.cff's",

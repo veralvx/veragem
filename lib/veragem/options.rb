@@ -17,7 +17,7 @@ module Veragem
     # Each option and its --help, in --help's order.
     OPTIONS = [
       ["--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)"],
-      ["--license=LICENSE", "mit, apache or dual (MIT OR Apache-2.0, the default)"],
+      ["--license=LICENSE", "#{License::CHOICES} (MIT OR Apache-2.0, the default)"],
       ["--author=NAME", "The author (default: git config user.name, else required)"],
       ["--[no-]email=EMAIL", "The author's email (default: git config user.email; --no-email, none)"],
       ["--github=USER", "The GitHub user or organization (default: git config github.user, else required)"],

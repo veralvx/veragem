@@ -87,6 +87,7 @@ class TestOptions < Minitest::Test
     invalid = "\xFF".dup.force_encoding(Encoding::UTF_8)
 
     { %W[#{invalid}] => /invalid gem name/, ["my_gem", "--author", invalid] => /invalid author/,
+      ["my_gem", "--email", invalid] => /\Ainvalid email "\\xFF": not UTF-8\z/,
       ["my_gem", "--#{invalid}"] => /invalid option/ }.each do |argv, message|
       assert_match message, assert_raises(Veragem::Error) { parse(*argv) }.message
     end

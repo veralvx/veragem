@@ -55,8 +55,7 @@ class TestCitation < Minitest::Test
 
   def test_an_orcid_id_zenodo_refuses_is_refused
     refused = ["0000-0002-1825-0098", "0000-0001-4999-9992", "0000-0003-5000-001X", "0009-0010-0000-0011",
-               "0000000218250097", "orcid", "https://isni.org/0000-0002-1825-0097", "0000-0002-1825-0097\nx",
-               "0000-0002-1825-009\xFF"]
+               "0000000218250097", "orcid", "https://isni.org/0000-0002-1825-0097", "0000-0002-1825-0097\nx"]
     refused.each do |given|
       error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", "--orcid=#{given}") }
 
@@ -120,18 +119,11 @@ class TestCitation < Minitest::Test
     assert_equal "TODO", parse("my_gem", "--citation", "--family-names=TODO").family_names
   end
 
-  # read as bytes: invalid UTF-8 refused, not raised on
-  def test_an_orcid_id_of_invalid_utf8_is_refused
-    error = assert_raises(Veragem::Error) { Veragem::Project.check(:orcid, (+"0000-0002-1825-009\xFF").force_encoding(Encoding::UTF_8)) }
-
-    assert_match(/\Ainvalid ORCID iD /, error.message)
-  end
-
   # as bytes, as a locale not UTF-8's gives them: a blank of Unicode's dropped, invalid UTF-8 refused
   def test_keywords_as_bytes
     assert_equal %w[a b], Veragem::Project.check(:keywords, "a,\u00A0,b".b).split(", ")
     error = assert_raises(Veragem::Error) { Veragem::Project.check(:keywords, "a,\xFF".dup.force_encoding(Encoding::UTF_8)) }
 
-    assert_match(/\Ainvalid keyword /, error.message)
+    assert_equal 'invalid keywords "a,\xFF": not UTF-8', error.message
   end
 end

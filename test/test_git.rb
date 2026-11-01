@@ -64,7 +64,7 @@ class TestGit < Minitest::Test
 
     { [] => 'invalid author "TODO Lee": RubyGems refuses one starting TODO or FIXME ' \
             "(git config user.name; --author replaces it)",
-      ["--author=Ada"] => 'invalid email "\xFF": one line of text (git config user.email; --email replaces it)' }
+      ["--author=Ada"] => 'invalid email "\xFF": not UTF-8 (git config user.email; --email replaces it)' }
       .each do |argv, message|
         assert_equal message, assert_raises(Veragem::Error) { parse("my_gem", *argv, config:) }.message
       end

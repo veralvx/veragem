@@ -42,9 +42,15 @@ module Veragem
     private def self.valid?: (String digits) -> bool
   end
 
+  module License
+    SPDX: Hash[String, Array[String]]
+    CHOICES: String
+
+    def self.check: (String value) -> String
+  end
+
   class Project
     GITHUB: Regexp
-    LICENSES: Hash[String, Array[String]]
     TAG: Regexp
     ANNOTATION: Regexp
     MAGIC: Regexp
@@ -77,7 +83,7 @@ module Veragem
     def nest: (String body, ?doc: String?) -> String
     def self.quote: (String value) -> String
     def self.check: (Symbol key, String value) -> String
-    private def self.completed: (String value) -> String
+    private def self.utf8: (Symbol key, String value) -> String
     private def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
     private def self.text: (String field, String value) -> String
     private def self.line: (String field, String value) -> String

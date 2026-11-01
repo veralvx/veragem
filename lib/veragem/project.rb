@@ -7,8 +7,6 @@ module Veragem
   class Project
     # GitHub's rule for a user or organization name.
     GITHUB = /\A[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\z/i
-    # Each choice's SPDX identifiers: the gemspec's licenses, the LICENSE-* files.
-    LICENSES = { "mit" => ["MIT"], "apache" => ["Apache-2.0"], "dual" => ["MIT", "Apache-2.0"] }.freeze
     # What YARD reads as a tag first in a comment: its own (`@param`, `(see`), and those yard-lint
     # (.yard-lint.yml) takes for one written informally.
     TAG = /\A(?:@|\(see\b|(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since
@@ -43,9 +41,10 @@ module Veragem
     #   iD its URL, keywords joined by ", "
     # @raise [Veragem::Error] +key+ cannot take it
     def self.check(key, value)
+      value = utf8(key, value)
       case key
       when :github then valid("GitHub user", value) { GITHUB.match?(it) }
-      when :license then valid("license (mit, apache or dual)", completed(value)) { LICENSES.key?(it) }
+      when :license then License.check(value)
       when :summary then documented(text("summary", value))
       when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
       else text(key.name, value)
@@ -88,7 +87,7 @@ module Veragem
 
     # The SPDX identifiers of its licence.
     # @return [Array<String>]
-    def licenses = LICENSES.fetch(license)
+    def licenses = License::SPDX.fetch(license)
 
     # The copyright's year: this one.
     # @return [Integer]
@@ -122,13 +121,14 @@ module Veragem
       end
     end
 
-    # A licence as its SPDX expression, its ORs in either order, or abbreviated, in any case
-    # (`Apache-2.0`, `apache-2.0 or mit`, `a`): that licence, or the one it starts, else +value+. Its
-    # bytes: invalid UTF-8 is refused, not raised on.
-    private_class_method def self.completed(value)
-      given = value.b.strip.downcase
-      LICENSES.find { |_, ids| ids.map(&:downcase).sort == given.split(" or ").sort }&.first ||
-        LICENSES.keys.select { it.start_with?(given) }.then { it.one? ? it.first : value }
+    # +value+'s bytes as UTF-8, whatever their encoding (ARGV's and git's are binary under a locale
+    # not UTF-8's), refused unless valid: every check after it takes valid UTF-8. None (nil) is "",
+    # which each check refuses.
+    private_class_method def self.utf8(key, value)
+      value = value.to_s.dup.force_encoding(Encoding::UTF_8)
+      raise Error, "invalid #{key.name.tr("_", " ")} #{value.inspect}: not UTF-8" unless value.valid_encoding?
+
+      value
     end
 
     private_class_method def self.valid(field, value)
@@ -146,13 +146,11 @@ module Veragem
       line
     end
 
-    # One line of valid UTF-8, its surrounding spaces stripped (Unicode's too), short enough for the
-    # gemspec's line (RuboCop's 120 columns). U+FFFE and U+FFFF are outside YAML's printable
-    # characters: CITATION.cff's.
+    # One line, its surrounding spaces stripped (Unicode's too), short enough for the gemspec's line
+    # (RuboCop's 120 columns). U+FFFE and U+FFFF are outside YAML's printable characters:
+    # CITATION.cff's.
     private_class_method def self.line(field, value)
-      value = value.dup.force_encoding(Encoding::UTF_8)
-      one_line = value.valid_encoding? && !value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/)
-      line = one_line ? value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "") : ""
+      line = value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/) ? "" : value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "")
       raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
       raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
 
