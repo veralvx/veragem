@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The plugin as a user meets it: installed from this checkout (`bundle plugin install --path`), it
 # generates a gem of each kind and licence, one with CITATION.cff, and each passes its own
-# `rake checks` and builds, and the command's OCI image runs, on Linux where Docker runs, and the
-# citation's release bumps -- its gems from rubygems.org, its tools the dev shell's: run it in
+# `rake checks`, but the links, and builds, and the command's OCI image runs, on Linux where Docker
+# runs, and the citation's release bumps -- its gems from rubygems.org, its tools the dev shell's: run it in
 # `nix develop`. smoke.yml's.
 set -euo pipefail
 
@@ -31,7 +31,13 @@ for gem in smoke_lib smoke-omniauth-google_oauth2 smoke_apache; do
     git add .
     git -c user.name="Smoke Test" -c user.email=smoke@example.com \
       commit --quiet --message "chore: initial commit from veragem"
-    bundle exec rake checks typeprof build
+    # `rake checks` but its links, links.yml's: a host's outage would fail an unrelated pull request
+    mapfile -t checks < <(bundle exec rake -P | awk '$0 == "rake checks" { f = 1; next } /^rake / { f = 0 } f && $1 != "links" { print $1 }')
+    if [ "${#checks[@]}" -lt 2 ]; then
+      echo "could not read the prerequisites of rake checks" >&2
+      exit 1
+    fi
+    bundle exec rake "${checks[@]}" typeprof build
     # the command's image, run as image.yml runs it, where Docker runs (the image is Linux's)
     if [ -e exe/"$gem" ] && [ "$(uname -s)" = Linux ] && docker info > /dev/null 2>&1; then
       "$(nix build --no-link --print-out-paths .#image.stream)" | docker load

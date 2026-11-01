@@ -187,7 +187,7 @@ packages few of them, and older).
   the template's are checked in place by this repository's checks, and a command line's own
   (`image.yml`) by the smoke test's command gem.
 - The smoke test (`dev/smoke.sh`, `smoke.yml`, weekly too): the plugin installed from this checkout
-  generates a gem of each kind and licence, and each passes its own `rake checks` and builds; the
+  generates a gem of each kind and licence, and each passes its own `rake checks`, but the links (`links.yml`'s), and builds; the
   citation's gem releases twice (`rake bump`), a patch and a minor.
 
 ## Contributing

@@ -72,7 +72,7 @@ monthly.
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
 left unrendered, each file parsing, the executables' modes, the gemspec, the git repository. The
 smoke test installs the plugin from this checkout, generates each kind, and runs each one's
-`rake checks` and build, its tools the dev shell's (the template's): a change to the template is
+`rake checks`, but the links (`links.yml`'s), and build, its tools the dev shell's (the template's): a change to the template is
 finished when it passes. It needs the network: rubygems.org for the gems, GitHub and Nix's cache
 for the flake.
 
