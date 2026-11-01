@@ -14,11 +14,13 @@ module Veragem
     # --help's first lines.
     BANNER = "Usage: bundle veragem NAME [options]\n" \
              "With a terminal for input, what no option gives (the name too) is asked for."
-    # Each option after --exe and --license, and its --help.
+    # Each option and its --help, in --help's order.
     OPTIONS = [
-      ["--author=NAME", "The author (default: git config user.name)"],
+      ["--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)"],
+      ["--license=LICENSE", "#{License::CHOICES} (MIT OR Apache-2.0, the default)"],
+      ["--author=NAME", "The author (default: git config user.name, else required)"],
       ["--[no-]email=EMAIL", "The author's email (default: git config user.email; --no-email, none)"],
-      ["--github=USER", "The GitHub user or organization (default: git config github.user)"],
+      ["--github=USER", "The GitHub user or organization (default: git config github.user, else required)"],
       ["--summary=TEXT", "The gem's summary (default: A Ruby gem.)"],
       ["--[no-]citation", "Add CITATION.cff, the citation GitHub and Zenodo read (default: --no-citation)"],
       ["--family-names=NAMES", "With --citation: the author's family names (required)"],
@@ -111,8 +113,6 @@ module Veragem
       OptionParser.new(BANNER) do |opts|
         opts.program_name = "bundle veragem"
         opts.version = VERSION
-        opts.on("--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)")
-        opts.on("--license=LICENSE", "mit, apache or dual (MIT OR Apache-2.0, the default)")
         OPTIONS.each { |switch, help| opts.on(switch, help) }
       end
     end

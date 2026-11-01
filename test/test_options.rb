@@ -87,6 +87,7 @@ class TestOptions < Minitest::Test
     invalid = "\xFF".dup.force_encoding(Encoding::UTF_8)
 
     { %W[#{invalid}] => /invalid gem name/, ["my_gem", "--author", invalid] => /invalid author/,
+      ["my_gem", "--email", invalid] => /\Ainvalid email "\\xFF": not UTF-8\z/,
       ["my_gem", "--#{invalid}"] => /invalid option/ }.each do |argv, message|
       assert_match message, assert_raises(Veragem::Error) { parse(*argv) }.message
     end
@@ -102,7 +103,9 @@ class TestOptions < Minitest::Test
     help, = capture_io { assert_raises(SystemExit) { parse("--help") } }
 
     ["--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)", "--license=LICENSE",
-     "mit, apache or dual (MIT OR Apache-2.0, the default)", "--[no-]alias=ALIAS"].each { assert_includes help, it }
+     "mit, apache or dual (MIT OR Apache-2.0, the default)", "--[no-]alias=ALIAS",
+     "(default: git config user.name, else required)",
+     "(default: git config github.user, else required)"].each { assert_includes help, it }
   end
 
   def test_version

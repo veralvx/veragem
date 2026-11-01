@@ -66,7 +66,7 @@ class TestQuestions < Minitest::Test
     gem, shown = ask("my_gem", answers: ["", "", "", "", "", "Ada", "", ""], config:)
 
     assert_equal "Ada", gem.author
-    assert_includes shown, %(invalid author "Jos\\xE9": one line of text (the default, not offered)\n)
+    assert_includes shown, %(invalid author "Jos\\xE9": not UTF-8 (the default, not offered)\n)
     assert_match(/not offered\)\nAuthor: an answer is required\nAuthor: Email/, shown)
   end
 

@@ -21,9 +21,9 @@ class TestProject < Minitest::Test
                      "Frozen string literal: x", "A frozen_string_literal: true"].freeze
 
   def test_the_github_user_follows_githubs_rule
-    ["jane", "jane-doe", "J4ne", "a" * 39].each { assert_equal it, project(github: it).github }
+    ["jane", "jane-doe", "J4ne", "jAne-Doe", "a" * 39].each { assert_equal it, project(github: it).github }
 
-    ["-jane", "jane-", "jane--doe", "jane_doe", "a" * 40, nil].each do |github|
+    ["-jane", "jane-", "jane--doe", "jane_doe", "a" * 40, "ſam", "\u212Aate", nil].each do |github|
       assert_raises(Veragem::Error, github.inspect) { project(github:) }
     end
   end
@@ -76,8 +76,17 @@ class TestProject < Minitest::Test
     assert_equal([["MIT"], ["Apache-2.0"], ["MIT", "Apache-2.0"]],
                  %w[mit apache dual].map { project(license: it).licenses })
     assert_raises(Veragem::Error) { project(license: "gpl") }
-    # a direct caller may give invalid UTF-8; Options and Questions give such a value as bytes
-    assert_raises(Veragem::Error) { Veragem::Project.check(:license, "\xFFm") }
+  end
+
+  # read as UTF-8 whatever its encoding, refused unless valid before any other check, named as elsewhere
+  def test_a_value_is_utf8
+    { author: "author", given_names: "given names", github: "GitHub user", license: "license (mit, apache or dual)",
+      orcid: "ORCID iD" }.each do |key, field|
+      error = assert_raises(Veragem::Error) { Veragem::Project.check(key, "a\xFF".b) }
+
+      assert_equal %(invalid #{field} "a\\xFF": not UTF-8), error.message
+    end
+    assert_equal "José", Veragem::Project.check(:author, "Jos\xC3\xA9".b)
   end
 
   def test_exe_is_true_or_absent

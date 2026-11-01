@@ -44,6 +44,7 @@ ignore:
   - { id: cc1eb3267ae2, reason: "options.rb: an OptionParser error's to_s is its message" }
   - { id: 62fb6a2f158c, reason: "questions.rb: puts writes an exception's message" }
   - { id: bfd117f2227d, reason: "questions.rb: a SystemCallError's or IOError's to_s is its message" }
+  - { id: e828006988c4, reason: "name.rb: a SystemCallError's to_s is its message" }
   # each and map alike: the block's value unused
   - { id: ee4f430cab44, reason: "citation.rb: force_encoding changes each word in place and returns it" }
   - { id: 86076ad21783, reason: "generator.rb: the files are written for their effect" }
@@ -65,4 +66,3 @@ ignore:
   - { id: 43ae3b2bfcd2, reason: "project.rb: removing an empty match changes nothing" }
   - { id: 7a0160fe9e3d, reason: "project.rb: removing an empty match changes nothing" }
   - { id: 8b03ab9b9e1d, reason: "project.rb: its one caller reads nil as false" }
-  - { id: b8f9bfcf21f6, reason: "project.rb: first and last of one licence are the same" }

@@ -33,7 +33,7 @@ module Veragem
     # The value a citation's +key+ takes, as Project.check's: an ORCID iD its URL, keywords joined by
     # ", ".
     # @param key [Symbol] one of KEYS
-    # @param value [String] as given
+    # @param value [String] valid UTF-8, as Project.check passes it
     # @yieldparam field [String] a value's name, as a refusal names it
     # @yieldparam text [String] the value, or a keyword
     # @yieldreturn [String] it checked, one line
@@ -90,16 +90,14 @@ module Veragem
       raise Error, "invalid #{field} #{names.inspect}: no comma, Zenodo's divide of family and given names"
     end
 
-    # Keywords, comma-separated, as CFF's list takes them: blanks and repeats dropped. Split as bytes:
-    # one of invalid UTF-8 goes to the block, which refuses it.
-    # @param value [String] as given
+    # Keywords, comma-separated, as CFF's list takes them: blanks and repeats dropped.
+    # @param value [String] valid UTF-8, as Project.check passes it
     # @yieldparam keyword [String] each keyword
     # @yieldreturn [String] it checked, one line
     # @return [Array<String>]
     # @raise [Veragem::Error] none is left
     def self.keywords(value, &)
-      words = value.b.split(",").map { it.force_encoding(Encoding::UTF_8) }
-                   .reject { it.valid_encoding? && it.match?(/\A[[:space:]]*\z/) }.map(&).uniq
+      words = value.split(",").grep_v(/\A[[:space:]]*\z/).map(&).uniq
       return words unless words.empty?
 
       raise Error, "invalid keywords #{value.inspect}: one or more, comma-separated"
@@ -108,12 +106,11 @@ module Veragem
     # An ORCID iD as CFF writes it, its URL, checked as Zenodo's import checks it (idutils' is_orcid):
     # its check digit ISO 7064 MOD 11-2's, its number in a block ORCID issues. Zenodo refuses the
     # whole citation for a bad one.
-    # @param value [String] bare or its URL
+    # @param value [String] bare or its URL, valid UTF-8 as Project.check passes it
     # @return [String] its https://orcid.org/ URL
     # @raise [Veragem::Error] it is no ORCID iD
     def self.orcid(value)
-      # as bytes: an answer of invalid UTF-8 is refused, not raised on
-      id = value.b.strip[ORCID, 1]&.upcase
+      id = value.strip[ORCID, 1]&.upcase
       return "https://orcid.org/#{id}" if id && valid?(id.delete("-"))
 
       raise Error, "invalid ORCID iD #{value.inspect}: 0000-0002-1825-0097, or its https://orcid.org/ URL"

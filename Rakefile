@@ -164,7 +164,7 @@ def cited(version)
 end
 
 # The release commit: the version, the lock, the changelog, and CITATION.cff's version and date.
-desc "Bump the version (major, minor or patch), write the changelog and commit"
+desc "Bump the version (major, minor or patch; a first release keeps the declared one), write the changelog and commit"
 task :bump, [:level] => "release:guard_clean" do |_, args|
   level = %w[major minor patch].index(args[:level]) or abort 'usage: rake "bump[major|minor|patch]"'
   current = gemspec.version.to_s

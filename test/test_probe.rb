@@ -49,9 +49,34 @@ class TestProbe < Minitest::Test
     original ? Bundler::ORIGINAL_ENV["RUBYOPT"] = original : Bundler::ORIGINAL_ENV.delete("RUBYOPT")
   end
 
+  # the module named, and how its Ruby ended
   def test_a_failing_probe_refuses
-    error = assert_raises(Veragem::Error) { Veragem::Name.probe("set", "my_gem", ["not a constant"]) }
+    error = assert_raises(Veragem::Error) { Veragem::Name.probe("set", "my_gem", ["Set", "not a constant"]) }
 
-    assert_equal "could not check set's modules", error.message
+    assert_match(/\Acould not check not a constant against its tools: their Ruby ended: pid \d+ exit 1\z/,
+                 error.message)
+  end
+
+  # a refusal, not a raw Errno: Bundler reports any other error as its own bug
+  def test_a_system_failure_refuses
+    error = with_mktmpdir(->(*) { raise Errno::ENOSPC }) do
+      assert_raises(Veragem::Error) { Veragem::Name.probe("date", "my_gem", %w[No No::Space]) }
+    end
+
+    assert_equal "could not check No::Space against its tools: No space left on device", error.message
+  end
+
+  private
+
+  # Ruby warns of a method redefined, which the tests would count as their own
+  def with_mktmpdir(stub)
+    verbose = $VERBOSE
+    $VERBOSE = nil
+    original = Dir.method(:mktmpdir)
+    Dir.define_singleton_method(:mktmpdir, &stub)
+    yield
+  ensure
+    Dir.define_singleton_method(:mktmpdir, original)
+    $VERBOSE = verbose
   end
 end
