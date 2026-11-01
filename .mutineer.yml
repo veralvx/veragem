@@ -56,8 +56,8 @@ ignore:
   - { id: 4b014462f593, reason: "generator.rb: a spec's line names its gem" }
   - { id: 5a9f582c0451, reason: "generator.rb: done, assigned later, reads nil, as false, until set" }
   # mutineer reports one of 5a14112d8554 and 3337825deb93, the same change, as either operator
-  - { id: b050e5a42798, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
-  - { id: a4c5e291bd52, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
+  - { id: 27762d06748a, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
+  - { id: 670c1e962fa1, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: 5a14112d8554, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: 3337825deb93, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: ba90a04a446b, reason: "generator.rb: >> 2 drops the 0o001 bit 0o445 adds to 0o444" }

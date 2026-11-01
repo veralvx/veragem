@@ -148,6 +148,7 @@ module Veragem
   module Generator
     TEMPLATE: String
     EXE: Array[String]
+    EXECUTABLES: Array[String]
     GIT_LOCAL: Hash[String, nil]
     LICENSE_FILES: Hash[String, String]
     CITATION: String
@@ -162,7 +163,8 @@ module Veragem
     private def self.tools: (?String lock) -> Array[String]
     private def self.path_of: (String file, String name) -> String
     private def self.removed_unless_done: (String target) { () -> void } -> void
-    private def self.write: (String source, String destination, Project project) -> void
+    private def self.write: (String file, String destination, Project project) -> void
+    private def self.stage: (String target, Array[String] executables) -> void
     private def self.render: (String source, Project project) -> String
     private def self.git: (String dir, *String args) -> void
   end

@@ -13,6 +13,10 @@ module Veragem
     # The files a command line alone needs: its code, its test, its OCI image's workflow.
     EXE = %w[exe/%name%.erb lib/%path%/cli.rb.erb test/test_cli.rb.erb .github/workflows/image.yml
              .github/image-registries.sh].freeze
+    # The files a generated gem runs as commands: executable there, and so in git's index, which a
+    # commit keeps, where the file system has no mode (Windows: core.fileMode false).
+    EXECUTABLES = %w[.githooks/commit-msg .githooks/pre-commit .githooks/pre-push .github/image-registries.sh
+                     .github/release-notes.sh bin/console.erb bin/setup exe/%name%.erb].freeze
     # git's variables that point it at another repository (`git rev-parse --local-env-vars`, but the
     # configuration given with `git -c`), which a git hook sets: unset, the repository is the gem's.
     GIT_LOCAL = %w[GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_CONFIG GIT_OBJECT_DIRECTORY GIT_DIR GIT_WORK_TREE
@@ -38,10 +42,8 @@ module Veragem
       written = files(project)
       Dir.mkdir(target)
       removed_unless_done(target) do
-        written.each { |file, path| write(File.join(TEMPLATE, file), File.join(target, path), project) }
-        git(target, "init", "--quiet", "--initial-branch=main")
-        # --force: the user's own excludes (core.excludesFile) keep none of the gem's files out
-        git(target, "add", "--all", "--force")
+        written.each { |file, path| write(file, File.join(target, path), project) }
+        stage(target, written.filter_map { |file, path| path if EXECUTABLES.include?(file) })
       end
     rescue SystemCallError => e
       raise Error, e.message
@@ -122,14 +124,23 @@ module Veragem
       end
     end
 
-    private_class_method def self.write(source, destination, project)
+    private_class_method def self.write(file, destination, project)
+      source = File.join(TEMPLATE, file)
       FileUtils.mkdir_p(File.dirname(destination))
-      File.binwrite(destination, source.end_with?(".erb") ? render(source, project) : File.binread(source))
-      return unless File.executable?(source)
+      File.binwrite(destination, file.end_with?(".erb") ? render(source, project) : File.binread(source))
+      return unless EXECUTABLES.include?(file)
 
       # executable where readable, as `chmod +x` under the umask
       mode = File.stat(destination).mode
       File.chmod(mode | ((mode & 0o444) >> 2), destination)
+    end
+
+    # A repository of its own, every file added, the executables' mode in the index too
+    private_class_method def self.stage(target, executables)
+      git(target, "init", "--quiet", "--initial-branch=main")
+      # --force: the user's own excludes (core.excludesFile) keep none of the gem's files out
+      git(target, "add", "--all", "--force")
+      git(target, "update-index", "--chmod=+x", "--", *executables)
     end
 
     # The ERB's values are +project+'s: its methods, called bare.

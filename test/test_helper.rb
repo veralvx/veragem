@@ -6,7 +6,9 @@ module OwnWarnings
   OURS = [File.expand_path("../lib", __dir__), __dir__].map { "#{it}/" }.freeze
 
   def warn(message, category: nil, **)
-    raise message if File.expand_path(message[/\A[^:]*/]).start_with?(*OURS)
+    # "PATH:LINE: ...", PATH relative or absolute (Windows': C:/...)
+    path = message[/\A(.+?):\d+: /, 1]
+    raise message if path && File.expand_path(path).start_with?(*OURS)
 
     super
   end
@@ -81,6 +83,14 @@ module Veragem
 
   # What the generator's tests share: each kind generated, and what it holds.
   module GeneratedSupport
+    # The files git's index of +dir+ holds as executable (mode 100755), under +paths+
+    def indexed_executables(dir, *paths)
+      IO.popen(["git", "ls-files", "--stage", "--", *paths], chdir: dir, &:readlines).filter_map do |entry|
+        mode, *, path = entry.chomp.split(/\s/, 4)
+        path if mode == "100755"
+      end
+    end
+
     # Each kind and license, generated: its project, its directory and its files.
     def each_kind
       [["my_gem", false, "dual"], ["my-tool", true, "mit"], ["my_lib", false, "apache"]].each do |name, exe, license|

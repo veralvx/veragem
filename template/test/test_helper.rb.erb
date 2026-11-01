@@ -6,7 +6,9 @@ module OwnWarnings
   OURS = [File.expand_path("../lib", __dir__), __dir__].map { "#{it}/" }.freeze
 
   def warn(message, category: nil, **)
-    raise message if File.expand_path(message[/\A[^:]*/]).start_with?(*OURS)
+    # "PATH:LINE: ...", PATH relative or absolute (Windows': C:/...)
+    path = message[/\A(.+?):\d+: /, 1]
+    raise message if path && File.expand_path(path).start_with?(*OURS)
 
     super
   end
