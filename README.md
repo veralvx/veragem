@@ -64,7 +64,7 @@ cd my_gem
 bin/setup               # the gems, and Gemfile.lock written
 git add .
 git commit -m "chore: initial commit from veragem"
-bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix develop`'s
+bundle exec rake checks # the tools the generated CONTRIBUTING.md lists, or `nix develop`'s
 ```
 
 | Option                     | Default                                     | Goes into                                              |
