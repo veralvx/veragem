@@ -10,7 +10,7 @@ authors:
   - family-names: "VERALVX"
     alias: "veralvx"
 version: "0.1.0"
-date-released: "2026-10-25"
+date-released: "2026-10-26"
 # MIT OR Apache-2.0, as CFF writes an OR; Zenodo's import refuses a list, so it archives no release
 # until zenodo/zenodo-rdm#1509 is fixed
 license:

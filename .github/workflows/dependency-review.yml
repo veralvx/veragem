@@ -1,9 +1,9 @@
 name: Dependency Review
 
-# The licences and advisories of what a pull request adds to Gemfile.lock and the workflows, as the
-# templates' Python and Rust ones review theirs. Advisory: it reports only when those files change,
-# so no required check can be it, and dependabot-automerge.yml merges a bump it flags (security.yml's
-# bundler-audit holds the lock daily).
+# The licences and advisories of what a pull request adds to Gemfile.lock and the workflows.
+# Advisory: it reports only when those files change, so no required check can be it, and
+# dependabot-automerge.yml merges a bump it flags (security.yml's bundler-audit holds the lock
+# daily).
 on:
   pull_request:
     paths:

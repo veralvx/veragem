@@ -15,7 +15,9 @@ name: Dependabot Auto-Merge
 # The token needs only the `permissions:` below: the repository's default token permissions can
 # stay read-only, and nothing here creates or approves a pull request. A merge this token makes
 # starts no workflow run (GitHub's rule for GITHUB_TOKEN's events): main runs nothing for it; its
-# pull request's required checks gated it.
+# pull request's required checks gated it, on the main its branch was last updated from. "Require
+# branches to be up to date before merging" makes that main the current one, each bump then waiting
+# for its branch's update (`@dependabot rebase`).
 
 on:
   pull_request:

@@ -70,7 +70,7 @@ bundle exec rake checks # its tools: the generated CONTRIBUTING.md's, or `nix de
 | Option                     | Default                                     | Goes into                                              |
 | -------------------------- | ------------------------------------------- | ------------------------------------------------------ |
 | `NAME`                     | --                                          | the gem, its module, its files: as `bundle gem`        |
-| `--[no-]exe`               | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/NAME/cli.rb`          |
+| `--[no-]exe`               | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/PATH/cli.rb`          |
 | `--license=LICENSE`        | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE        |
 | `--author=NAME`            | `git config user.name` (required)           | the gemspec, the licence's copyright line              |
 | `--[no-]email=EMAIL`       | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                       |
@@ -125,7 +125,7 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 
 - whose module is already defined, by Ruby, Bundler, Rake or Minitest, or by its top-level library
   where this Ruby has one (`set`, `option_parser`, `date-holidays`: Date is a class);
-- whose file would shadow a library this Ruby has (`json`: lib/json.rb);
+- whose file would shadow a library this Ruby has (`ripper`: lib/ripper.rb);
 - whose module its tests or `gem build` would take for Minitest's or RubyGems' own
   (`lifecycle_hooks`, `date_like`);
 - that `bundle gem` would refuse or mangle (`1gem`, `my--gem`);
@@ -164,8 +164,8 @@ flake.nix, flake.lock the dev shell, the package (and the command's image), `nix
 cliff.toml, cog.toml  git-cliff's changelog, cocogitto's commit checks
 dprint.json, .editorconfig
 .github/              CI, the flake, bundler-audit, the dependency review, the release (and the
-                      image), the style checks, Dependabot and its auto-merge; issue and pull
-                      request templates
+                      image), the style checks, the links, Dependabot and its auto-merge; issue
+                      and pull request templates
 README, CONTRIBUTING, AGENTS, SECURITY, CODE_OF_CONDUCT, LICENSE-MIT / LICENSE-APACHE
 CITATION.cff          with --citation: the citation, its version and date `rake bump`'s
 ```
@@ -182,11 +182,11 @@ packages few of them, and older).
   property), the options, every file of each kind and licence rendered, parsed and kept executable,
   the gemspec read back, the values written as given whatever the locale.
 - The harness here is the template's: this repository's Gemfile, Rakefile, workflows, hooks, flake
-  and tools' configuration are the template's own files, byte for byte (`test/test_sync.rb`; but
-  `dependabot.yml`, whose directories differ, `.mutineer.yml`, whose ignored mutants are the
-  plugin's, and the smoke test's workflow, the plugin's alone), so
-  the template's are checked in place by this repository's checks, and a command line's own
-  (`image.yml`) by the smoke test's command gem.
+  and tools' configuration are the template's own plain files, byte for byte (`test/test_sync.rb`;
+  but `dependabot.yml`, which moves both, `.mutineer.yml`, whose ignored mutants are the plugin's,
+  and the smoke test's workflow, the plugin's alone), so the template's are checked in place by
+  this repository's checks, and a command line's own (`image.yml`) by the smoke test's command
+  gem.
 - The smoke test (`dev/smoke.sh`, `smoke.yml`, weekly too): the plugin installed from this checkout
   generates a gem of each kind and licence, and each passes its own `rake checks`, but the links
   (`links.yml`'s), and builds; the citation's gem releases twice (`rake bump`), a patch and a minor.

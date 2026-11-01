@@ -6,12 +6,12 @@
 #
 # Least privilege, as RubyGems' Trusted Publishing advises, after PyPI's security model: the
 # checks, which load the bundle's gems, write nothing; the build, apart from them, loads no bundle,
-# so no tool's gem touches the file published, and its digest, a job output no later job can
-# rewrite, is checked before the gem is pushed or released; the signing job, which runs
+# so no tool's gem touches the file published; its path and digest, job outputs no later job can
+# rewrite, name the one file signed, pushed and released, checked first; the signing job, which runs
 # sigstore-cli's gems, signs as this workflow outside the environment the publisher names, so it
 # mints no key; only the RubyGems job can mint one, with nothing checked out, no Gemfile or Rakefile
-# loaded and no action but setup-ruby's and the credentials'; only the release job can write the
-# repository.
+# loaded and no action but the artifacts' download, setup-ruby's and the credentials'; only the
+# release job can write the repository.
 name: Release
 
 on:
@@ -54,6 +54,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      gem: ${{ steps.build.outputs.gem }}
       sha256: ${{ steps.build.outputs.sha256 }}
     steps:
       - name: Checkout
@@ -84,7 +85,10 @@ jobs:
           # assigned first: a failing command substitution inside echo's arguments would not stop
           # the step
           sha256="$(sha256sum "$gem")"
-          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+          {
+            echo "gem=$gem"
+            echo "sha256=$sha256"
+          } >> "$GITHUB_OUTPUT"
           .github/release-notes.sh CHANGELOG.md "$version" > notes.md
 
       - name: Keep the gem
@@ -122,12 +126,11 @@ jobs:
 
       - name: Sign
         # as rubygems/release-gem signs, with sigstore-cli's latest release: unpinned, as nothing
-        # would bump a version here; a bad one can fail the push, not change the gem (its digest)
-        run: |
-          set -euo pipefail
-          for gem in pkg/*.gem; do
-            gem exec sigstore-cli sign "$gem" --bundle "$gem.sigstore.json"
-          done
+        # would bump a version here; a bad one can fail the push, not change the gem (its digest),
+        # nor add one: the jobs after it take the build's path alone
+        env:
+          GEM: ${{ needs.build.outputs.gem }}
+        run: gem exec sigstore-cli sign "$GEM" --bundle "$GEM.sigstore.json"
 
       - name: Keep the attestation
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -176,11 +179,9 @@ jobs:
 
       - name: Push
         # RubyGems verifies the attestation, and shows the gem's provenance
-        run: |
-          set -euo pipefail
-          for gem in pkg/*.gem; do
-            gem push "$gem" --attestation "$gem.sigstore.json"
-          done
+        env:
+          GEM: ${{ needs.build.outputs.gem }}
+        run: gem push "$GEM" --attestation "$GEM.sigstore.json"
 
   release:
     name: GitHub release
@@ -209,6 +210,7 @@ jobs:
       - name: Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GEM: ${{ needs.build.outputs.gem }}
         run: |
-          gh release create "$GITHUB_REF_NAME" pkg/*.gem --repo "$GITHUB_REPOSITORY" --verify-tag \
+          gh release create "$GITHUB_REF_NAME" "$GEM" --repo "$GITHUB_REPOSITORY" --verify-tag \
             --title "$GITHUB_REF_NAME" --notes-file notes.md

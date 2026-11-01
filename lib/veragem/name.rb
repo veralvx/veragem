@@ -76,7 +76,11 @@ module Veragem
         "\#{reader} would find \#{owner}::\#{first}" if owner
       end
       answers.puts(found.first)
-      nestings.each { answers.puts(Object.const_defined?(it, false) ? Object.const_get(it, false).class : "") }
+      nestings.each do |nesting|
+        answers.puts(Object.const_defined?(nesting, false) ? Object.const_get(nesting, false).class : "")
+      rescue TypeError # an outer one no module (`Noisy = 1`): nothing within it
+        answers.puts("")
+      end
       answers.flush
       exit!(0)
     RUBY
@@ -111,10 +115,10 @@ module Veragem
       answers.map(&:chomp).freeze
     end
 
-    # Its lib/<path>.rb, first on the load path, must not shadow a library its tools require
-    # (lib/json.rb, JSON's); its tests' classes, Minitest::Test's, and its gemspec, which `gem build`
-    # evaluates in Gem::Specification, must find its module, not one of theirs (`lifecycle_hooks`:
-    # Minitest::Test::LifecycleHooks).
+    # Its lib/<path>.rb, first on the load path, must not shadow a library its tools may require:
+    # this Ruby's (lib/json.rb, JSON's), an installed gem's too; its tests' classes, Minitest::Test's,
+    # and its gemspec, which `gem build` evaluates in Gem::Specification, must find its module, not
+    # one of theirs (`lifecycle_hooks`: Minitest::Test::LifecycleHooks).
     private_class_method def self.check_shadowing(name, shadowed, found)
       raise Error, "invalid gem name #{name}: its lib/#{path(name)}.rb would shadow #{shadowed}" unless shadowed.empty?
       raise Error, "invalid gem name #{name}: #{found} for its module" unless found.empty?

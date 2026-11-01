@@ -93,9 +93,10 @@ module Veragem
     # @return [Integer]
     def year = Time.now.year
 
-    # Today, as CFF writes a date: CITATION.cff's date-released until `rake bump` sets a release's.
+    # Today in UTC, as CFF writes a date: CITATION.cff's date-released until `rake bump` sets a
+    # release's, UTC's too.
     # @return [String]
-    def today = Time.now.strftime("%F")
+    def today = Time.now.utc.strftime("%F")
 
     # +value+ as a YAML double-quoted string: JSON's, which YAML reads alike.
     # @param value [String] a value of the gem's, checked
