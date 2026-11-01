@@ -85,7 +85,7 @@ module Veragem
     def self.quote: (String value) -> String
     def self.check: (Symbol key, String? value) -> String
     private def self.utf8: (Symbol key, String? value) -> String
-    private def self.valid: [T < Object] (String field, T value) { (T) -> bool } -> T
+    private def self.github: (String value) -> String
     private def self.text: (String field, String value) -> String
     private def self.line: (String field, String value) -> String
     private def self.documented: (String summary) -> String
@@ -115,9 +115,10 @@ module Veragem
     @input: _Input
     @output: _Output
     @dir: String
+    @git: Hash[Symbol, String]
 
     def self.none?: (String text) -> bool
-    def initialize: (_Input input, _Output output, String dir) -> void
+    def initialize: (_Input input, _Output output, String dir, ?git: Hash[Symbol, String]) -> void
     def name: (String? given, exe: bool, citation: bool) -> String
     def values: (String name, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults)
               -> Hash[Symbol, String | bool | nil]
@@ -127,8 +128,10 @@ module Veragem
     def check_name: (String name, bool exe, bool citation) -> String
     def answer: (Symbol key, String text, String name, Hash[Symbol, String | bool | nil] values) -> (String | bool)
     def default: (Symbol key, Hash[Symbol, String] defaults, Hash[Symbol, String | bool | nil] values) -> String?
-    def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?optional: bool) -> (String | bool | nil)
-    def offered: (String question, String? default, ^(String) -> (String | bool) check) -> String?
+    def source: (Symbol key) -> String
+    def ask: (String question, ?String? default, check: ^(String) -> (String | bool), ?from: String, ?optional: bool)
+           -> (String | bool | nil)
+    def offered: (String question, String? default, String from, ^(String) -> (String | bool) check) -> String?
     def read: (String question, String? default, bool optional) -> String?
     def unanswered: (String question) -> nil
     def checked: (String question, String answer, ^(String) -> (String | bool) check, ?String note) -> (String | bool | nil)
@@ -150,6 +153,7 @@ module Veragem
                            Questions questions) -> Project
     private def self.name_of: (Array[String] names) -> String
     private def self.required: (Hash[Symbol, String] defaults, Hash[Symbol, String | bool] given) -> Hash[Symbol, String | bool]
+    private def self.present: (Hash[Symbol, String | bool] values) -> void
     private def self.parser: () -> OptionParser
     private def self.git_config: (String key) -> String?
   end

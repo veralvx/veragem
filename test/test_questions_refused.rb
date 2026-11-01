@@ -13,11 +13,11 @@ class TestQuestionsRefused < Minitest::Test
     %w[helper] => /\Ainvalid gem name helper: it would write test/,
     %w[cli --exe] => /\Ainvalid gem name cli: it would write test/,
     %w[my-c_l_i --exe] => /its command line would find another CLI/,
-    %w[my_gem --github=-x] => /\Ainvalid GitHub user "-x"\z/,
-    %w[--github=-x] => /\Ainvalid GitHub user "-x"\z/,
+    %w[my_gem --github=-x] => /\Ainvalid GitHub user "-x": up to 39 /,
+    %w[--github=-x] => /\Ainvalid GitHub user "-x": up to 39 /,
     %w[--author=TODO] => /\Ainvalid author "TODO"/,
     %w[my_gem --alias=-] => /\Ainvalid alias "-": a question's none; for none, --no-alias\z/,
-    %w[1gem --github=-x] => /\Ainvalid GitHub user "-x"\z/,
+    %w[1gem --github=-x] => /\Ainvalid GitHub user "-x": up to 39 /,
     %w[one two] => /\Aone gem name, not 2/
   }.freeze
 

@@ -52,7 +52,7 @@ class TestOptions < Minitest::Test
 
   def test_the_author_and_the_github_user_are_required
     { "user.name" => /no author: --author, or git config user.name/,
-      "github.user" => /no github: --github, or git config github.user/ }.each do |key, message|
+      "github.user" => /no GitHub user: --github, or git config github.user/ }.each do |key, message|
       error = assert_raises(Veragem::Error) { parse("my_gem", config: CONFIG.except(key)) }
 
       assert_match message, error.message
@@ -70,7 +70,7 @@ class TestOptions < Minitest::Test
   def test_an_option_is_refused_before_the_name
     error = assert_raises(Veragem::Error) { parse("1gem", "--github=-x") }
 
-    assert_equal 'invalid GitHub user "-x"', error.message
+    assert_equal 'invalid GitHub user "-x": up to 39 ASCII letters, digits and inner single hyphens', error.message
   end
 
   def test_a_bad_option_is_refused_with_the_usage

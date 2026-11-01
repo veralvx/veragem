@@ -46,7 +46,7 @@ module Veragem
     def self.check(key, value)
       value = utf8(key, value)
       case key
-      when :github then valid(FIELDS[:github], value) { GITHUB.match?(it) }
+      when :github then github(value)
       when :license then License.check(value)
       when :summary then documented(text("summary", value))
       when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
@@ -135,10 +135,10 @@ module Veragem
       value
     end
 
-    private_class_method def self.valid(field, value)
-      raise Error, "invalid #{field} #{value.inspect}" unless yield value
+    private_class_method def self.github(value)
+      return value if GITHUB.match?(value)
 
-      value
+      raise Error, "invalid GitHub user #{value.inspect}: up to 39 ASCII letters, digits and inner single hyphens"
     end
 
     # A value a file quotes, which RubyGems does not refuse as unfinished.

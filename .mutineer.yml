@@ -36,7 +36,7 @@ ignore:
   - { id: dab754339cb6, reason: "name.rb: answers raises unless the probe gives every String" }
   - { id: aebef202ac5a, reason: "name.rb: answers raises unless the probe gives every String" }
   - { id: 1feb2c391304, reason: "options.rb: a nil default reads as an absent one ([]); compact keeps it String" }
-  - { id: 47e342edb057, reason: "options.rb: Project reads a nil value as an absent one ([]); compact narrows it" }
+  - { id: e6b2bb64bc59, reason: "options.rb: Project reads a nil value as an absent one ([]); compact narrows it" }
   - { id: 61fd2024fe65, reason: "project.rb: the keyword is nil only with no match, so no colon nor space either" }
   - { id: 44f1d178fd51, reason: "project.rb: the field is only interpolated, and a Symbol interpolates as its name" }
   # an exception's text is its message: puts, interpolation and raise read it alike
@@ -51,6 +51,7 @@ ignore:
   - { id: 999b1d290446, reason: "options.rb: the block raises or returns nothing used" }
   - { id: 989d946a7491, reason: "options.rb: the block raises or returns nothing used" }
   - { id: b653f69cef85, reason: "options.rb: OptionParser.new ignores its block's value" }
+  - { id: 8efa9f4fdfb2, reason: "options.rb: the block raises or returns nothing used" }
   - { id: 0d350157b54f, reason: "questions.rb: each question is asked for its effect" }
   # identities
   - { id: 055cc7bb2a07, reason: "citation.rb: ISO 7064's (12 - r) % 11 is (1 - r) % 11, 12 and 1 alike mod 11" }

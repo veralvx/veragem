@@ -66,8 +66,16 @@ class TestQuestions < Minitest::Test
     gem, shown = ask("my_gem", answers: ["", "", "", "", "", "Ada", "", ""], config:)
 
     assert_equal "Ada", gem.author
-    assert_includes shown, %(invalid author "Jos\\xE9": not UTF-8 (the default, not offered)\n)
+    assert_includes shown, %(invalid author "Jos\\xE9": not UTF-8 (git config user.name, not offered)\n)
     assert_match(/not offered\)\nAuthor: an answer is required\nAuthor: Email/, shown)
+  end
+
+  # a guess refused, the author's words: the default, as no git config value gives it
+  def test_a_refused_guess_is_the_default
+    gem, shown = ask("my_gem", "--citation", "--author=Ada, B Lovelace", answers: [""] * 10)
+
+    assert_nil gem.given_names
+    assert_match(/invalid given names "Ada, B": .+ \(the default, not offered\)\n/, shown)
   end
 
   def test_with_no_default_an_empty_answer_is_asked_again_but_an_email_may_be_none
