@@ -3,3 +3,5 @@
 
 # The gems at Gemfile.lock's versions; the first run writes the lock, to commit.
 system("bundle", "install", exception: true)
+# Windows' gems too, as CI checks the gem there and installs from the lock alone
+system("bundle", "lock", "--add-platform", "x64-mingw-ucrt", exception: true)

@@ -5,7 +5,9 @@ the [templates](https://github.com/veralvx/templates) repository's Python and Ru
 `bundle gem` gives a gemspec, a Rakefile, Minitest and RuboCop; `bundle veragem NAME` gives that
 and the rest:
 
-- **Ruby 4.0** or later, `required_ruby_version` and CI alike, on Linux and macOS.
+- **Ruby 4.0** or later, `required_ruby_version` and CI alike, on Linux, macOS and Windows:
+  Gemfile.lock holds Windows' platform (`bin/setup`), `.gitattributes` keeps every text file LF,
+  and the executables' mode is in git's index, which a commit keeps where the file system has none.
 - **Types**: Steep checks `lib/` against the signatures in `sig/`, its strictest diagnostics on;
   TypeProf infers signatures to start them from, and its editor support is configured.
 - **Lint and format**: RuboCop with every new cop, rubocop-minitest, rubocop-packaging,

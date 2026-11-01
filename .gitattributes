@@ -1,0 +1,3 @@
+# Every text file LF, as checked out on Windows too (core.autocrlf): the files are compared and
+# rendered byte for byte, and a generated gem is written as its template's bytes.
+* text=auto eol=lf
