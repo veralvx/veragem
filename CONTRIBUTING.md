@@ -47,9 +47,9 @@ Keep a file plain unless it needs a value: a plain file is checked in place, as 
 own. **This repository's harness is the template's**: each plain file of `template/` is here too,
 the same bytes and mode, and `test/test_sync.rb` fails on any drift -- but the files it names as
 different (Dependabot's configuration, which moves both, and `.mutineer.yml`, whose ignored mutants
-are the plugin's), and the command line's own
-(`Generator::EXE`: this gem has none), which the smoke test's command gem checks. Change one,
-change both: edit the template's, then copy it here (or the other way round).
+are the plugin's), and the command line's own (`Generator::EXE`: this gem has none), which the
+smoke test's command gem checks. Change one, change both: edit the template's, then copy it here
+(or the other way round).
 
 A value written into a Ruby string goes through `quote`, which writes it as given whatever the
 locale. Each value is checked first: one line of UTF-8 (`Project.check`), a gem name `bundle gem`
@@ -65,10 +65,9 @@ nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
 bundle exec rake mutation # every line of lib/ mutated: what no test catches (mutineer), minutes
 ```
 
-A warning from `lib/` or the tests fails them (`test/test_helper.rb`). One
-surviving mutant fails mutineer (`.mutineer.yml`'s `threshold: 100`): `rake checks` mutates the
-lines changed since `origin/main` alone, `ruby-ci.yml` every line. `links.yml` runs `rake links`
-monthly.
+A warning from `lib/` or the tests fails them (`test/test_helper.rb`). One surviving mutant fails
+mutineer (`.mutineer.yml`'s `threshold: 100`): `rake checks` mutates the lines changed since
+`origin/main` alone, `ruby-ci.yml` every line. `links.yml` runs `rake links` monthly.
 
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
 left unrendered, each file parsing, the executables' modes, the gemspec, the git repository. The
@@ -120,7 +119,8 @@ bundle exec rake "bump[minor]"      # or major, or patch; a first release keeps 
 bundle exec rake release
 ```
 
-`rake bump` sets the version, updates the lock, writes the changelog (git-cliff) and commits;
-`rake release`, Bundler's own, tags `v<version>` and pushes the branch and the tag. The tag runs
-`release.yml`: the Ruby checks (`rake`), then the build (`gem build`, no bundle loaded) and its
-Sigstore attestation, the push to RubyGems by Trusted Publishing, then the GitHub release.
+`rake bump` sets the version and `CITATION.cff`'s version and date, updates the lock, writes the
+changelog (git-cliff) and commits; `rake release`, Bundler's own, tags `v<version>` and pushes the
+branch and the tag. The tag runs `release.yml`: the Ruby checks (`rake`), then the build
+(`gem build`, no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted
+Publishing, then the GitHub release.

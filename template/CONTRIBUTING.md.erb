@@ -57,11 +57,11 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
 - **Regressions:** if you are fixing a bug, include a test that reproduces the previous failure.
 - **Coverage:** every line, branch and method of `lib/` (SimpleCov's `strict` profile,
   configured in `.simplecov`, started by `rake test`). Code a test cannot reach is questioned
-  before it is excluded. Some tests (`bundle exec rake test N=/greets/`) run fewer than the gate
+  before it is excluded. Some tests (`bundle exec rake test N=/version/`) run fewer than the gate
   counts: their exit fails, the tests' own verdict above it. One file run alone
-  (`bundle exec ruby -Ilib -Itest test/test_cli.rb`) is not measured.
-- **Warnings:** one from `lib/` or the tests fails them, every category of
-  Ruby's on (`test/test_helper.rb`); a gem's only prints.
+  (`bundle exec ruby -Ilib -Itest test/test_<%= underscored %>.rb`) is not measured.
+- **Warnings:** one from `lib/` or the tests fails them, every category of Ruby's on
+  (`test/test_helper.rb`); a gem's only prints.
 - **Mutations:** `bundle exec rake mutation` changes `lib/` a mutant at a time (mutineer,
   `.mutineer.yml`) and lists each one no test catches: a test missing, or a change that keeps the
   behaviour, which `.mutineer.yml`'s `ignore:` holds with its reason. One survivor fails it
@@ -187,8 +187,9 @@ bundle exec rake release
 ```
 
 `rake bump` refuses a release with nothing in it: no commit since the last tag, merges and fixups
-aside, which the changelog leaves out. It sets the version in `lib/<%= path %>/version.rb` (the first release keeps the version
-declared, whatever the level), updates the lock, writes the changelog (git-cliff) and commits.
+aside, which the changelog leaves out. It sets the version in `lib/<%= path %>/version.rb` (the
+first release keeps the version declared, whatever the level), updates the lock, writes the
+changelog (git-cliff) and commits.
 <%- if citation -%>
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
 <%- end -%>
