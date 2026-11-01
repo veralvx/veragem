@@ -46,6 +46,9 @@ Layout/ClassStructure:
 Layout/EmptyLineAfterMultilineCondition:
   Enabled: true
 
+Layout/EndOfLine: # LF, as .gitattributes checks every text file out, Windows' too; `native` wants CRLF there
+  EnforcedStyle: lf
+
 Layout/HeredocArgumentClosingParenthesis:
   Enabled: true
 
