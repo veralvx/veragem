@@ -83,6 +83,9 @@ bundle exec rake checks # the tools the generated CONTRIBUTING.md lists, or `nix
 | `--orcid=ID`               | optional                                    | with `--citation`: the author's ORCID iD               |
 | `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated           |
 
+A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
+expression (`Apache-2.0`, `MIT OR Apache-2.0`).
+
 With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
 once the options are checked. A question offers its default unless veragem refuses it, Enter takes
 it, an optional one takes `-` for none, and a refused answer, or none where there is no default, is
