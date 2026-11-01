@@ -6,6 +6,8 @@ require "test_helper"
 # here too, the same bytes and mode -- but those that must differ, below, and a command line's
 # alone (this gem has none).
 class TestSync < Minitest::Test
+  include Veragem::GeneratedSupport
+
   ROOT = File.expand_path("..", __dir__)
   TEMPLATE = Veragem::Generator::TEMPLATE
   # Dependabot here moves the template's copies too; mutineer's ignores this repository's mutants.
@@ -22,6 +24,13 @@ class TestSync < Minitest::Test
     ours = File.join(ROOT, file)
     theirs = File.join(TEMPLATE, file)
     File.file?(ours) && File.binread(ours) == File.binread(theirs) && File.executable?(ours) == File.executable?(theirs)
+  end
+
+  # the modes git records, the same on every platform
+  def test_the_executables_are_the_generators
+    executables = indexed_executables(ROOT, "template").map { it.delete_prefix("template/") }
+
+    assert_equal executables.sort, Veragem::Generator::EXECUTABLES.sort
   end
 
   def test_the_harness_is_the_templates

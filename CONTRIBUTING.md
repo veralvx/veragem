@@ -6,8 +6,9 @@ Thank you for considering contributing to `veragem`!
 
 Either **Nix** -- `nix develop` gives Ruby and every tool below at the versions `flake.lock` pins
 -- or, installed yourself: **Ruby 4.0** or later (with Bundler, Ruby's own), **ShellCheck**,
-**shfmt**, **actionlint**, **zizmor**, **dprint**, **cocogitto** (`cog`), **git-cliff**, and
-**Nix** for the last of `rake checks`. `bin/setup` installs the gems `Gemfile.lock` pins.
+**shfmt**, **actionlint**, **zizmor**, **dprint**, **cocogitto** (`cog`), **git-cliff**,
+**lychee**, and **Nix** for the last of `rake checks`. `bin/setup` installs the gems
+`Gemfile.lock` pins.
 
 ## Setup
 
@@ -27,7 +28,7 @@ lib/veragem/questions.rb  a terminal's questions for what no option gives
 lib/veragem/name.rb     the gem's name, checked: bundle gem's rules, what its files and tools meet
 lib/veragem/citation.rb  CITATION.cff's rules: who may give its values, its title, its ORCID iD
 lib/veragem/project.rb  the values, checked, and what follows from them
-lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, modes kept; git
+lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, executables marked; git
 template/               the generated gem
 sig/, test/, dev/smoke.sh
 ```
@@ -39,12 +40,14 @@ project its `self` (`lib/veragem/project.rb`: `name`, `path`, `constant`, `autho
 `nest`...); every other file is copied as is. In a path, `%name%`, `%path%` and `%underscored%`
 are the project's. The command line's files are the `--exe` kind's alone, each LICENSE file its
 licence's, and CITATION.cff a `--citation`'s (`Generator::EXE`, `Generator::LICENSE_FILES`,
-`Generator::CITATION`).
+`Generator::CITATION`). A file `Generator::EXECUTABLES` lists is executable, on the disk and in
+git's index (`test/test_sync.rb` holds the list to the template's modes).
 
 Keep a file plain unless it needs a value: a plain file is checked in place, as this repository's
 own. **This repository's harness is the template's**: each plain file of `template/` is here too,
 the same bytes and mode, and `test/test_sync.rb` fails on any drift -- but the files it names as
-different (Dependabot's configuration, which moves both), and the command line's own
+different (Dependabot's configuration, which moves both, and `.mutineer.yml`, whose ignored mutants
+are the plugin's), and the command line's own
 (`Generator::EXE`: this gem has none), which the smoke test's command gem checks. Change one,
 change both: edit the template's, then copy it here (or the other way round).
 
@@ -56,17 +59,23 @@ takes, a GitHub user GitHub takes.
 
 ```sh
 bundle exec rake          # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
-bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the flake's checks
+bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the links,
+                          # the changed lines' mutations, the flake's checks
 nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
-bundle exec rake mutation # lib/ mutated: what no test catches (mutineer), minutes, not in checks
+bundle exec rake mutation # every line of lib/ mutated: what no test catches (mutineer), minutes
 ```
+
+A warning from `lib/` or the tests fails them (`test/test_helper.rb`). One
+surviving mutant fails mutineer (`.mutineer.yml`'s `threshold: 100`): `rake checks` mutates the
+lines changed since `origin/main` alone, `ruby-ci.yml` every line. `links.yml` runs `rake links`
+monthly.
 
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
 left unrendered, each file parsing, the executables' modes, the gemspec, the git repository. The
 smoke test installs the plugin from this checkout, generates each kind, and runs each one's
-`rake checks` and build, its tools the dev shell's (the template's): a change to the template is
-finished when it passes. It needs the network: rubygems.org for the gems, GitHub and Nix's cache
-for the flake.
+`rake checks`, but the links (`links.yml`'s), and build, its tools the dev shell's (the
+template's): a change to the template is finished when it passes. It needs the network:
+rubygems.org for the gems, GitHub and Nix's cache for the flake.
 
 Coverage is measured by `rake test` alone (`.simplecov`). Some tests
 (`bundle exec rake test N=/probe/`) run fewer than its gate counts: their exit fails, the tests'

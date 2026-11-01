@@ -1,6 +1,7 @@
 # The Ruby checks, `bundle exec rake` (RuboCop, Steep, the tests with their coverage gate,
-# yard-lint), on each Ruby the matrix lists, the gems installed from Gemfile.lock; then TypeProf's
-# verdict, advisory.
+# yard-lint), on each Ruby the matrix lists, on Linux, macOS and Windows, the gems installed from
+# Gemfile.lock; then TypeProf's verdict, advisory. Beside them, the mutation test of every line: a
+# change to the tests alone weakens them, and has no changed line to mutate.
 # nix.yml runs the flake's checks: the Nix format, the shell, the workflows, the package.
 name: Ruby CI
 
@@ -21,13 +22,18 @@ permissions:
 
 jobs:
   checks:
-    name: Checks (Ruby ${{ matrix.ruby }})
-    runs-on: ubuntu-latest
+    name: Checks (Ruby ${{ matrix.ruby }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         # the gemspec's required_ruby_version, and each newer Ruby once released
         ruby: ["4.0"]
+    # Windows' default is PowerShell: the scripts below are bash, Git for Windows' there
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -58,3 +64,21 @@ jobs:
 
       - name: TypeProf (advisory)
         run: bundle exec rake typeprof
+
+  mutation:
+    name: Mutation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+
+      - name: mutineer, every line
+        run: bundle exec rake mutation

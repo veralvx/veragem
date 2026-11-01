@@ -1,5 +1,22 @@
 # frozen_string_literal: true
 
+# A warning Ruby reports from lib/ or the tests raises, failing the test, or the run when they load;
+# a gem's only prints. Every category is on: `ruby -w` turns on the deprecations alone.
+ours = [File.expand_path("../lib", __dir__), __dir__].map { "#{it}/" }
+# Anonymous: a constant would meet a gem's own module (own_warnings: OwnWarnings)
+own_warnings = Module.new do
+  define_method(:warn) do |message, **options|
+    # "PATH:LINE: ..." or, evaluated code's, "(eval at PATH:LINE):LINE: ..."; PATH relative or
+    # absolute (Windows': C:/...)
+    path = message[/\A(?:\(eval at )*(.+?):\d+[:)]/, 1]
+    raise message if path && File.expand_path(path).start_with?(*ours)
+
+    super(message, **options)
+  end
+end
+Warning.singleton_class.prepend(own_warnings)
+Warning.categories.each { Warning[it] = true }
+
 require "veragem"
 
 require "minitest/autorun"
@@ -67,6 +84,14 @@ module Veragem
 
   # What the generator's tests share: each kind generated, and what it holds.
   module GeneratedSupport
+    # The files git's index of +dir+ holds as executable (mode 100755), under +paths+
+    def indexed_executables(dir, *paths)
+      IO.popen(["git", "ls-files", "--stage", "-z", "--", *paths], chdir: dir, &:read).split("\0").filter_map do |entry|
+        mode, *, path = entry.split(/\s/, 4)
+        path if mode == "100755"
+      end
+    end
+
     # Each kind and license, generated: its project, its directory and its files.
     def each_kind
       [["my_gem", false, "dual"], ["my-tool", true, "mit"], ["my_lib", false, "apache"]].each do |name, exe, license|

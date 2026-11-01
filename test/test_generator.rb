@@ -8,8 +8,6 @@ class TestGenerator < Minitest::Test
   include Veragem::TestSupport
   include Veragem::GeneratedSupport
 
-  EXECUTABLES = %w[bin/console bin/setup .githooks/commit-msg .githooks/pre-commit .githooks/pre-push
-                   .github/release-notes.sh].freeze
   RUBY = %r{\.(rb|gemspec)\z|\A(Gemfile|Rakefile|Steepfile|\.simplecov|bin/console|bin/setup|exe/.*)\z}
 
   def test_a_gem_has_its_files
@@ -60,14 +58,6 @@ class TestGenerator < Minitest::Test
     end
   end
 
-  def test_the_executables_keep_their_mode
-    each_kind do |gem, target, files|
-      executables = EXECUTABLES + (gem.exe ? ["exe/#{gem.name}", ".github/image-registries.sh"] : [])
-
-      assert_equal executables.sort, files.select { File.executable?(File.join(target, it)) }.sort
-    end
-  end
-
   def test_the_ruby_parses
     each_kind do |_, target, files|
       assert_empty(files.grep(RUBY).reject { Prism.parse_file(File.join(target, it)).success? })
@@ -113,19 +103,6 @@ class TestGenerator < Minitest::Test
     each_kind do |_, target, files|
       assert_equal "main", IO.popen(%w[git symbolic-ref --short HEAD], chdir: target, &:read).strip
       assert_equal files.sort, IO.popen(%w[git ls-files], chdir: target, &:read).lines(chomp: true).sort
-    end
-  end
-
-  def test_the_modes_follow_the_umask
-    in_tmpdir do |dir|
-      umask = File.umask(0o077)
-      begin
-        Veragem::Generator.generate(project, File.join(dir, "my_gem"))
-      ensure
-        File.umask(umask)
-      end
-
-      assert_equal([0o600, 0o700], %w[README.md bin/setup].map { File.stat(File.join(dir, "my_gem", it)).mode & 0o777 })
     end
   end
 end

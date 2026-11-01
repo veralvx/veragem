@@ -42,9 +42,10 @@ require "<%= path %>"
 
 ## Development
 
-`bin/setup` installs the gems at `Gemfile.lock`'s versions (its first run writes the lock); then
-`bundle exec rake` runs the Ruby checks (RuboCop, Steep, the tests with their coverage gate,
-yard-lint) and `bundle exec rake checks` everything CI runs:
+`bin/setup` installs the gems at `Gemfile.lock`'s versions (its first run writes the lock, Windows'
+platform too, as CI checks the gem there); then `bundle exec rake` runs the Ruby checks (RuboCop,
+Steep, the tests with their coverage gate, yard-lint) and `bundle exec rake checks` CI's checks,
+the links too, but mutates the changed lines alone:
 
 ```sh
 bin/setup

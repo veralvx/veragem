@@ -46,8 +46,9 @@ class TestNames < Minitest::Test
       error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
       path = name.tr("-", "/")
+      shadowed = error.message[%r{\Ainvalid gem name #{name}: its lib/#{path}\.rb would shadow (.*/#{path}\.rb)\z}, 1]
 
-      assert_match %r{\Ainvalid gem name #{name}: its lib/#{path}\.rb would shadow /.*/#{path}\.rb\z}, error.message
+      assert_operator File, :absolute_path?, shadowed.to_s, error.message
     end
   end
 
