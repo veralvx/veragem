@@ -152,9 +152,11 @@
               shfmt --diff .
             '';
             # actionlint runs shellcheck on each `run:` script too; zizmor audits Dependabot's
-            # configuration as well
+            # configuration as well. The workflows named: actionlint finds them in a git repository
+            # alone, and the sandbox has none
             workflows = check pkgs "workflows" [ pkgs.actionlint pkgs.shellcheck pkgs.zizmor ] ''
-              actionlint .github/workflows/*.yml
+              shopt -s nullglob
+              actionlint .github/workflows/*.{yml,yaml}
               zizmor --offline --quiet --strict-collection .
             '';
             inherit package;
