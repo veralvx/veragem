@@ -34,11 +34,14 @@ module Veragem
     # @param input [#gets, #tty?] where the answers are typed
     # @param output [#print, #puts] where the questions are shown
     # @param dir [String] where the gem is to be generated
+    # @param git [Hash{Symbol => String}] each value's git config key, which a refusal of the default
+    #   git gives names
     # @return [void]
-    def initialize(input, output, dir)
+    def initialize(input, output, dir, git: {})
       @input = input
       @output = output
       @dir = dir
+      @git = git
     end
 
     # The name, +given+ or else asked for: checked as far as it, +exe+ and +citation+ decide, before
@@ -68,7 +71,8 @@ module Veragem
 
         check = -> { answer(key, it, name, values) }
         offer = default(key, defaults, values)
-        values[key] = ask(format(question, name:), offer, optional: Project::OPTIONAL.key?(key), check:)
+        values[key] = ask(format(question, name:), offer,
+                          from: source(key), check:, optional: Project::OPTIONAL.key?(key))
       end
       values
     end
@@ -92,8 +96,8 @@ module Veragem
     # The answer, or the default, through +check+; asked again, saying why, when there is neither, or
     # the check fails, but an +optional+ one is nil -- and "-" its none, which a default would take
     # otherwise.
-    def ask(question, default = nil, check:, optional: false)
-      default = offered(question, default, check)
+    def ask(question, default = nil, check:, from: "the default", optional: false)
+      default = offered(question, default, from, check)
       loop do
         reply = read(question, default, optional) || default
         return if optional && (reply.nil? || Questions.none?(reply))
@@ -103,9 +107,9 @@ module Veragem
       end
     end
 
-    # +default+ if it passes +check+: one refused, said why and that it is the default, is not offered.
-    def offered(question, default, check)
-      default unless default.nil? || checked(question, default, check, " (the default, not offered)").nil?
+    # +default+ if it passes +check+: one refused, said why and where it is from, is not offered.
+    def offered(question, default, from, check)
+      default unless default.nil? || checked(question, default, check, " (#{from}, not offered)").nil?
     end
 
     # A line's text, nil when empty; one its encoding cannot read as bytes, as an argument's.
@@ -150,5 +154,8 @@ module Veragem
     end
 
     def default(key, defaults, values) = Citation.default(key, values) || { exe: "n", **defaults }[key]
+
+    # where a default is from, as a refusal of it says
+    def source(key) = @git[key] ? "git config #{@git[key]}" : "the default"
   end
 end

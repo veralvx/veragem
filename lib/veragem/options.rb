@@ -47,7 +47,7 @@ module Veragem
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
       return Project.new(name_of(names), required(defaults, given)) unless input.tty?
 
-      ask(names, given, defaults, Questions.new(input, output, dir))
+      ask(names, given, defaults, Questions.new(input, output, dir, git: GIT_CONFIG))
     rescue OptionParser::ParseError => e
       raise Error, "#{e.message} (bundle veragem --help)"
     end
@@ -104,9 +104,14 @@ module Veragem
       rescue Error => e
         raise Error, "#{e} (git config #{name}; --#{key} replaces it)"
       end
-      values = defaults.merge(given)
-      %i[author github].each { raise Error, "no #{it}: --#{it}, or git config #{GIT_CONFIG[it]}" unless values[it] }
-      values.compact
+      defaults.merge(given).tap { check_present(it) }.compact
+    end
+
+    # The author and the GitHub user, which nothing but git defaults.
+    private_class_method def self.check_present(values)
+      { author: "author", github: "GitHub user" }.each do |key, field|
+        raise Error, "no #{field}: --#{key}, or git config #{GIT_CONFIG[key]}" unless values[key]
+      end
     end
 
     private_class_method def self.parser
