@@ -9,8 +9,8 @@
 #   nix fmt          the Nix, by nixfmt
 #   nix flake check  the Nix format, the shell scripts (shellcheck, shfmt), the workflows
 #                    (actionlint, zizmor), the package and its library loaded -- and the command
-#                    run, and its image -- and CITATION.cff where there is one (cffconvert); offline
-#                    in the sandbox: git's files alone
+#                    run, and its image built -- and CITATION.cff where there is one (cffconvert);
+#                    offline in the sandbox: git's files alone
 #
 # Nothing here names the gem: its name is the gemspec's file; its version, lib/<path>/version.rb's
 # VERSION; its summary, homepage and licences, the gemspec's lines that set them.
@@ -37,7 +37,9 @@
         if lib.length gemspecs == 1 then
           lib.removeSuffix ".gemspec" (lib.head gemspecs)
         else
-          throw "flake.nix: one *.gemspec expected, found ${toString gemspecs}";
+          throw "flake.nix: one *.gemspec expected, found ${
+            if gemspecs == [ ] then "none" else toString gemspecs
+          }";
       path = lib.replaceStrings [ "-" ] [ "/" ] name;
       # the groups of the first of +file+'s lines that +pattern+ matches whole, or null
       line =
@@ -61,7 +63,7 @@
           found = line ''[[:space:]]*VERSION[[:space:]]*=[[:space:]]*"([^"]+)"${rest}'' ./lib/${path}/version.rb;
         in
         if found == null then
-          throw "flake.nix: no VERSION = \"...\" line in version.rb"
+          throw "flake.nix: no VERSION = \"...\" line in lib/${path}/version.rb"
         else
           lib.head found;
       # the SPDX identifiers of `spec.licenses = [...]` or `spec.license = "..."`
