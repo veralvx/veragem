@@ -58,6 +58,6 @@ ignore:
   - { id: 5a14112d8554, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: 3337825deb93, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: ba90a04a446b, reason: "generator.rb: >> 2 drops the 0o001 bit 0o445 adds to 0o444" }
-  - { id: 43ae3b2bfcd2, reason: "project.rb: removing an empty match changes nothing" }
-  - { id: 7a0160fe9e3d, reason: "project.rb: removing an empty match changes nothing" }
+  - { id: 279689c357df, reason: "project.rb: removing an empty match changes nothing" }
+  - { id: e57d6f4fb781, reason: "project.rb: removing an empty match changes nothing" }
   - { id: 5371c8d83d13, reason: "summary.rb: its one caller reads nil as false" }
