@@ -104,11 +104,11 @@ module Veragem
       rescue Error => e
         raise Error, "#{e} (git config #{name}; --#{key} replaces it)"
       end
-      defaults.merge(given).tap { present(it) }.compact
+      defaults.merge(given).tap { check_present(it) }.compact
     end
 
     # The author and the GitHub user, which nothing but git defaults.
-    private_class_method def self.present(values)
+    private_class_method def self.check_present(values)
       { author: "author", github: "GitHub user" }.each do |key, field|
         raise Error, "no #{field}: --#{key}, or git config #{GIT_CONFIG[key]}" unless values[key]
       end

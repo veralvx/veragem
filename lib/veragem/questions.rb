@@ -34,8 +34,8 @@ module Veragem
     # @param input [#gets, #tty?] where the answers are typed
     # @param output [#print, #puts] where the questions are shown
     # @param dir [String] where the gem is to be generated
-    # @param git [Hash{Symbol => String}] the git config key that gives a value's default, which a
-    #   refusal of that default names
+    # @param git [Hash{Symbol => String}] each value's git config key, which a refusal of the default
+    #   git gives names
     # @return [void]
     def initialize(input, output, dir, git: {})
       @input = input

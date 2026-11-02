@@ -153,7 +153,7 @@ module Veragem
                            Questions questions) -> Project
     private def self.name_of: (Array[String] names) -> String
     private def self.required: (Hash[Symbol, String] defaults, Hash[Symbol, String | bool] given) -> Hash[Symbol, String | bool]
-    private def self.present: (Hash[Symbol, String | bool] values) -> void
+    private def self.check_present: (Hash[Symbol, String | bool] values) -> void
     private def self.parser: () -> OptionParser
     private def self.git_config: (String key) -> String?
   end

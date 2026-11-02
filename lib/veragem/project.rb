@@ -138,7 +138,7 @@ module Veragem
     private_class_method def self.github(value)
       return value if GITHUB.match?(value)
 
-      raise Error, "invalid GitHub user #{value.inspect}: up to 39 ASCII letters, digits and inner single hyphens"
+      raise Error, "invalid #{FIELDS[:github]} #{value.inspect}: 1 to 39 ASCII letters, digits and inner single hyphens"
     end
 
     # A value a file quotes, which RubyGems does not refuse as unfinished.
