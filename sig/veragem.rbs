@@ -61,6 +61,7 @@ module Veragem
   class Project
     GITHUB: Regexp
     FIELDS: Hash[Symbol, String]
+    MARKUP: Regexp
     OPTIONAL: Hash[Symbol, String]
 
     attr_reader name: String

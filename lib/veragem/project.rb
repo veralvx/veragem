@@ -10,10 +10,15 @@ module Veragem
     GITHUB = /\A[a-zA-Z\d](?:[a-zA-Z\d]|-(?=[a-zA-Z\d])){0,38}\z/
     # Each value a refusal names otherwise than its key.
     FIELDS = { github: "GitHub user", license: "license (#{License::CHOICES})", orcid: "ORCID iD" }.freeze
+    # What Markdown would read as markup in a text: a URL, which GFM links whole, as written but its
+    # backticks and backslashes (a code span comes first); else a character to escape, but an `_`
+    # within a word.
+    MARKUP = %r{(?<url>(?:https?://|www\.)[^\s<`\\]+) | [\\`*\[\]<~$] | (?<![[:alnum:]])_ | _(?![[:alnum:]])
+                | &(?=\#?[[:alnum:]]+;)}x
     # The values that may be none, and how an option gives none: a question takes "-".
     OPTIONAL = { email: "--no-email", given_names: "--no-given-names", alias: "--no-alias",
                  orcid: "leave --orcid out", keywords: "leave --keywords out" }.freeze
-    private_constant :GITHUB, :FIELDS
+    private_constant :GITHUB, :FIELDS, :MARKUP
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
                 :alias_name, :orcid, :keywords
@@ -104,13 +109,13 @@ module Veragem
     # @return [String]
     def yaml(value) = JSON.generate(value)
 
-    # +value+ as Markdown's text, shown as written, as RubyGems shows a summary: its markup escaped
-    # (an `_` within a word is none), one space between words, as dprint writes them.
+    # +value+ as Markdown's text, shown as written, as RubyGems shows a summary: its markup escaped,
+    # one space between words, as dprint writes them.
     # @param value [String] a value of the gem's, checked
     # @return [String]
     def markdown(value)
-      value.squeeze(" ").gsub(/[\\`*\[\]<~$]|(?<![[:alnum:]])_|_(?![[:alnum:]])|&(?=#?[[:alnum:]]+;)/) { "\\#{it}" }
-           .sub(/\A(?=[#>+-])|\A\d+\K(?=[.)])/) { "\\" }
+      escaped = value.squeeze(" ").gsub(MARKUP) { Regexp.last_match(:url) || "\\#{it}" }
+      escaped.sub(/\A(?=[#>+-])|\A\d+\K(?=[.)])/) { "\\" }
     end
 
     # Project.quote, for the templates.

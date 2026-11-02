@@ -30,8 +30,7 @@ lib/veragem/citation.rb  CITATION.cff's rules: who may give its values, its titl
 lib/veragem/license.rb  the licence's choices, their SPDX identifiers, the one a value names
 lib/veragem/summary.rb  the summary, the module's comment too: what yard-lint and RuboCop take
 lib/veragem/project.rb  the values, checked, and what follows from them
-lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, executables marked;
-                          git
+lib/veragem/generator.rb  template/ written out (ERB rendered, executables marked); git
 template/               the generated gem
 sig/, test/, dev/smoke.sh
 ```

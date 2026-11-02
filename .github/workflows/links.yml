@@ -1,6 +1,6 @@
-# The links of the files git tracks but the tests' (`rake links`, lychee), monthly and on demand: a page moves or
-# goes with nothing changed here. In the dev shell, whose lychee is the flake's; GITHUB_TOKEN, so
-# GitHub's links are not rate-limited, lychee's alone, not the gems' installs.
+# The links of the files git tracks but the tests' (`rake links`, lychee), monthly and on demand: a
+# page moves or goes with nothing changed here. In the dev shell, whose lychee is the flake's;
+# GITHUB_TOKEN, so GitHub's links are not rate-limited, lychee's alone, not the gems' installs.
 name: Links
 
 on:

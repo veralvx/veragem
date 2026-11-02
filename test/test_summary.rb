@@ -27,7 +27,9 @@ class TestSummary < Minitest::Test
                "<!-- x" => "\\<!-- x",
                "`a` *b* [c] ~d~ $e & &amp; \\" => "\\`a\\` \\*b\\* \\[c\\] \\~d\\~ \\$e & \\&amp; \\\\",
                "# x" => "\\# x", "> x" => "\\> x", "- x" => "\\- x", "+ x" => "\\+ x", "2) x" => "2\\) x",
-               "10. x" => "10\\. x", "1.5 x" => "1\\.5 x", ".5 x) y" => ".5 x) y", "a &; b" => "a &; b" }.freeze
+               "10. x" => "10\\. x", "1.5 x" => "1\\.5 x", ".5 x) y" => ".5 x) y", "a &; b" => "a &; b",
+               "https://x.y/~a/_b*c$d?e&amp;f=[g] _h_" => "https://x.y/~a/_b*c$d?e&amp;f=[g] \\_h\\_",
+               "www.x.y/~a`b` <c>" => "www.x.y/~a\\`b\\` \\<c>" }.freeze
 
   # the module's comment too: each refused fails the generated gem's yard-lint or RuboCop as it, and
   # each taken passes them (both checked so in a generated gem)

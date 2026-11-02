@@ -157,11 +157,11 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 ### The summary
 
 The summary is plain text, as RubyGems shows it: the README shows it as written, its Markdown
-characters escaped (`_`, `` ` ``, `<`...) and its spaces single, as dprint writes them. It is the
-module's comment too, so one the gem's yard-lint or RuboCop would not take as its
-documentation is refused: a tag first, YARD's (`@param`, `(see`) or written informally (`Note:`,
-`See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic comment (`encoding:`), a
-backtick or `**` left open.
+characters escaped (`_`, `` ` ``, `<`...) but a URL's, which GitHub links, and its spaces single,
+as dprint writes them. It is the module's comment too, so one the gem's yard-lint or RuboCop would
+not take as its documentation is refused: a tag first, YARD's (`@param`, `(see`) or written
+informally (`Note:`, `See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic
+comment (`encoding:`), a backtick or `**` left open.
 
 ## What you get
 

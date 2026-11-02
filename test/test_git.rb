@@ -99,17 +99,16 @@ class TestGit < Minitest::Test
 
   private
 
-  # Ruby warns of a default external encoding set, which the tests would count as their own
+  # silently: Ruby warns of a default external encoding set
   def with_encodings(external, internal)
-    verbose = $VERBOSE
-    $VERBOSE = nil
     saved = [Encoding.default_external, Encoding.default_internal]
-    Encoding.default_external = external
-    Encoding.default_internal = internal
+    silently do
+      Encoding.default_external = external
+      Encoding.default_internal = internal
+    end
     yield
   ensure
-    Encoding.default_external, Encoding.default_internal = saved
-    $VERBOSE = verbose
+    silently { Encoding.default_external, Encoding.default_internal = saved }
   end
 
   # git's messages untranslated (LC_ALL=C), as the tests match them

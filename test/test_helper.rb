@@ -42,16 +42,22 @@ module Veragem
     # git's output in +dir+'s repository, whatever repository a git hook running the tests points at
     def git(dir, *args) = IO.popen(Generator.const_get(:GIT_LOCAL), ["git", *args], chdir: dir, &:read)
 
-    # the block with +object+'s method +name+ replaced by +stub+; Ruby warns of a method redefined,
-    # which the tests would count as their own
+    # the block with +object+'s method +name+ replaced by +stub+
     def stubbed(object, name, stub)
-      verbose = $VERBOSE
-      $VERBOSE = nil
       original = object.method(name)
-      object.define_singleton_method(name, &stub)
+      silently { object.define_singleton_method(name, &stub) }
       yield
     ensure
-      object.define_singleton_method(name, original)
+      silently { object.define_singleton_method(name, original) } if original
+    end
+
+    # Ruby's warnings off for the block: one of a method redefined, which the tests would count as
+    # their own
+    def silently
+      verbose = $VERBOSE
+      $VERBOSE = nil
+      yield
+    ensure
       $VERBOSE = verbose
     end
 
