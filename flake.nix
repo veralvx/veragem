@@ -216,7 +216,8 @@
             ];
           };
         };
-      output = attribute: forAllSystems (pkgs: (perSystem pkgs).${attribute});
+      all = forAllSystems perSystem;
+      output = attribute: lib.mapAttrs (_: outputs: outputs.${attribute}) all;
     in
     {
       packages = output "packages";
