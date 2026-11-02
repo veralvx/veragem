@@ -20,8 +20,8 @@ CI (nixpkgs packages few of them, and older).
 - **[dprint](https://dprint.dev/)** -- formats the Markdown and TOML.
 - **[cocogitto](https://docs.cocogitto.io/)** (`cog`) -- enforces Conventional Commits.
 - **[git-cliff](https://git-cliff.org/)** -- writes the changelog at a release.
-- **[lychee](https://lychee.cli.rs/)** -- checks the links of the files git tracks, online
-  (`rake links`; `links.yml` monthly too).
+- **[lychee](https://lychee.cli.rs/)** -- checks the links of the files git tracks but the
+  tests', online (`rake links`; `links.yml` monthly too).
 - **[Nix](https://nixos.org)** for the last of `rake checks`, the flake's checks (`rake nix`):
   without it, `rake checks` stops there, every other check passed.
 
@@ -36,8 +36,8 @@ bin/setup
 ```
 
 3. Optionally, `bundle exec rake hooks`: `.githooks/` then runs RuboCop, the shell, the workflows
-   and dprint before each commit, checks its message as a Conventional Commit, and every pushed
-   commit's message before a push: what CI would refuse, minutes earlier.
+   and dprint before each commit, checks its message as a Conventional Commit, and each commit's
+   in a pushed ref's history before a push: what CI would refuse, minutes earlier.
    `git config --unset core.hooksPath` turns them off.
 
 ## Guidelines
@@ -128,7 +128,8 @@ Then, in whichever order suits you:
   `.github/workflows/dependabot-automerge.yml`: without required status checks, it merges bumps
   that CI never gated.
 - Enable private vulnerability reporting (Settings → Advanced Security; a public repository's
-  alone): it is off by default, and [SECURITY.md](SECURITY.md) and the issue form point to it.
+  alone): it is off by default, and [SECURITY.md](SECURITY.md) and the issue chooser's link point
+  to it.
 - Enable the dependency graph (Settings → Advanced Security), if it is off: the dependency review
   (`dependency-review.yml`) fails without it. A private repository's needs GitHub Code Security
   too, an organization's; without it, delete the workflow.

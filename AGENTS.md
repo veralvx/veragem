@@ -10,7 +10,7 @@ and in every gem veragem generates: `template/AGENTS.md.erb` is their source.
 RuboCop runs with its defaults, a few cops beyond them, and every new cop as it ships
 (`NewCops: enable`), its Minitest, packaging, performance and Rake extensions on, and the project
 indexed first (`UseProjectIndex`, the rubydex gem) for the cops that look across files
-(`.rubocop.yml`). Steep checks `lib/` against the signatures in `sig/`, its strictest diagnostics on
+(`.rubocop.yml`). Steep checks `lib/` against the signatures in `sig/`, its `strict` diagnostics on
 (`Steepfile`): every method of `lib/` is declared in `sig/`, and a warning fails as an error does.
 Gemfile.lock pins both, so the verdict is the same locally and in CI. YARD documents `lib/`, and
 yard-lint holds it (`.yard-lint.yml`).
@@ -21,7 +21,8 @@ configuration, zizmor's security audit.
 
 ### 1.1. RuboCop
 
-- Before finishing, check what you changed with `bundle exec rubocop --changed --format json`.
+- Before finishing, check what you changed since main with
+  `bundle exec rubocop --changed=main --format json` (`--changed` alone: since the last commit).
 - Fix offenses with `bundle exec rubocop -a FILES`. Don't use `-A` unless asked.
 - If an offense is unclear, run `bundle exec rubocop --explain Department/CopName`.
 - Don't edit `.rubocop.yml` to make offenses go away.

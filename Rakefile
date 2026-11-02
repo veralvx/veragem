@@ -40,7 +40,7 @@ task :graph do
 end
 
 # Every test file but test_helper.rb, which every test requires and holds none: mutineer pairs
-# lib/a/b.rb with test/a/test_b.rb alone, and a test may reach any file.
+# lib/a/b.rb with one test file by its path (test/a/test_b.rb), and a test may reach any file.
 def mutate(*options)
   tests = FileList["test/test_*.rb"].exclude("test/test_helper.rb").flat_map { ["--test", it] }
   sh "mutineer", "run", *options, *FileList["lib/**/*.rb"], *tests
@@ -126,7 +126,7 @@ cliff = ["git-cliff", "--offline", "--github-repo", repository]
 # least 10 s apart, so a brief outage is waited out. Not the tests' links, made up; nor GitHub's
 # bare address, read off those the code builds; nor the gem's own pages, missing until it is pushed
 # and published.
-desc "Check the links in git's files with lychee"
+desc "Check the links in git's files with lychee. Not the tests', whose links are made up"
 task :links do
   files = output("git", "ls-files", "-z").split("\0").select { File.file?(it) }.grep_v(%r{\Atest/})
   own = [gemspec.homepage, "https://rubygems.org/gems/#{gemspec.name}", "https://rubydoc.info/gems/#{gemspec.name}"]

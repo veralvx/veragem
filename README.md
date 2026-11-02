@@ -8,7 +8,7 @@ and the rest:
 - **Ruby 4.0** or later, `required_ruby_version` and CI alike, on Linux, macOS and Windows:
   Gemfile.lock holds Windows' platform (`bin/setup`), `.gitattributes` keeps every text file LF,
   and the executables' mode is in git's index, which a commit keeps where the file system has none.
-- **Types**: Steep checks `lib/` against the signatures in `sig/`, its strictest diagnostics on;
+- **Types**: Steep checks `lib/` against the signatures in `sig/`, its `strict` diagnostics on;
   TypeProf infers signatures to start them from, and its editor support is configured.
 - **Lint and format**: RuboCop with every new cop, rubocop-minitest, rubocop-packaging,
   rubocop-performance and rubocop-rake; the project is indexed first (rubydex), so the cops that see
@@ -22,13 +22,13 @@ and the rest:
   tests fails them. [mutineer](https://github.com/davidteren/mutineer) mutates `lib/`, and one
   mutant no test catches fails it: `rake checks` the lines changed since `origin/main`, CI every
   line (`rake mutation`).
-- **Links**: lychee checks the links of the files git tracks (`rake links`), in `rake checks` and
-  monthly (`links.yml`).
+- **Links**: lychee checks the links of the files git tracks but the tests' (`rake links`), in
+  `rake checks` and monthly (`links.yml`).
 - **Security**: bundler-audit over `Gemfile.lock`, daily and on every pull request; a pull request's
-  new gems and actions reviewed for their licences and advisories (`dependency-review.yml`,
-  advisory, as in the Python and Rust templates); zizmor over the workflows and Dependabot's
-  configuration; Dependabot for the gems, the actions and the flake, a release proposed once a week
-  old.
+  new gems reviewed for their licences and advisories, its new actions for their licences
+  (`dependency-review.yml`, advisory, as in the Python and Rust templates); zizmor over the
+  workflows and Dependabot's configuration; Dependabot for the gems, the actions and the flake, a
+  release proposed once a week old.
 - **Commits and releases**: Conventional Commits (cocogitto, in CI and opt-in git hooks), a
   changelog written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own
   `rake release`; the tag publishes to RubyGems by Trusted Publishing, no API key stored, the gem
@@ -91,7 +91,7 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 
 A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
 expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, a value git's
-config gives that veragem refuses names its key and the option that replaces it.
+config gives that veragem refuses names its key and the options that replace it.
 
 ### Questions
 
@@ -156,8 +156,9 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 
 ### The summary
 
-The summary is plain text: written into the README as given, Markdown in it is dprint's to check.
-It is the module's comment too, so one the gem's yard-lint or RuboCop would not take as its
+The summary is plain text, as RubyGems shows it: the README shows it as written, its Markdown
+characters escaped (`_`, `` ` ``, `<`...) and its spaces single, as dprint writes them. It is the
+module's comment too, so one the gem's yard-lint or RuboCop would not take as its
 documentation is refused: a tag first, YARD's (`@param`, `(see`) or written informally (`Note:`,
 `See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic comment (`encoding:`), a
 backtick or `**` left open.
@@ -166,7 +167,7 @@ backtick or `**` left open.
 
 ```
 NAME.gemspec          the gem: its version from lib/PATH/version.rb (`my-gem`'s lib/my/gem/), its
-                      files lib/, sig/, exe/
+                      files lib/, sig/, exe/, the README, the changelog and the licences
 Gemfile               the gemspec, then the tools; Gemfile.lock pins them (written by bin/setup)
 Rakefile              `rake`: RuboCop, Steep, the tests, yard-lint; `rake checks`: what CI runs;
                       `rake "bump[level]"`, `rake release`; `rake -T` lists them all
