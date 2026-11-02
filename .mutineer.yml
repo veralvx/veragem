@@ -51,12 +51,10 @@ ignore:
   - { id: 68846607f55e, reason: "generator.rb: a GEM section is never empty: Bundler writes its remote first" }
   - { id: 4b014462f593, reason: "generator.rb: a spec's line names its gem" }
   - { id: 5a9f582c0451, reason: "generator.rb: done, assigned later, reads nil, as false, until set" }
-  # mutineer reports one of 5a14112d8554 and 3337825deb93, the same change, as either operator;
   # test_nothing_is_left_unrendered refuses ERB left in any file generated
   - { id: 27762d06748a, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: 670c1e962fa1, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: 5a14112d8554, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
-  - { id: 3337825deb93, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: ba90a04a446b, reason: "generator.rb: >> 2 drops the 0o001 bit 0o445 adds to 0o444" }
   - { id: 279689c357df, reason: "project.rb: removing an empty match changes nothing" }
   - { id: e57d6f4fb781, reason: "project.rb: removing an empty match changes nothing" }
