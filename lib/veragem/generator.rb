@@ -7,9 +7,9 @@ module Veragem
   # Writes a Project's gem from template/: each `.erb` file rendered, every other copied, the
   # executables executable; then a git repository, its files added, as `bundle gem` leaves one.
   module Generator
-    # template/: a generated gem's files, ERB and plain. (Steep: __dir__ is nil only in code evaluated
-    # from a string, never in a required file.)
-    TEMPLATE = File.expand_path("../../template", __dir__) # steep:ignore ArgumentTypeMismatch
+    # template/: a generated gem's files, ERB and plain. (`|| raise`: __dir__ is nil only in code
+    # evaluated from a string, never in a required file.)
+    TEMPLATE = File.expand_path("../../template", __dir__ || raise)
     # The files a command line alone needs: its code, its test, its OCI image's workflow and its script.
     EXE = %w[exe/%name%.erb lib/%path%/cli.rb.erb test/test_cli.rb.erb .github/workflows/image.yml
              .github/image-registries.sh].freeze
@@ -27,9 +27,8 @@ module Veragem
     # The citation's file, a citation's alone (--citation).
     CITATION = "CITATION.cff.erb"
     # The tools' resolution: this repository's Gemfile is the template's (test_sync.rb), so its lock
-    # names every gem a generated gem's tools load, theirs included. (Steep: __dir__ is never nil in
-    # a required file.)
-    TOOLS_LOCK = File.expand_path("../../Gemfile.lock", __dir__) # steep:ignore ArgumentTypeMismatch
+    # names every gem a generated gem's tools load, theirs included.
+    TOOLS_LOCK = File.expand_path("../../Gemfile.lock", __dir__ || raise)
     private_constant :GIT_LOCAL, :LICENSE_FILES, :CITATION, :TOOLS_LOCK
 
     # Into +target+, a new directory: a failure, an interrupt included, leaves none behind.
