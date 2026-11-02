@@ -49,7 +49,7 @@ module Veragem
 
       ask(names, given, defaults, Questions.new(input, output, dir, git: GIT_CONFIG))
     rescue OptionParser::ParseError => e
-      raise Error, "#{e.message} (bundle veragem --help)"
+      raise Error, "#{e} (bundle veragem --help)"
     end
 
     # The names and the options given, each value checked as Project checks it: before the name, and

@@ -51,9 +51,9 @@ module Veragem
     # @raise [Veragem::Error] a module or its file would meet another, or they could not be checked
     def self.check_modules(name)
       nestings = nestings_of(name)
-      shadowed, found, *kinds = probe(library_of(name), path(name), nestings)
-      check_shadowing(name, shadowed.to_s, found.to_s)
-      check_defined(name, nestings.zip(kinds).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
+      answers = probe(library_of(name), path(name), nestings)
+      check_shadowing(name, answers.fetch(0), answers.fetch(1))
+      check_defined(name, nestings.zip(answers.drop(2)).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
     end
 
     # The child: no stdin, a scratch directory, its arguments cleared before the libraries load, their

@@ -133,7 +133,7 @@ module Veragem
     def checked(question, answer, check, note = "")
       check.call(answer)
     rescue Error => e
-      terminal(question) { @output.puts "#{e.message}#{note}" }
+      terminal(question) { @output.puts "#{e}#{note}" }
       nil
     end
 
@@ -142,7 +142,7 @@ module Veragem
     def terminal(question)
       yield
     rescue SystemCallError, IOError => e
-      raise Error, "cannot ask #{question}: #{e.message}"
+      raise Error, "cannot ask #{question}: #{e}"
     end
 
     def yes?(answer)

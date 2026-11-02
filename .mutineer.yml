@@ -33,23 +33,16 @@ ignore:
   - { id: 72a760198a48, reason: "citation.rb: the author, required, is asked before the names that read it" }
   - { id: 10a7fed4111f, reason: "citation.rb: the family names, required, are asked before the given names" }
   - { id: b295db2a52c7, reason: "citation.rb: the GitHub user, required, is asked before the alias" }
-  - { id: dab754339cb6, reason: "name.rb: answers raises unless the probe gives every String" }
-  - { id: aebef202ac5a, reason: "name.rb: answers raises unless the probe gives every String" }
   - { id: 1feb2c391304, reason: "options.rb: a nil default reads as an absent one ([]); compact keeps it String" }
   - { id: df7edef89535, reason: "options.rb: Project reads a nil value as an absent one ([]); compact narrows it" }
   - { id: 61fd2024fe65, reason: "project.rb: the keyword is nil only with no match, so no colon nor space either" }
   - { id: 44f1d178fd51, reason: "project.rb: the field is only interpolated, and a Symbol interpolates as its name" }
   # an exception's text is its message: puts, interpolation and raise read it alike
   - { id: 2cb248365d33, reason: "generator.rb: Error.new(e) reads e's message" }
-  - { id: cc1eb3267ae2, reason: "options.rb: an OptionParser error's to_s is its message" }
-  - { id: 62fb6a2f158c, reason: "questions.rb: puts writes an exception's message" }
-  - { id: bfd117f2227d, reason: "questions.rb: a SystemCallError's or IOError's to_s is its message" }
   - { id: e828006988c4, reason: "name.rb: a SystemCallError's to_s is its message" }
   # each and map alike: the block's value unused
-  - { id: ee4f430cab44, reason: "citation.rb: force_encoding changes each word in place and returns it" }
   - { id: 86076ad21783, reason: "generator.rb: the files are written for their effect" }
   - { id: 999b1d290446, reason: "options.rb: the block raises or returns nothing used" }
-  - { id: 989d946a7491, reason: "options.rb: the block raises or returns nothing used" }
   - { id: b653f69cef85, reason: "options.rb: OptionParser.new ignores its block's value" }
   - { id: a93b0e39900f, reason: "options.rb: the block raises or returns nothing used" }
   - { id: 0d350157b54f, reason: "questions.rb: each question is asked for its effect" }
@@ -58,7 +51,8 @@ ignore:
   - { id: 68846607f55e, reason: "generator.rb: a GEM section is never empty: Bundler writes its remote first" }
   - { id: 4b014462f593, reason: "generator.rb: a spec's line names its gem" }
   - { id: 5a9f582c0451, reason: "generator.rb: done, assigned later, reads nil, as false, until set" }
-  # mutineer reports one of 5a14112d8554 and 3337825deb93, the same change, as either operator
+  # mutineer reports one of 5a14112d8554 and 3337825deb93, the same change, as either operator;
+  # test_nothing_is_left_unrendered refuses ERB left in any file generated
   - { id: 27762d06748a, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: 670c1e962fa1, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
   - { id: 5a14112d8554, reason: "generator.rb: no plain template file holds ERB, so rendering one copies it" }
