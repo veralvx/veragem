@@ -26,14 +26,14 @@ task default: %i[rubocop steep test yard_lint]
 
 # Steep, against sig/, is the gate. TypeProf reads Ruby's core signatures alone, not the standard
 # library's.
-desc "Print the signatures TypeProf infers. From lib/: a start for sig/, and what it finds amiss"
+desc "Print the signatures TypeProf infers. It reads lib/, to start sig/ from, and prints what it finds amiss"
 task :typeprof do
   sh "typeprof", "--show-errors", "lib"
 end
 
 # yard graph draws what yardoc records (.yardoc): lib/'s, quietly, so the graph alone is printed, and
 # its private methods too (no .yardopts, whose query keeps the public API)
-desc "Print lib/'s classes and modules as a graph. Graphviz's (yard graph), for `dot`"
+desc "Print lib/'s classes and modules as a graph. yard graph writes it for Graphviz's `dot`"
 task :graph do
   sh "yard", "doc", "-n", "-q", "--no-stats", "--no-yardopts", "lib/**/*.rb"
   sh "yard", "graph", "--protected", "--private", "--full", "--dependencies"
@@ -51,7 +51,7 @@ task(:mutation) { mutate }
 
 # The lines changed since the branch left origin/main, uncommitted ones too, of the files git tracks
 # (not a new one before `git add`); every line where there is no origin/main (a gem never pushed)
-desc "Mutate the lines changed since origin/main. As `rake mutation` does all of lib/"
+desc "Mutate lib/'s lines changed since origin/main. `rake mutation` mutates all of them"
 task "mutation:changed" do
   base = IO.popen(%w[git merge-base HEAD origin/main], err: File::NULL, &:read).chomp
   mutate(*(["--since", base, "--allow-empty"] unless base.empty?))
@@ -62,7 +62,7 @@ task :yard_lint do
   sh "yard-lint", "lib", "--stats"
 end
 
-desc "Check Gemfile.lock against the advisories. It updates their database first (bundler-audit)"
+desc "Update the advisories, check Gemfile.lock. bundler-audit fetches its database, then checks the lock"
 task audit: %w[bundle:audit:update bundle:audit:check]
 
 desc "Check the Markdown and TOML format (dprint)"
@@ -83,7 +83,7 @@ def output(*command)
   end
 end
 
-desc "Lint and format-check the shell scripts. Those git tracks, with shellcheck and shfmt"
+desc "Lint and format-check the shell scripts. It checks those git tracks, with shellcheck and shfmt"
 task :shell do
   tracked = output("git", "ls-files", "-z").split("\0").select { File.file?(it) }
   scripts = output("shfmt", "--find", *tracked).lines(chomp: true)
@@ -91,27 +91,28 @@ task :shell do
   sh "shfmt", "--diff", *scripts
 end
 
-desc "Lint the workflows, audit their security. With actionlint and zizmor"
+desc "Lint the workflows, audit their security. It runs actionlint and zizmor"
 task :workflows do
   sh "actionlint"
   sh "zizmor", "--offline", "--quiet", "--strict-collection", "."
 end
 
-desc "Run the flake's checks. The Nix format, the shell, the workflows, the package (git's files alone)"
+desc "Run the flake's checks. They check the Nix format, the shell, the workflows and the package (git's files)"
 task :nix do
   sh "nix", "flake", "check"
 end
 
-desc "Run CI's checks, the links too. It mutates the changed lines alone"
+desc "Run CI's checks, mutating the changed lines. It checks the links too; CI mutates every line"
 task checks: %i[default audit dprint cog shell workflows links mutation:changed nix]
 
-desc "Format the Ruby, Markdown, TOML and Nix files"
+desc "Format the Ruby, Markdown, TOML and Nix files. It rewrites them in place"
 task format: "rubocop:autocorrect" do
   sh "dprint", "fmt"
   sh "nix", "fmt"
 end
 
-desc "Use .githooks/ for git's hooks. The quick checks before a commit, Conventional Commits for every message"
+desc "Use .githooks/ for git's hooks. They run the quick checks before a commit, and check that every " \
+     "message is a Conventional Commit"
 task :hooks do
   sh "git", "config", "core.hooksPath", ".githooks"
 end
@@ -164,7 +165,7 @@ def cited(version)
 end
 
 # The release commit: the version, the lock, the changelog, and CITATION.cff's version and date.
-desc "Bump the version, write the changelog, commit. Its level: major, minor or patch; a first release " \
+desc "Bump the version, write the changelog, commit. The level is major, minor or patch; a first release " \
      "keeps the declared version"
 task :bump, [:level] => "release:guard_clean" do |_, args|
   level = %w[major minor patch].index(args[:level]) or abort 'usage: rake "bump[major|minor|patch]"'
