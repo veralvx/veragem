@@ -93,6 +93,9 @@
           dependencies = [ ];
           package = pkgs.buildRubyGem {
             gemName = name;
+            # the root's: unset, buildRubyGem builds the first *.gemspec `find` lists, a test's
+            # fixture too
+            gemspec = "${name}.gemspec";
             inherit version ruby;
             src = self;
             gemPath = dependencies;
