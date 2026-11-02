@@ -23,6 +23,11 @@ module Veragem
     # @return [String]
     def self.field(key) = FIELDS.fetch(key) { key.name.tr("_", " ") }
 
+    # +text+ without the spaces around it, Unicode's too (String#strip's are ASCII's alone).
+    # @param text [String]
+    # @return [String]
+    def self.strip(text) = text.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "")
+
     # +value+ as a Ruby string literal, as written whatever the locale (String#inspect escapes
     # what the locale cannot show): a quote, a backslash and an interpolation escaped.
     # @param value [String] a value of the gem's, checked
@@ -40,7 +45,7 @@ module Veragem
       value = utf8(key, value)
       case key
       when :github then github(value)
-      when :license then License.check(value)
+      when :license then License.check(strip(value))
       when :summary then Summary.check(text("summary", value))
       when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
       else text(key.name, value)
@@ -155,7 +160,7 @@ module Veragem
     # (RuboCop's 120 columns). U+FFFE and U+FFFF are outside YAML's printable characters:
     # CITATION.cff's.
     private_class_method def self.line(field, value)
-      line = value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/) ? "" : value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "")
+      line = value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/) ? "" : strip(value)
       raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
       raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
 

@@ -120,7 +120,7 @@ module Veragem
       end
       raise Error, "no answer to #{question}" unless line
 
-      answer = (line.valid_encoding? ? line : line.b).gsub(/\A[[:space:]]+|[[:space:]]+\z/, "")
+      answer = Project.strip(line.valid_encoding? ? line : line.b)
       answer unless answer.empty?
     end
 

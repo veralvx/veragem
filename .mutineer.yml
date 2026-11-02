@@ -35,7 +35,7 @@ ignore:
   - { id: b295db2a52c7, reason: "citation.rb: the GitHub user, required, is asked before the alias" }
   - { id: 1feb2c391304, reason: "options.rb: a nil default reads as an absent one ([]); compact keeps it String" }
   - { id: df7edef89535, reason: "options.rb: Project reads a nil value as an absent one ([]); compact narrows it" }
-  - { id: 61fd2024fe65, reason: "project.rb: the keyword is nil only with no match, so no colon nor space either" }
+  - { id: cbdceb9248b4, reason: "summary.rb: the keyword is nil only with no match, so no colon nor space either" }
   - { id: 44f1d178fd51, reason: "project.rb: the field is only interpolated, and a Symbol interpolates as its name" }
   # an exception's text is its message: puts, interpolation and raise read it alike
   - { id: 2cb248365d33, reason: "generator.rb: Error.new(e) reads e's message" }
@@ -60,4 +60,4 @@ ignore:
   - { id: ba90a04a446b, reason: "generator.rb: >> 2 drops the 0o001 bit 0o445 adds to 0o444" }
   - { id: 43ae3b2bfcd2, reason: "project.rb: removing an empty match changes nothing" }
   - { id: 7a0160fe9e3d, reason: "project.rb: removing an empty match changes nothing" }
-  - { id: 8b03ab9b9e1d, reason: "project.rb: its one caller reads nil as false" }
+  - { id: 5371c8d83d13, reason: "summary.rb: its one caller reads nil as false" }

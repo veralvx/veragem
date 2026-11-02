@@ -22,6 +22,13 @@ class TestSummary < Minitest::Test
                      "note-taking app", "Notes: x", "Encoding: helpers", "Coding: kata", "Encoding=x",
                      "Frozen string literal: x", "A frozen_string_literal: true"].freeze
 
+  # each value, and the README's text of it
+  MARKDOWN = { "A Ruby gem." => "A Ruby gem.", "A _fast_ my_gem" => "A \\_fast\\_ my_gem", "a  b" => "a b",
+               "<!-- x" => "\\<!-- x",
+               "`a` *b* [c] ~d~ $e & &amp; \\" => "\\`a\\` \\*b\\* \\[c\\] \\~d\\~ \\$e & \\&amp; \\\\",
+               "# x" => "\\# x", "> x" => "\\> x", "- x" => "\\- x", "+ x" => "\\+ x", "2) x" => "2\\) x",
+               "10. x" => "10\\. x", "1.5 x" => "1\\.5 x", ".5 x) y" => ".5 x) y", "a &; b" => "a &; b" }.freeze
+
   # the module's comment too: each refused fails the generated gem's yard-lint or RuboCop as it, and
   # each taken passes them (both checked so in a generated gem)
   def test_a_summary_is_a_comment_yard_lint_and_rubocop_take
@@ -44,10 +51,7 @@ class TestSummary < Minitest::Test
   # as written, as RubyGems shows it, whatever Markdown would make of it: its escapes alone added,
   # its spaces single, as dprint writes them (each case checked so in a generated gem)
   def test_a_markdown_value_shows_as_written
-    { "A Ruby gem." => "A Ruby gem.", "A _fast_ my_gem" => "A \\_fast\\_ my_gem", "a  b" => "a b",
-      "<!-- x" => "\\<!-- x", "`a` *b* [c] ~d~ $e & &amp; \\" => "\\`a\\` \\*b\\* \\[c\\] \\~d\\~ \\$e & \\&amp; \\\\",
-      "# x" => "\\# x", "> x" => "\\> x", "- x" => "\\- x", "+ x" => "\\+ x", "2) x" => "2\\) x",
-      "10. x" => "10\\. x", "1.5 x" => "1\\.5 x" }.each { |value, text| assert_equal text, project.markdown(value) }
+    MARKDOWN.each { |value, text| assert_equal text, project.markdown(value) }
     Pbt.assert do
       Pbt.property(Pbt.printable_string) do |value|
         assert_equal value.squeeze(" "), project.markdown(value).gsub(/\\(.)/m, "\\1")

@@ -92,6 +92,7 @@ module Veragem
     def markdown: (String value) -> String
     def nest: (String body, ?doc: String?) -> String
     def self.field: (Symbol key) -> String
+    def self.strip: (String text) -> String
     def self.quote: (String value) -> String
     def self.check: (Symbol key, String? value) -> String
     private def self.utf8: (Symbol key, String? value) -> String
