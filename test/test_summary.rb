@@ -28,8 +28,10 @@ class TestSummary < Minitest::Test
                "`a` *b* [c] ~d~ $e & &amp; \\" => "\\`a\\` \\*b\\* \\[c\\] \\~d\\~ \\$e & \\&amp; \\\\",
                "# x" => "\\# x", "> x" => "\\> x", "- x" => "\\- x", "+ x" => "\\+ x", "2) x" => "2\\) x",
                "10. x" => "10\\. x", "1.5 x" => "1\\.5 x", ".5 x) y" => ".5 x) y", "a &; b" => "a &; b",
-               "https://x.y/~a/_b*c$d?e&amp;f=[g] _h_" => "https://x.y/~a/_b*c$d?e&amp;f=[g] \\_h\\_",
-               "www.x.y/~a`b` <c>" => "www.x.y/~a\\`b\\` \\<c>" }.freeze
+               "x &#36; y" => "x \\&#36; y",
+               "http://x.y/__a__ <b> HTTPS://x/*c* ftp://x/~d~" =>
+                 "http\\://x.y/\\_\\_a\\_\\_ \\<b> HTTPS\\://x/\\*c\\* ftp\\://x/\\~d\\~",
+               "www._x_ and awww.x, WWW.x a://b" => "www\\.\\_x\\_ and awww\\.x, WWW.x a\\://b" }.freeze
 
   # the module's comment too: each refused fails the generated gem's yard-lint or RuboCop as it, and
   # each taken passes them (both checked so in a generated gem)
@@ -50,8 +52,8 @@ class TestSummary < Minitest::Test
     end
   end
 
-  # as written, as RubyGems shows it, whatever Markdown would make of it: its escapes alone added,
-  # its spaces single, as dprint writes them (each case checked so in a generated gem)
+  # as written, as RubyGems shows it, whatever Markdown would make of it, a URL unlinked: its escapes
+  # alone added, its spaces single, as dprint writes them (each case checked so in a generated gem)
   def test_a_markdown_value_shows_as_written
     MARKDOWN.each { |value, text| assert_equal text, project.markdown(value) }
     Pbt.assert do

@@ -36,7 +36,7 @@ class TestCitation < Minitest::Test
   # ORCID's own examples, its check digit an X too; and its blocks' bounds, as Zenodo's idutils has them
   def test_an_orcid_id_is_one_zenodo_takes_written_as_its_url
     { "0000-0002-1825-0097" => ORCID, " http://orcid.org/0000-0002-9079-593X " => "https://orcid.org/0000-0002-9079-593X",
-      "https://orcid.org/0000-0002-1694-233x" => "https://orcid.org/0000-0002-1694-233X",
+      "HTTPS://ORCID.ORG/0000-0002-1694-233x" => "https://orcid.org/0000-0002-1694-233X",
       "0000-0001-5000-0007" => "https://orcid.org/0000-0001-5000-0007",
       "0000-0003-5000-0001" => "https://orcid.org/0000-0003-5000-0001",
       "0009-0000-1234-567X" => "https://orcid.org/0009-0000-1234-567X",
@@ -58,7 +58,8 @@ class TestCitation < Minitest::Test
   def test_an_orcid_id_zenodo_refuses_is_refused
     refused = ["0000-0002-1825-0098", "0000-0001-4999-9992", "0000-0003-5000-001X", "0009-0010-0000-0011",
                "0008-9999-9999-9996",
-               "0000000218250097", "orcid", "https://isni.org/0000-0002-1825-0097", "0000-0002-1825-0097\nx"]
+               "0000000218250097", "orcid", "https://isni.org/0000-0002-1825-0097",
+               "httpſ://orcid.org/0000-0002-1825-0097", "0000-0002-1825-0097\nx"]
     refused.each do |given|
       error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", "--orcid=#{given}") }
 

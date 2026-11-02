@@ -91,13 +91,23 @@ class TestGenerator < Minitest::Test
   def test_the_values_are_written_as_given
     in_tmpdir do |dir|
       gem = project(author: "José \"Q\" \#{x}", summary: "Greets \\ people.")
-      Veragem::Generator.generate(gem, File.join(dir, "my_gem"))
+      # a locale not UTF-8's, whose String#inspect would escape the é
+      with_encodings(Encoding::US_ASCII, nil) { Veragem::Generator.generate(gem, File.join(dir, "my_gem")) }
 
       assert_equal [["José \"Q\" \#{x}"], "Greets \\ people."],
                    spec_of(File.join(dir, "my_gem"), gem).values_at("authors", "summary")
       assert_match(/\ACopyright #{Time.now.year} José "Q" \#\{x\}$/, read(dir, "my_gem/LICENSE-MIT"))
       # as written, whatever the locale: no escape but a quote's, a backslash's and an interpolation's
       assert_includes read(dir, "my_gem/my_gem.gemspec"), 'spec.authors = ["José \"Q\" \#{x}"]'
+    end
+  end
+
+  # as Markdown's text (Project#markdown), under its title
+  def test_the_readme_shows_the_summary_as_written
+    in_tmpdir do |dir|
+      Veragem::Generator.generate(project(summary: "Greets _all_ people."), File.join(dir, "my_gem"))
+
+      assert_equal "Greets \\_all\\_ people.\n", read(dir, "my_gem/README.md").lines[2]
     end
   end
 

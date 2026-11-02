@@ -48,8 +48,7 @@ class TestQuestionsRefused < Minitest::Test
   end
 
   def test_a_terminal_that_cannot_be_asked_stops_it
-    # input closed, then a prompt and a refusal that cannot be shown, then a line its encoding cannot
-    # convert (Encoding.default_internal set)
+    # input closed, a prompt and a refusal that cannot be shown, a line its encoding cannot convert
     [{ input: terminal.tap(&:close_read), output: StringIO.new }, { input: terminal, output: broken(:print) },
      { input: terminal("1gem"), output: broken(:puts) },
      { input: unconvertible, output: StringIO.new }].each do |io|
@@ -69,5 +68,11 @@ class TestQuestionsRefused < Minitest::Test
 
   def broken(write) = StringIO.new.tap { it.define_singleton_method(write) { |*| raise Errno::EPIPE } }
 
-  def unconvertible = terminal.tap { it.define_singleton_method(:gets) { raise Encoding::InvalidByteSequenceError } }
+  # a terminal that converts what it reads to US-ASCII, an "é" on it
+  def unconvertible
+    reader, writer = IO.pipe(Encoding::UTF_8, Encoding::US_ASCII)
+    writer.write("é\n")
+    writer.close
+    reader.tap { |io| def io.tty? = true }
+  end
 end

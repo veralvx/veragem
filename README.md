@@ -91,7 +91,7 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 
 A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
 expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, a value git's
-config gives that veragem refuses names its key and the options that replace it.
+config gives that veragem refuses names its key and the option or options that replace it.
 
 ### Questions
 
@@ -157,8 +157,9 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 ### The summary
 
 The summary is plain text, as RubyGems shows it: the README shows it as written, its Markdown
-characters escaped (`_`, `` ` ``, `<`...) but a URL's, which GitHub links, and its spaces single,
-as dprint writes them. It is the module's comment too, so one the gem's yard-lint or RuboCop would
+characters escaped (`_`, `` ` ``, `<`...), a URL's `://` and `www.` too, which GitHub would link
+with its escapes shown, and its spaces single, as dprint writes them; GitHub's emoji (`:gem:`)
+alone it cannot keep. It is the module's comment too, so one the gem's yard-lint or RuboCop would
 not take as its documentation is refused: a tag first, YARD's (`@param`, `(see`) or written
 informally (`Note:`, `See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic
 comment (`encoding:`), a backtick or `**` left open.

@@ -44,7 +44,7 @@ class TestGit < Minitest::Test
         gem = Dir.chdir(home) { Veragem::Options.parse(["my_gem", "--github=ada"], input:, output: writer) }
         writer.close
 
-        assert_equal ["José", true], [gem.author, reader.read.include?("Author [José]: ")]
+        assert_equal ["José", "Author [José]: "], [gem.author, reader.read[/Author \[José\]: /]]
       end
     end
   end
@@ -98,18 +98,6 @@ class TestGit < Minitest::Test
   end
 
   private
-
-  # silently: Ruby warns of a default external encoding set
-  def with_encodings(external, internal)
-    saved = [Encoding.default_external, Encoding.default_internal]
-    silently do
-      Encoding.default_external = external
-      Encoding.default_internal = internal
-    end
-    yield
-  ensure
-    silently { Encoding.default_external, Encoding.default_internal = saved }
-  end
 
   # git's messages untranslated (LC_ALL=C), as the tests match them
   def in_git_home

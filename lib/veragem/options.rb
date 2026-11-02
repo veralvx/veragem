@@ -56,8 +56,7 @@ module Veragem
     # any question.
     private_class_method def self.arguments(argv)
       given = {} #: Hash[Symbol, String | bool]
-      # an argument of invalid UTF-8 as bytes, as git's values are: OptionParser's matching raises on
-      # it, Project refuses it
+      # an argument of invalid UTF-8 as bytes: OptionParser's matching raises on it, Project refuses it
       names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: given)
       # OptionParser keys --given-names as :"given-names"; Project's are :given_names
       given.transform_keys! { it.name.tr("-", "_").to_sym }

@@ -42,13 +42,15 @@ module Veragem
     # git's output in +dir+'s repository, whatever repository a git hook running the tests points at
     def git(dir, *args) = IO.popen(Generator.const_get(:GIT_LOCAL), ["git", *args], chdir: dir, &:read)
 
-    # the block with +object+'s method +name+ replaced by +stub+
+    # the block with +object+'s method +name+ replaced by +stub+: then its own again, or the one it
+    # inherits
     def stubbed(object, name, stub)
-      original = object.method(name)
+      own = object.method(name) if object.singleton_class.method_defined?(name, false)
       silently { object.define_singleton_method(name, &stub) }
       yield
     ensure
-      silently { object.define_singleton_method(name, original) } if original
+      object.singleton_class.remove_method(name)
+      object.define_singleton_method(name, own) if own
     end
 
     # Ruby's warnings off for the block: one of a method redefined, which the tests would count as
@@ -59,6 +61,18 @@ module Veragem
       yield
     ensure
       $VERBOSE = verbose
+    end
+
+    # silently: Ruby warns of a default external encoding set
+    def with_encodings(external, internal)
+      saved = [Encoding.default_external, Encoding.default_internal]
+      silently do
+        Encoding.default_external = external
+        Encoding.default_internal = internal
+      end
+      yield
+    ensure
+      silently { Encoding.default_external, Encoding.default_internal = saved }
     end
 
     def with_env(values)
