@@ -10,7 +10,7 @@ module Veragem
     # template/: a generated gem's files, ERB and plain. (Steep: __dir__ is nil only in code evaluated
     # from a string, never in a required file.)
     TEMPLATE = File.expand_path("../../template", __dir__) # steep:ignore ArgumentTypeMismatch
-    # The files a command line alone needs: its code, its test, its OCI image's workflow.
+    # The files a command line alone needs: its code, its test, its OCI image's workflow and its script.
     EXE = %w[exe/%name%.erb lib/%path%/cli.rb.erb test/test_cli.rb.erb .github/workflows/image.yml
              .github/image-registries.sh].freeze
     # The files a generated gem runs as commands: executable there, and so in git's index, which a

@@ -59,24 +59,10 @@ class TestProbe < Minitest::Test
 
   # a refusal, not a raw Errno: Bundler reports any other error as its own bug
   def test_a_system_failure_refuses
-    error = with_mktmpdir(->(*) { raise Errno::ENOSPC }) do
+    error = stubbed(Dir, :mktmpdir, ->(*) { raise Errno::ENOSPC }) do
       assert_raises(Veragem::Error) { Veragem::Name.probe("date", "my_gem", %w[No No::Space]) }
     end
 
     assert_equal "could not check No::Space against its tools: No space left on device", error.message
-  end
-
-  private
-
-  # Ruby warns of a method redefined, which the tests would count as their own
-  def with_mktmpdir(stub)
-    verbose = $VERBOSE
-    $VERBOSE = nil
-    original = Dir.method(:mktmpdir)
-    Dir.define_singleton_method(:mktmpdir, &stub)
-    yield
-  ensure
-    Dir.define_singleton_method(:mktmpdir, original)
-    $VERBOSE = verbose
   end
 end

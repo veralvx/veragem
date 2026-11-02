@@ -17,7 +17,7 @@ class TestQuestions < Minitest::Test
   end
 
   def test_the_answers_are_taken_their_spaces_stripped
-    gem, = ask(answers: [" my-gem ", "y", " n ", " M ", "Greets.", "Ada", "ada@example.com", "ada"])
+    gem, = ask(answers: [" my-gem ", "\u3000y\u00A0", " n ", " M ", "Greets.", "Ada", "ada@example.com", "ada"])
 
     assert_equal ["my-gem", true, "mit", "Greets.", "Ada", "ada@example.com", "ada"],
                  [gem.name, gem.exe, gem.license, gem.summary, gem.author, gem.email, gem.github]
@@ -48,7 +48,7 @@ class TestQuestions < Minitest::Test
 
   def test_a_refused_answer_is_asked_again_saying_why
     gem, shown = ask(answers: ["1gem", "my_gem", "maybe", "YES", "", "gpl", "apache", "TODO", "Greets.",
-                               "\u00A0", "Ada", "a\tb", "ada@example.com", "-ada", "ada"])
+                               "FIXME", "Ada", "a\tb", "ada@example.com", "-ada", "ada"])
 
     assert_equal ["my_gem", true, "apache", "Greets.", "Ada", "ada@example.com", "ada"],
                  [gem.name, gem.exe, gem.license, gem.summary, gem.author, gem.email, gem.github]

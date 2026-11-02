@@ -49,12 +49,19 @@ module Veragem
     def self.check: (String value) -> String
   end
 
-  class Project
-    GITHUB: Regexp
-    FIELDS: Hash[Symbol, String]
+  module Summary
     TAG: Regexp
     ANNOTATION: Regexp
     MAGIC: Regexp
+
+    def self.check: (String summary) -> String
+    private def self.annotation?: (String summary) -> bool
+  end
+
+  class Project
+    GITHUB: Regexp
+    FIELDS: Hash[Symbol, String]
+    MARKUP: Regexp
     OPTIONAL: Hash[Symbol, String]
 
     attr_reader name: String
@@ -71,6 +78,8 @@ module Veragem
     attr_reader orcid: String?
     attr_reader keywords: Array[String]?
 
+    # each key's value its own type (author a String, email a String or false, exe a bool), which no
+    # Hash type says: untyped
     def initialize: (String name, Hash[Symbol, untyped] values) -> void
     def path: () -> String
     def underscored: () -> String
@@ -81,15 +90,16 @@ module Veragem
     def today: () -> String
     def yaml: (String value) -> String
     def quote: (String value) -> String
+    def markdown: (String value) -> String
     def nest: (String body, ?doc: String?) -> String
+    def self.field: (Symbol key) -> String
+    def self.strip: (String text) -> String
     def self.quote: (String value) -> String
     def self.check: (Symbol key, String? value) -> String
     private def self.utf8: (Symbol key, String? value) -> String
     private def self.github: (String value) -> String
     private def self.text: (String field, String value) -> String
     private def self.line: (String field, String value) -> String
-    private def self.documented: (String summary) -> String
-    private def self.annotation?: (String summary) -> bool
 
     private
 

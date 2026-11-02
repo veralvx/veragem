@@ -21,13 +21,13 @@ module Veragem
     }.freeze
     private_constant :QUESTIONS
 
-    # Whether +text+ is "-", an optional question's none: spaces around it stripped, Unicode's too, as
-    # a value's are.
+    # Whether +text+ is "-", an optional question's none, its spaces around it stripped as a value's
+    # are (Project.strip).
     # @param text [String] an answer or an option's value, its bytes as given
     # @return [Boolean]
     def self.none?(text)
       text = text.dup.force_encoding(Encoding::UTF_8)
-      text.valid_encoding? && text.match?(/\A[[:space:]]*-[[:space:]]*\z/)
+      text.valid_encoding? && Project.strip(text) == "-"
     end
 
     # Questions on +output+, answered on +input+, for a gem generated into +dir+.
@@ -120,7 +120,7 @@ module Veragem
       end
       raise Error, "no answer to #{question}" unless line
 
-      answer = (line.valid_encoding? ? line : line.b).strip
+      answer = Project.strip(line.valid_encoding? ? line : line.b)
       answer unless answer.empty?
     end
 
@@ -141,7 +141,7 @@ module Veragem
     # check's own failure.
     def terminal(question)
       yield
-    rescue SystemCallError, IOError => e
+    rescue SystemCallError, IOError, EncodingError => e
       raise Error, "cannot ask #{question}: #{e}"
     end
 

@@ -91,18 +91,43 @@ class TestGenerator < Minitest::Test
   def test_the_values_are_written_as_given
     in_tmpdir do |dir|
       gem = project(author: "José \"Q\" \#{x}", summary: "Greets \\ people.")
-      Veragem::Generator.generate(gem, File.join(dir, "my_gem"))
+      # a locale not UTF-8's, whose String#inspect would escape the é
+      with_encodings(Encoding::US_ASCII, nil) { Veragem::Generator.generate(gem, File.join(dir, "my_gem")) }
 
       assert_equal [["José \"Q\" \#{x}"], "Greets \\ people."],
                    spec_of(File.join(dir, "my_gem"), gem).values_at("authors", "summary")
       assert_match(/\ACopyright #{Time.now.year} José "Q" \#\{x\}$/, read(dir, "my_gem/LICENSE-MIT"))
+      # as written, whatever the locale: no escape but a quote's, a backslash's and an interpolation's
+      assert_includes read(dir, "my_gem/my_gem.gemspec"), 'spec.authors = ["José \"Q\" \#{x}"]'
+    end
+  end
+
+  # as Markdown's text (Project#markdown), under its title
+  def test_the_readme_shows_the_summary_as_written
+    in_tmpdir do |dir|
+      Veragem::Generator.generate(project(summary: "Greets _all_ people."), File.join(dir, "my_gem"))
+
+      assert_equal "Greets \\_all\\_ people.\n", read(dir, "my_gem/README.md").lines[2]
     end
   end
 
   def test_it_is_a_git_repository_on_main_its_files_added
     each_kind do |_, target, files|
-      assert_equal "main", IO.popen(%w[git symbolic-ref --short HEAD], chdir: target, &:read).strip
-      assert_equal files.sort, IO.popen(%w[git ls-files], chdir: target, &:read).lines(chomp: true).sort
+      assert_equal "main", git(target, "symbolic-ref", "--short", "HEAD").strip
+      assert_equal files.sort, git(target, "ls-files").lines(chomp: true).sort
+    end
+  end
+
+  # an interrupt while the files are written leaves nothing behind, as a failure does (test_refusals.rb)
+  def test_an_interrupt_leaves_nothing_behind
+    in_tmpdir do |dir|
+      target = File.join(dir, "my_gem")
+
+      stubbed(File, :binwrite, ->(*) { raise Interrupt }) do
+        assert_raises(Interrupt) { Veragem::Generator.generate(project, target) }
+      end
+
+      refute_path_exists target
     end
   end
 end

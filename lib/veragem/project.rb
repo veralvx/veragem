@@ -8,27 +8,28 @@ module Veragem
     # GitHub's rule for a user or organization name: ASCII's letters, which /i would widen to Unicode's
     # (ſ, the Kelvin sign).
     GITHUB = /\A[a-zA-Z\d](?:[a-zA-Z\d]|-(?=[a-zA-Z\d])){0,38}\z/
-    # Each value a refusal names otherwise than its key, as its other refusals do.
+    # Each value a refusal names otherwise than its key.
     FIELDS = { github: "GitHub user", license: "license (#{License::CHOICES})", orcid: "ORCID iD" }.freeze
-    # What YARD reads as a tag first in a comment: its own (`@param`, `(see`), and those yard-lint
-    # (.yard-lint.yml) takes for one written informally.
-    TAG = /\A(?:@|\(see\b|(?:note|important|todo|fixme|see(?:\ also)?|warning|deprecated|author|version|since
-            |returns|raises|example):)/xi
-    # A RuboCop annotation, no documentation, as its AnnotationComment reads one: a keyword first, then
-    # a colon, spaces before it or not, or a space -- but a sentence's capitalized first word, a word
-    # after it (a summary, stripped, has one after a space).
-    ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)\b(\s*:)?(\s+)?/i
-    # A magic comment as RuboCop reads one -- an encoding's anywhere, lower-case (Ruby's rule), a
-    # frozen string literal's first, in any case -- or a RuboCop directive, which would turn its cops
-    # off, or fail them.
-    MAGIC = /\b(?:en)?coding\s*[:=]|\A(?i:frozen[_-]string[_-]literal):|(?i:\brubocop\s*:)/
+    # What Markdown would read as markup in a text: a character to escape, but an `_` within a word;
+    # and a URL's `://` or `www.`, which GFM would link, its escapes shown.
+    MARKUP = %r{[\\`*\[\]<~$] | (?<![[:alnum:]])_ | _(?![[:alnum:]]) | &(?=\#?[[:alnum:]]+;) | :(?=//) | (?<=www)\.}x
     # The values that may be none, and how an option gives none: a question takes "-".
     OPTIONAL = { email: "--no-email", given_names: "--no-given-names", alias: "--no-alias",
                  orcid: "leave --orcid out", keywords: "leave --keywords out" }.freeze
-    private_constant :GITHUB, :FIELDS, :TAG, :ANNOTATION, :MAGIC
+    private_constant :GITHUB, :FIELDS, :MARKUP
 
     attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
                 :alias_name, :orcid, :keywords
+
+    # The value +key+ names, as a refusal names it: `GitHub user` :github, `given names` :given_names.
+    # @param key [Symbol] a value's
+    # @return [String]
+    def self.field(key) = FIELDS.fetch(key) { key.name.tr("_", " ") }
+
+    # +text+ without the spaces around it, Unicode's too (String#strip's are ASCII's alone).
+    # @param text [String]
+    # @return [String]
+    def self.strip(text) = text.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "")
 
     # +value+ as a Ruby string literal, as written whatever the locale (String#inspect escapes
     # what the locale cannot show): a quote, a backslash and an interpolation escaped.
@@ -47,8 +48,8 @@ module Veragem
       value = utf8(key, value)
       case key
       when :github then github(value)
-      when :license then License.check(value)
-      when :summary then documented(text("summary", value))
+      when :license then License.check(strip(value))
+      when :summary then Summary.check(text("summary", value))
       when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
       else text(key.name, value)
       end
@@ -106,6 +107,15 @@ module Veragem
     # @return [String]
     def yaml(value) = JSON.generate(value)
 
+    # +value+ as Markdown's text, shown as written, as RubyGems shows a summary: its markup escaped,
+    # one space between words, as dprint writes them.
+    # @param value [String] a value of the gem's, checked
+    # @return [String]
+    def markdown(value)
+      escaped = value.squeeze(" ").gsub(MARKUP) { "\\#{it}" }
+      escaped.sub(/\A(?=[#>+-])|\A\d+\K(?=[.)])/) { "\\" }
+    end
+
     # Project.quote, for the templates.
     # @param value [String] a value of the gem's, checked
     # @return [String]
@@ -124,13 +134,12 @@ module Veragem
       end
     end
 
-    # +value+'s bytes as UTF-8, whatever their encoding (ARGV's and git's are binary under a locale
-    # not UTF-8's), refused unless valid: every check after it takes valid UTF-8. None (nil) is "",
-    # which each check refuses.
+    # +value+'s bytes as UTF-8, whatever their encoding (an argument's are binary where the locale's
+    # encoding cannot read them), refused unless valid: every check after it takes valid UTF-8.
+    # None (nil) is "", which each check refuses.
     private_class_method def self.utf8(key, value)
       value = value.to_s.dup.force_encoding(Encoding::UTF_8)
-      field = FIELDS.fetch(key) { key.name.tr("_", " ") }
-      raise Error, "invalid #{field} #{value.inspect}: not UTF-8" unless value.valid_encoding?
+      raise Error, "invalid #{field(key)} #{value.inspect}: not UTF-8" unless value.valid_encoding?
 
       value
     end
@@ -138,7 +147,7 @@ module Veragem
     private_class_method def self.github(value)
       return value if GITHUB.match?(value)
 
-      raise Error, "invalid #{FIELDS[:github]} #{value.inspect}: 1 to 39 ASCII letters, digits and inner single hyphens"
+      raise Error, "invalid #{field(:github)} #{value.inspect}: 1 to 39 ASCII letters, digits and inner single hyphens"
     end
 
     # A value a file quotes, which RubyGems does not refuse as unfinished.
@@ -154,34 +163,11 @@ module Veragem
     # (RuboCop's 120 columns). U+FFFE and U+FFFF are outside YAML's printable characters:
     # CITATION.cff's.
     private_class_method def self.line(field, value)
-      line = value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/) ? "" : value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "")
+      line = value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/) ? "" : strip(value)
       raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
       raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
 
       line
-    end
-
-    # +summary+, which is the module's comment too: one the gem's own yard-lint and RuboCop take as its
-    # documentation, no tag, annotation or magic comment, and no backtick or bold left open -- a `**`
-    # outside code with a non-space beside it, as yard-lint counts (`x ** 2` is no bold).
-    private_class_method def self.documented(summary)
-      raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(TAG)
-
-      misread = annotation?(summary) || summary.match?(MAGIC)
-      raise Error, "invalid summary #{summary.inspect}: RuboCop would read an annotation or a directive" if misread
-
-      bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size
-      left_open = summary.count("`").odd? || bold.odd?
-      raise Error, "invalid summary #{summary.inspect}: a backtick or ** left open" if left_open
-
-      summary
-    end
-
-    private_class_method def self.annotation?(summary)
-      keyword, colon, space = summary.match(ANNOTATION)&.captures
-      return false unless keyword && (colon || space)
-
-      !(keyword == keyword.capitalize && !colon)
     end
 
     private

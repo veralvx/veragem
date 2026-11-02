@@ -10,5 +10,6 @@
 
 - [ ] Code passes local CI (`bundle exec rake checks`).
 - [ ] Core logic is extracted into pure, unit-testable functions.
-- [ ] Any new `# rubocop:disable` or `# steep:ignore` names its cop or diagnostic and says why it is wrong here (RuboCop's after `--`, Steep's on the line above: AGENTS.md).
+- [ ] Any new `# rubocop:disable` or `# steep:ignore` names its cop or diagnostic and says why it
+      is wrong here (RuboCop's after `--`, Steep's on the line above: AGENTS.md).
 - [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/).

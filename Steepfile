@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Steep checks lib/ against sig/, its strictest diagnostics on: `rake steep`.
+# Steep checks lib/ against sig/, its strict diagnostics on: `rake steep`.
 target :lib do
   signature "sig"
   check "lib"

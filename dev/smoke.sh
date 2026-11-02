@@ -18,7 +18,9 @@ bundle plugin install veragem --path "$root"
 generate() {
   bundle veragem "$@" --author "Smoke Test" --email smoke@example.com --github veragem-smoke < /dev/null
 }
-generate smoke_lib
+# a summary of Markdown's markup, which the README shows as written and dprint takes
+# shellcheck disable=SC2016 # the backticks and $z are the summary's, as written
+generate smoke_lib --summary '+ A __fast__ my_gem  for `JSON` <!-- x, 2) & &amp; ~y~ $z [l](u) http://x/_a_ www._b_'
 generate smoke-omniauth-google_oauth2 --exe --license mit
 generate smoke_apache --license apache --citation --given-names Smöke --family-names Test \
   --alias smoke-test --orcid 0000-0002-1825-0097 --keywords smoke,test

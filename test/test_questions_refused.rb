@@ -48,9 +48,10 @@ class TestQuestionsRefused < Minitest::Test
   end
 
   def test_a_terminal_that_cannot_be_asked_stops_it
-    # input closed, then a prompt and a refusal that cannot be shown
+    # input closed, a prompt and a refusal that cannot be shown, a line its encoding cannot convert
     [{ input: terminal.tap(&:close_read), output: StringIO.new }, { input: terminal, output: broken(:print) },
-     { input: terminal("1gem"), output: broken(:puts) }].each do |io|
+     { input: terminal("1gem"), output: broken(:puts) },
+     { input: unconvertible, output: StringIO.new }].each do |io|
       error = assert_raises(Veragem::Error) { Veragem::Options.parse([], config: CONFIG.method(:[]), **io) }
 
       assert_match(/\Acannot ask Gem name: /, error.message)
@@ -66,4 +67,12 @@ class TestQuestionsRefused < Minitest::Test
   private
 
   def broken(write) = StringIO.new.tap { it.define_singleton_method(write) { |*| raise Errno::EPIPE } }
+
+  # a terminal that converts what it reads to US-ASCII, an "é" on it
+  def unconvertible
+    reader, writer = IO.pipe(Encoding::UTF_8, Encoding::US_ASCII)
+    writer.write("é\n")
+    writer.close
+    reader.tap { |io| def io.tty? = true }
+  end
 end

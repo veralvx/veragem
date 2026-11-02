@@ -7,19 +7,6 @@ require "yaml"
 class TestProject < Minitest::Test
   include Veragem::TestSupport
 
-  REFUSED_SUMMARIES = ["Note: a fork.", "see also: foo.", "EXAMPLE: x", "Parses `foo files.", "Bold **text.",
-                       "@param x", "(see #foo)", "review the code", "Review: the code", "HACK: a fix",
-                       "Note : a fork.", "Hack :x", "todo later", "NOTE a fork", "encoding: ascii",
-                       "A gem: encoding: utf-8 inside", "A coding=utf-8 thing", "coding : x",
-                       "Frozen_string_literal: true", "frozen-string-literal: x", "rubocop:disable all",
-                       "Parses C# rubocop:disable all", "Rubocop:disable all"].freeze
-  TAKEN_SUMMARIES = ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.",
-                     "Squares: x ** 2.", "Code `a **b` too.", "Code `a`** b.", "Code ``** b.", "Review the code",
-                     "Todo later", "Notebook support",
-                     "Decoding: utf-8 fast", "see the docs", "Note-taking app", "Hack's toolkit", "Note.", "Review",
-                     "note-taking app", "Notes: x", "Encoding: helpers", "Coding: kata", "Encoding=x",
-                     "Frozen string literal: x", "A frozen_string_literal: true"].freeze
-
   def test_the_github_user_follows_githubs_rule
     ["jane", "jane-doe", "J4ne", "jAne-Doe", "a" * 39].each { assert_equal it, project(github: it).github }
 
@@ -32,25 +19,6 @@ class TestProject < Minitest::Test
     ["", " ", "\u3000", "two\nlines", "two\u2028lines", "tab\there", "TODO: write", " FIXME", "\xFF".b,
      "x" * 99].each do |summary|
       assert_raises(Veragem::Error, summary.inspect) { project(summary:) }
-    end
-  end
-
-  # the module's comment too: each refused fails the generated gem's yard-lint or RuboCop as it, and
-  # each taken passes them (both checked so in a generated gem)
-  def test_a_summary_is_a_comment_yard_lint_and_rubocop_take
-    REFUSED_SUMMARIES.each do |summary|
-      assert_raises(Veragem::Error, summary.inspect) { Veragem::Project.check(:summary, summary) }
-    end
-    TAKEN_SUMMARIES.each { assert_equal it, Veragem::Project.check(:summary, it) }
-  end
-
-  # the whole message: what is refused, as given, and why
-  def test_a_refused_summary_says_why
-    { "x" * 99 => "invalid summary: too long, its Ruby string at most 100 characters",
-      "@param x" => 'invalid summary "@param x": YARD would read a tag',
-      "Hack: a fix" => 'invalid summary "Hack: a fix": RuboCop would read an annotation or a directive',
-      "Parses `foo" => 'invalid summary "Parses `foo": a backtick or ** left open' }.each do |summary, why|
-      assert_equal why, assert_raises(Veragem::Error) { Veragem::Project.check(:summary, summary) }.message
     end
   end
 
