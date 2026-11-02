@@ -95,13 +95,14 @@ config gives that veragem refuses names its key and the option that replaces it.
 
 ### Questions
 
-With a terminal for input, `bundle veragem` asks for each value no option gives, the name too,
-once the options are checked. A question offers its default unless veragem refuses it, Enter takes
-it, an optional one takes `-` for none, and a refused answer, or none where there is no default, is
-asked again, saying why. `-` is no option's value, as no answer can give it: `--no-email`,
-`--no-given-names` and `--no-alias` give none, and an `--orcid` or `--keywords` left out does.
-With other input (CI, a pipe, `< /dev/null` to skip the questions) nothing is asked: the defaults
-apply, and a missing name, author, GitHub user or, with `--citation`, family names is refused.
+With a terminal for input, `bundle veragem` asks for each value no option gives, the name too, once
+the options are checked. A question offers its default unless veragem refuses it, saying why and
+where it is from (`git config user.name`); Enter takes it, an optional one takes `-` for none, and a
+refused answer, or none where there is no default, is asked again, saying why. `-` is no option's
+value, as no answer can give it: `--no-email`, `--no-given-names` and `--no-alias` give none, and an
+`--orcid` or `--keywords` left out does. With other input (CI, a pipe, `< /dev/null` to skip the
+questions) nothing is asked: the defaults apply, and a missing name, author, GitHub user or, with
+`--citation`, family names is refused.
 
 ### CITATION.cff
 
