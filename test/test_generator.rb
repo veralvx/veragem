@@ -96,13 +96,28 @@ class TestGenerator < Minitest::Test
       assert_equal [["José \"Q\" \#{x}"], "Greets \\ people."],
                    spec_of(File.join(dir, "my_gem"), gem).values_at("authors", "summary")
       assert_match(/\ACopyright #{Time.now.year} José "Q" \#\{x\}$/, read(dir, "my_gem/LICENSE-MIT"))
+      # as written, whatever the locale: no escape but a quote's, a backslash's and an interpolation's
+      assert_includes read(dir, "my_gem/my_gem.gemspec"), 'spec.authors = ["José \"Q\" \#{x}"]'
     end
   end
 
   def test_it_is_a_git_repository_on_main_its_files_added
     each_kind do |_, target, files|
-      assert_equal "main", IO.popen(%w[git symbolic-ref --short HEAD], chdir: target, &:read).strip
-      assert_equal files.sort, IO.popen(%w[git ls-files], chdir: target, &:read).lines(chomp: true).sort
+      assert_equal "main", git(target, "symbolic-ref", "--short", "HEAD").strip
+      assert_equal files.sort, git(target, "ls-files").lines(chomp: true).sort
+    end
+  end
+
+  # an interrupt while the files are written leaves nothing behind, as a failure does (test_refusals.rb)
+  def test_an_interrupt_leaves_nothing_behind
+    in_tmpdir do |dir|
+      target = File.join(dir, "my_gem")
+
+      stubbed(File, :binwrite, ->(*) { raise Interrupt }) do
+        assert_raises(Interrupt) { Veragem::Generator.generate(project, target) }
+      end
+
+      refute_path_exists target
     end
   end
 end

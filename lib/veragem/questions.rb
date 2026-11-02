@@ -120,7 +120,7 @@ module Veragem
       end
       raise Error, "no answer to #{question}" unless line
 
-      answer = (line.valid_encoding? ? line : line.b).strip
+      answer = (line.valid_encoding? ? line : line.b).gsub(/\A[[:space:]]+|[[:space:]]+\z/, "")
       answer unless answer.empty?
     end
 
@@ -141,7 +141,7 @@ module Veragem
     # check's own failure.
     def terminal(question)
       yield
-    rescue SystemCallError, IOError => e
+    rescue SystemCallError, IOError, EncodingError => e
       raise Error, "cannot ask #{question}: #{e}"
     end
 

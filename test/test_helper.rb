@@ -39,6 +39,22 @@ module Veragem
 
     def in_tmpdir(&) = Dir.mktmpdir("veragem-test", &)
 
+    # git's output in +dir+'s repository, whatever repository a git hook running the tests points at
+    def git(dir, *args) = IO.popen(Generator.const_get(:GIT_LOCAL), ["git", *args], chdir: dir, &:read)
+
+    # the block with +object+'s method +name+ replaced by +stub+; Ruby warns of a method redefined,
+    # which the tests would count as their own
+    def stubbed(object, name, stub)
+      verbose = $VERBOSE
+      $VERBOSE = nil
+      original = object.method(name)
+      object.define_singleton_method(name, &stub)
+      yield
+    ensure
+      object.define_singleton_method(name, original)
+      $VERBOSE = verbose
+    end
+
     def with_env(values)
       saved = ENV.to_h
       ENV.update(values)
@@ -84,9 +100,11 @@ module Veragem
 
   # What the generator's tests share: each kind generated, and what it holds.
   module GeneratedSupport
+    include TestSupport
+
     # The files git's index of +dir+ holds as executable (mode 100755), under +paths+
     def indexed_executables(dir, *paths)
-      IO.popen(["git", "ls-files", "--stage", "-z", "--", *paths], chdir: dir, &:read).split("\0").filter_map do |entry|
+      git(dir, "ls-files", "--stage", "-z", "--", *paths).split("\0").filter_map do |entry|
         mode, *, path = entry.split(/\s/, 4)
         path if mode == "100755"
       end

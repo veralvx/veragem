@@ -73,7 +73,7 @@ module Veragem
     private_class_method def self.checked(key, value)
       none = Project::OPTIONAL[key]
       if none && Questions.none?(value)
-        raise Error, %(invalid #{key.name.tr("_", " ")} "-": a question's none; for none, #{none})
+        raise Error, %(invalid #{Project.field(key)} "-": a question's none; for none, #{none})
       end
 
       Project.check(key, value)
@@ -96,21 +96,22 @@ module Veragem
     end
 
     # The options' values, and git's where none is given: one of git's refused says so, and which
-    # option replaces it, as a missing author or GitHub user does.
+    # options replace it, as a missing author or GitHub user does.
     private_class_method def self.required(defaults, given)
       GIT_CONFIG.except(*given.keys).each do |key, name|
         value = defaults[key] or next
         Project.check(key, value)
       rescue Error => e
-        raise Error, "#{e} (git config #{name}; --#{key} replaces it)"
+        replaced = ["--#{key}", Project::OPTIONAL[key]].compact.join(" or ")
+        raise Error, "#{e} (git config #{name}; #{replaced} replaces it)"
       end
       defaults.merge(given).tap { check_present(it) }.compact
     end
 
     # The author and the GitHub user, which nothing but git defaults.
     private_class_method def self.check_present(values)
-      { author: "author", github: "GitHub user" }.each do |key, field|
-        raise Error, "no #{field}: --#{key}, or git config #{GIT_CONFIG[key]}" unless values[key]
+      %i[author github].each do |key|
+        raise Error, "no #{Project.field(key)}: --#{key}, or git config #{GIT_CONFIG[key]}" unless values[key]
       end
     end
 
@@ -122,14 +123,14 @@ module Veragem
       end
     end
 
-    # A git config value, nil when unset (status 1): its bytes, which Project reads as UTF-8 whatever
-    # the locale. A git that cannot run, or cannot read its config, is refused here, with git's reason,
-    # before a missing value would be blamed on the config.
+    # A git config value, nil when unset (status 1): its bytes as UTF-8, whatever the locale, which
+    # Project refuses unless valid. A git that cannot run, or cannot read its config, is refused here,
+    # with git's reason, before a missing value would be blamed on the config.
     private_class_method def self.git_config(key)
       value, error, status = Open3.capture3("git", "config", "--get", key, binmode: true)
       raise Error, "git config --get #{key}: #{error.strip}" unless status.success? || status.exitstatus == 1
 
-      value.strip.then { it unless it.empty? }
+      value.strip.force_encoding(Encoding::UTF_8).then { it unless it.empty? }
     rescue SystemCallError => e
       raise Error, "cannot run git: #{e}"
     end

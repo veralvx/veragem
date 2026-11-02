@@ -25,7 +25,7 @@ class TestCitationFile < Minitest::Test
 
   def test_the_file_holds_the_projects_values
     gem = project(citation: true, given_names: "Jane", family_names: "Doe", alias: "jdoe", orcid: ORCID,
-                  keywords: "ruby, gem")
+                  keywords: "ruby, gem", email: "jane@example.com")
     cff, version = generated(gem)
 
     assert_equal({ "cff-version" => "1.2.0", "title" => "my_gem", "abstract" => "A Ruby gem.",

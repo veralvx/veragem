@@ -101,7 +101,7 @@ class TestRefusals < Minitest::Test
       end
 
       assert_path_exists File.join(dir, "my_gem/.git")
-      assert_empty IO.popen(%w[git ls-files], chdir: other, &:read)
+      assert_empty git(other, "ls-files")
     end
   end
 
@@ -113,7 +113,7 @@ class TestRefusals < Minitest::Test
       target = File.join(dir, "my_gem")
       with_git_config(dir, "[core]\n  excludesFile = #{excludes}\n") { Veragem::Generator.generate(project, target) }
 
-      assert_includes IO.popen(%w[git ls-files], chdir: target, &:read).lines(chomp: true), "my_gem.gemspec"
+      assert_includes git(target, "ls-files").lines(chomp: true), "my_gem.gemspec"
     end
   end
 
@@ -131,10 +131,10 @@ class TestRefusals < Minitest::Test
 
   private
 
-  # the block run with +text+ as git's global config: what git prints
+  # the block run with +text+ as git's global config: what git prints, untranslated (LC_ALL=C)
   def with_git_config(dir, text, &)
     config = File.join(dir, "gitconfig")
     File.write(config, text)
-    capture_subprocess_io { with_env("GIT_CONFIG_GLOBAL" => config, &) }
+    capture_subprocess_io { with_env("GIT_CONFIG_GLOBAL" => config, "LC_ALL" => "C", &) }
   end
 end

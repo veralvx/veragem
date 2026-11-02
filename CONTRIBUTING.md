@@ -28,8 +28,10 @@ lib/veragem/questions.rb  a terminal's questions for what no option gives
 lib/veragem/name.rb     the gem's name, checked: bundle gem's rules, what its files and tools meet
 lib/veragem/citation.rb  CITATION.cff's rules: who may give its values, its title, its ORCID iD
 lib/veragem/license.rb  the licence's choices, their SPDX identifiers, the one a value names
+lib/veragem/summary.rb  the summary, the module's comment too: what yard-lint and RuboCop take
 lib/veragem/project.rb  the values, checked, and what follows from them
-lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, executables marked; git
+lib/veragem/generator.rb  template/ written out: ERB rendered, the rest copied, executables marked;
+                          git
 template/               the generated gem
 sig/, test/, dev/smoke.sh
 ```
@@ -103,10 +105,10 @@ Open a pull request against `main`, titled as a conventional commit, once
   [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers) for the gem `veragem`:
   this repository, the workflow `release.yml`, the environment `release` (a publisher without one
   admits any of the workflow's jobs) -- and limit that environment's deployments to the tags `v*`
-  (Settings → Environments, a rule of ref type Tag): a trusted publisher names the environment, not
-  a ref, so without the rule a workflow pushed to any branch could publish. Limit who creates those
-  tags too (Settings → Rules → Rulesets, a tag ruleset on `v*`): a tag pushed on any commit runs
-  that commit's workflows in the environment.
+  (Settings → Environments, a rule of ref type Tag): a trusted publisher names the environment,
+  not a ref, so without the rule a workflow pushed to any branch could publish. Limit who creates
+  those tags too (Settings → Rules → Rulesets, a tag ruleset on `v*`): a tag pushed on any commit
+  runs that commit's workflows in the environment.
 - An advisory with no fixed version yet fails `security.yml` on every pull request until weighed:
   its ID under `ignore:` in `.bundler-audit.yml` (bundler-audit's own file) lets the checks pass.
 

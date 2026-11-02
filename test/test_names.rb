@@ -6,12 +6,6 @@ require "test_helper"
 class TestNames < Minitest::Test
   include Veragem::TestSupport
 
-  # bundle gem's own constant (Bundler's cli/gem.rb)
-  def bundle_gem_constant(name)
-    namespaced = name.gsub(/-[_-]*(?![_-]|$)/) { "::" }
-    namespaced.gsub(/([_-]+|(::)|^)(.|$)/) { Regexp.last_match(2).to_s + Regexp.last_match(3).upcase }
-  end
-
   def test_an_underscore_joins_words_into_one_constant
     gem = project("my_gem")
 
@@ -128,5 +122,13 @@ class TestNames < Minitest::Test
         assert(gem.modules.all? { it.match?(/\A[A-Z][A-Za-z0-9]*\z/) })
       end
     end
+  end
+
+  private
+
+  # bundle gem's own constant (Bundler's cli/gem.rb)
+  def bundle_gem_constant(name)
+    namespaced = name.gsub(/-[_-]*(?![_-]|$)/) { "::" }
+    namespaced.gsub(/([_-]+|(::)|^)(.|$)/) { Regexp.last_match(2).to_s + Regexp.last_match(3).upcase }
   end
 end

@@ -7,8 +7,9 @@ module Veragem
   module Citation
     # The values CITATION.cff alone writes.
     KEYS = %i[given_names family_names alias orcid keywords].freeze
-    # An ORCID iD, bare or as its URL: its 16th character, the check digit.
-    ORCID = %r{\A(?:https?://orcid\.org/)?(\d{4}-\d{4}-\d{4}-\d{3}[\dX])\z}i
+    # An ORCID iD, bare or as its URL, spaces around it (Unicode's too): its 16th character, the
+    # check digit.
+    ORCID = %r{\A[[:space:]]*(?:https?://orcid\.org/)?(\d{4}-\d{4}-\d{4}-\d{3}[\dX])[[:space:]]*\z}i
     # The ORCID iDs ORCID issues, without their check digit: those Zenodo's import takes (idutils).
     ORCID_BLOCKS = [15_000_000..35_000_000, 900_000_000_000..900_100_000_000].freeze
     private_constant :ORCID, :ORCID_BLOCKS
@@ -110,7 +111,7 @@ module Veragem
     # @return [String] its https://orcid.org/ URL
     # @raise [Veragem::Error] it is no ORCID iD
     def self.orcid(value)
-      id = value.strip[ORCID, 1]&.upcase
+      id = value[ORCID, 1]&.upcase
       return "https://orcid.org/#{id}" if id && valid?(id.delete("-"))
 
       raise Error, "invalid ORCID iD #{value.inspect}: 0000-0002-1825-0097, or its https://orcid.org/ URL"

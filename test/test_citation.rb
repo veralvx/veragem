@@ -39,7 +39,9 @@ class TestCitation < Minitest::Test
       "https://orcid.org/0000-0002-1694-233x" => "https://orcid.org/0000-0002-1694-233X",
       "0000-0001-5000-0007" => "https://orcid.org/0000-0001-5000-0007",
       "0000-0003-5000-0001" => "https://orcid.org/0000-0003-5000-0001",
-      "0009-0000-1234-567X" => "https://orcid.org/0009-0000-1234-567X" }.each do |given, written|
+      "0009-0000-1234-567X" => "https://orcid.org/0009-0000-1234-567X",
+      "0009-0000-0000-0009" => "https://orcid.org/0009-0000-0000-0009",
+      "\u00A00009-0010-0000-0003\u3000" => "https://orcid.org/0009-0010-0000-0003" }.each do |given, written|
       assert_equal written, parse("my_gem", "--citation", "--family-names=Doe", "--orcid=#{given}").orcid
     end
   end
@@ -55,6 +57,7 @@ class TestCitation < Minitest::Test
 
   def test_an_orcid_id_zenodo_refuses_is_refused
     refused = ["0000-0002-1825-0098", "0000-0001-4999-9992", "0000-0003-5000-001X", "0009-0010-0000-0011",
+               "0008-9999-9999-9996",
                "0000000218250097", "orcid", "https://isni.org/0000-0002-1825-0097", "0000-0002-1825-0097\nx"]
     refused.each do |given|
       error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", "--orcid=#{given}") }

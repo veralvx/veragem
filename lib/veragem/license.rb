@@ -9,13 +9,13 @@ module Veragem
     CHOICES = "mit, apache or dual"
 
     # The choice +value+ names: a choice, its SPDX expression (its ORs in either order) or the start
-    # of one choice alone, in any case and spaces around it aside (`Apache-2.0`, `apache-2.0 or mit`,
-    # `a`).
+    # of one choice alone, in any case and spaces around it aside, Unicode's too (`Apache-2.0`,
+    # `apache-2.0 or mit`, `a`).
     # @param value [String] valid UTF-8, as Project.check passes it
     # @return [String] the choice
     # @raise [Veragem::Error] it names none
     def self.check(value)
-      given = value.strip.downcase
+      given = value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, "").downcase
       spdx = SPDX.find { |_, ids| ids.map(&:downcase).sort == given.split(" or ").sort }&.first
       return spdx if spdx
 

@@ -5,6 +5,20 @@ require "test_helper"
 class TestOptions < Minitest::Test
   include Veragem::TestSupport
 
+  # each option and what --help says it does
+  HELP = { "--[no-]exe" => "Add a command line, exe/NAME (default: --no-exe, a library alone)",
+           "--license=LICENSE" => "mit, apache or dual (MIT OR Apache-2.0, the default)",
+           "--author=NAME" => "The author (default: git config user.name, else required)",
+           "--[no-]email=EMAIL" => "The author's email (default: git config user.email; --no-email, none)",
+           "--github=USER" => "The GitHub user or organization (default: git config github.user, else required)",
+           "--summary=TEXT" => "The gem's summary (default: A Ruby gem.)",
+           "--[no-]citation" => "Add CITATION.cff, the citation GitHub and Zenodo read (default: --no-citation)",
+           "--family-names=NAMES" => "With --citation: the author's family names (required)",
+           "--[no-]given-names=NAMES" => "With --citation: the author's given names (--no-given-names: none, unasked)",
+           "--[no-]alias=ALIAS" => "With --citation: the author's alias, as a handle (--no-alias: none, unasked)",
+           "--orcid=ID" => "With --citation: the author's ORCID iD",
+           "--keywords=LIST" => "With --citation: keywords, comma-separated" }.freeze
+
   def test_git_config_gives_the_defaults
     gem = parse("my_gem")
 
@@ -32,7 +46,7 @@ class TestOptions < Minitest::Test
       "--alias= - " => "alias \"-\": a question's none; for none, --no-alias",
       "--alias=\u00A0-\u3000" => "alias \"-\": a question's none; for none, --no-alias",
       "--alias=\u00A0-".b => "alias \"-\": a question's none; for none, --no-alias",
-      "--orcid=-" => "orcid \"-\": a question's none; for none, leave --orcid out",
+      "--orcid=-" => "ORCID iD \"-\": a question's none; for none, leave --orcid out",
       "--keywords=-" => "keywords \"-\": a question's none; for none, leave --keywords out" }.each do |option, why|
       error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", option) }
 
@@ -102,10 +116,7 @@ class TestOptions < Minitest::Test
   def test_the_help_says_what_each_option_does
     help, = capture_io { assert_raises(SystemExit) { parse("--help") } }
 
-    ["--[no-]exe", "Add a command line, exe/NAME (default: --no-exe, a library alone)", "--license=LICENSE",
-     "mit, apache or dual (MIT OR Apache-2.0, the default)", "--[no-]alias=ALIAS",
-     "(default: git config user.name, else required)",
-     "(default: git config github.user, else required)"].each { assert_includes help, it }
+    HELP.each { |switch, does| assert_match(/^ +#{Regexp.escape(switch)} +#{Regexp.escape(does)}$/, help) }
   end
 
   def test_version
