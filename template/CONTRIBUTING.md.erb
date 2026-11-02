@@ -65,6 +65,8 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
   behaviour, which `.mutineer.yml`'s `ignore:` holds with its reason. One survivor fails it
   (`threshold: 100`). It takes minutes: `rake checks` mutates the lines changed since `origin/main`
   alone (`rake mutation:changed`; all of them where there is none), and `ruby-ci.yml` every line.
+  Each first fails on an ignore that names no mutant (`rake mutation:ignores`): its method changed
+  or moved, so it hides nothing.
 
 ## Development Workflow
 

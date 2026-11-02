@@ -69,7 +69,8 @@ bundle exec rake mutation # every line of lib/ mutated: what no test catches (mu
 
 A warning from `lib/` or the tests fails them (`test/test_helper.rb`). One surviving mutant fails
 mutineer (`.mutineer.yml`'s `threshold: 100`): `rake checks` mutates the lines changed since
-`origin/main` alone, `ruby-ci.yml` every line. `links.yml` runs `rake links` monthly.
+`origin/main` alone, `ruby-ci.yml` every line. Each first fails on an ignore that names no mutant
+(`rake mutation:ignores`). `links.yml` runs `rake links` monthly.
 
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
 left unrendered, each file parsing, the executables' modes, the gemspec, the git repository. The

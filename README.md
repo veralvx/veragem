@@ -20,8 +20,8 @@ and the rest:
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered; a warning from `lib/` or the
   tests fails them. [mutineer](https://github.com/davidteren/mutineer) mutates `lib/`, and one
-  mutant no test catches fails it: `rake checks` the lines changed since `origin/main`, CI every
-  line (`rake mutation`).
+  mutant no test catches, or an ignore that names none, fails it: `rake checks` the lines changed
+  since `origin/main`, CI every line (`rake mutation`).
 - **Links**: lychee checks the links of the files git tracks but the tests' (`rake links`), in
   `rake checks` and monthly (`links.yml`).
 - **Security**: bundler-audit over `Gemfile.lock`, daily and on every pull request; a pull request's
