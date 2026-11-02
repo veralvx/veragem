@@ -46,13 +46,20 @@ def mutate(*options)
   sh "mutineer", "run", *options, *FileList["lib/**/*.rb"], *tests
 end
 
+# An ignore whose mutant is gone (its method changed or moved) hides nothing and goes stale: migrate
+# --dry-run names each and fails, writing nothing; it counts an ignored copy mutineer drops as used.
+desc "Check that each ignore of .mutineer.yml names a mutant of lib/. mutineer migrate --dry-run"
+task "mutation:ignores" do
+  sh "mutineer", "migrate", "--dry-run", *FileList["lib/**/*.rb"]
+end
+
 desc "Mutate lib/ against the tests. A change none catches fails it (mutineer, .mutineer.yml)"
-task(:mutation) { mutate }
+task(mutation: "mutation:ignores") { mutate }
 
 # The lines changed since the branch left origin/main, uncommitted ones too, of the files git tracks
 # (not a new one before `git add`); every line where there is no origin/main (a gem never pushed)
 desc "Mutate lib/'s lines changed since origin/main. `rake mutation` mutates all of them"
-task "mutation:changed" do
+task "mutation:changed" => "mutation:ignores" do
   base = IO.popen(%w[git merge-base HEAD origin/main], err: File::NULL, &:read).chomp
   mutate(*(["--since", base, "--allow-empty"] unless base.empty?))
 end
