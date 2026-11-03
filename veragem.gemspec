@@ -10,8 +10,9 @@ Gem::Specification.new do |spec|
   spec.summary = "Bundler plugin: bundle veragem NAME generates a Ruby gem with its toolchain wired up"
   spec.description = "A Bundler plugin that generates a Ruby 4.0+ gem with what `bundle gem` gives and " \
                      "the rest: Steep and TypeProf, RuboCop and its extensions, Minitest with a 100% " \
-                     "coverage gate and property tests, bundler-audit, Conventional Commits, a " \
-                     "generated changelog, a Nix flake, and a release by Trusted Publishing."
+                     "coverage gate, property tests and mutation testing, YARD held by yard-lint, " \
+                     "bundler-audit, Conventional Commits, a generated changelog, a Nix flake, and a " \
+                     "release by Trusted Publishing."
   spec.homepage = "https://github.com/veralvx/veragem"
   spec.licenses = ["MIT", "Apache-2.0"]
   spec.required_ruby_version = ">= 4.0"

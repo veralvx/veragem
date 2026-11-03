@@ -3,7 +3,7 @@
 # A warning Ruby reports from lib/ or the tests raises, failing the test, or the run when they load;
 # a gem's only prints. Every category is on: `ruby -w` turns on the deprecations alone.
 ours = [File.expand_path("../lib", __dir__), __dir__].map { "#{it}/" }
-# Anonymous: a constant would meet a gem's own module (own_warnings: OwnWarnings)
+# Anonymous: a constant would be the module of a gem named for it (own_warnings' OwnWarnings)
 own_warnings = Module.new do
   define_method(:warn) do |message, **options|
     # "PATH:LINE: ..." or, evaluated code's, "(eval at PATH:LINE):LINE: ..."; PATH relative or

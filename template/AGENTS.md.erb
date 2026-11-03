@@ -21,8 +21,8 @@ configuration, zizmor's security audit.
 
 ### 1.1. RuboCop
 
-- Before finishing, check what you changed since main with
-  `bundle exec rubocop --changed=main --format json` (`--changed` alone: since the last commit).
+- Before finishing, check the files you changed since your branch left main with
+  `bundle exec rake rubocop:changed` (every file where there is no origin/main yet).
 - Fix offenses with `bundle exec rubocop -a FILES`. Don't use `-A` unless asked.
 - If an offense is unclear, run `bundle exec rubocop --explain Department/CopName`.
 - Don't edit `.rubocop.yml` to make offenses go away.
@@ -33,13 +33,14 @@ configuration, zizmor's security audit.
 ### 1.2. YARD
 
 - Every public object of `lib/` is documented (yard-lint, at 100% coverage; `.yardopts` keeps the
-  public API): what it is for, then its tags -- each `@param`, `@return`, `@yield` and `@raise` --
-  their types the signatures' in YARD's syntax (`Array<String>`, `Hash{Symbol => String}`,
-  `String, nil`). A private one takes a comment only as §2 has it, and no tags: its signature
-  holds its types.
+  public API): what it is for, then its tags -- each `@param`, `@yield`, `@return` and `@raise`, in
+  that order (Tags/Order) -- their types the signatures' in YARD's syntax (`Array<String>`,
+  `Hash{Symbol => String}`, `String, nil`). A private one takes a comment only as §2 has it, and no
+  tags: its signature holds its types.
 - `bundle exec rake yard_lint` lints it (`yard-lint lib --stats`); `bundle exec rake yard` writes
   it to `doc/`.
-- `yardoc` queries the tags: `--query '@return && @param'`, `--query 'has_tag?(:api)'`.
+- `bundle exec yard list --query '@return && @param'` lists the objects a query of the tags
+  matches.
 - `bundle exec rake graph` prints the classes and modules as a Graphviz graph
   (`yard graph --protected --private --full --dependencies`): `| dot -Tsvg -o graph.svg`.
 
@@ -49,12 +50,13 @@ configuration, zizmor's security audit.
 one's too (it has no YARD tags): look a method's up in `sig/<%= path %>.rbs`.
 `bundle exec rake typeprof` prints the signatures TypeProf infers from `lib/`: a start for a new
 method's, never a replacement for reading them -- it says `untyped` where it cannot tell. A
-signature is as narrow as the code allows: `untyped` only where the value truly is any value, and
-a call on one fails `rake steep:typed` until `when String` or an assertion (`value #: String`)
-narrows it (`value.is_a?(String)` is itself such a call). A library without signatures gives
-untyped values: declare in `sig/` what `lib/` calls of it. When a diagnostic has to stay, ignore it
-on its line, the reason on the line above (text after the diagnostic's name voids the ignore; it
-leaves an untyped call untyped):
+signature is as narrow as the code allows: `untyped` only where the value truly is any value, and a
+call on one fails `rake steep:typed` until `when String` or an assertion (`value #: String`) narrows
+it (`value.is_a?(String)` is itself such a call). A library Steep has no signatures of is an error
+to it: name one that ships them in the Steepfile (`library "json"`), take a gem's from
+gem_rbs_collection (CONTRIBUTING.md), and declare in `sig/` what `lib/` calls of one with none. When
+a diagnostic has to stay, ignore it on its line, the reason on the line above (text after the
+diagnostic's name voids the ignore; an ignore leaves an untyped call untyped):
 
 ```ruby
 # the library's signature lacks the method
@@ -69,14 +71,16 @@ noise, and it goes stale. A change that falsifies a comment rewrites it.
 
 ## 3. Commits
 
-[Conventional Commits](https://www.conventionalcommits.org/) are enforced by `cog check` locally
-and in CI. The changelog is generated from the commits (`cliff.toml`), so the subject line is
-user-facing text; it lists every one but the release's own, `chore` and `ci` as Miscellaneous
-Tasks, and `!` or a `BREAKING CHANGE` footer lists a commit first:
+[Conventional Commits](https://www.conventionalcommits.org/) are enforced by `cog check` locally and
+in CI. The changelog is generated from the commits (`cliff.toml`) and shows each one's subject
+alone, so a subject is user-facing text, and a commit holds only the change its subject names:
+anything else gets its own commit. The changelog lists every commit cog checks but the release's
+own, `chore` and `ci` as Miscellaneous Tasks, and `!` or a `BREAKING CHANGE` footer lists a commit
+first:
 
 ```
 feat: accept the name as a symbol too
-fix: strip a trailing newline from the name
+fix: strip Unicode whitespace from the name too
 docs: explain the greeting's fallback
 build(deps): depend on json
 ```
@@ -87,11 +91,23 @@ them with `--no-verify`. `git revert` writes `Revert "..."`, which CI refuses: r
 
 ## 4. Before you claim a change is done
 
-Run `bundle exec rake checks`. It runs CI's gates, the links too: RuboCop, Steep, the tests with
-every line, branch and method covered and no warning of their own, yard-lint, bundler-audit,
-dprint, the commit messages, the shell, the workflows, the links, the mutations of the changed
-lines (CI's, of every line), and the flake's checks. Reporting "done" on a change that has not
-passed it is the one thing that wastes the most time here.
+Run `bundle exec rake checks`. It runs CI's gates: RuboCop, Steep, the tests with every line, branch
+and method covered and no warning of their own, yard-lint, bundler-audit, dprint, the commit
+messages, the shell, the workflows, the links (CI's, monthly), the mutations of the changed lines
+(CI's, of every line), and the flake's checks. It stops at the first that fails: run the rest by
+name (`bundle exec rake mutation:changed nix`). Reporting "done" on a change that has not passed it
+is the one thing that wastes the most time here.
+
+A fix comes with a test that fails without it: run it before the fix, then after. The gates hold
+what the tests run, so they pass code nothing needs, which a change deletes rather than hides:
+
+- a signature with no method behind it (Steep accepts one), a `require` nothing needs, a constant
+  nothing reads;
+- an option no test sets: its default alone runs;
+- code kept from coverage (`# simplecov:disable`, a `.simplecov` skip): mutineer scores no mutant no
+  test runs, so it passes both. `.simplecov` skips only what loads before coverage starts
+  (`version.rb`), and `.mutineer.yml` ignores only a mutant that keeps the behaviour, with its
+  reason.
 
 If a check fails for reasons unrelated to your change, say so explicitly rather than working
 around it -- a broken check that everyone routes around stops protecting anything.

@@ -96,8 +96,9 @@ for gem in "${gems[@]}"; do
     mapfile -t checks < <(awk '$0 == "rake checks" { f = 1; next } /^rake / { f = 0 } f && $1 != "links" { print $1 }' <<< "$prerequisites")
     [[ " ${checks[*]} " == *" default "* && " ${checks[*]} " == *" nix "* ]] ||
       fail "could not read the prerequisites of rake checks: ${checks[*]}"
-    # typeprof is advisory: its crash alone fails it. `rake format` changes nothing generated
-    bundle exec rake "${checks[@]}" typeprof build format
+    # typeprof is advisory: its crash alone fails it. `rake format` changes nothing generated.
+    # rubocop:changed with no origin yet: every file
+    bundle exec rake "${checks[@]}" typeprof build format rubocop:changed
     committed
     # the flake's description, read from the gemspec by a pattern: the summary, as Ruby reads it
     summary="$(ruby -e 'print Gem::Specification.load(ARGV[0]).summary' "$gem.gemspec")"
@@ -130,6 +131,10 @@ for gem in "${gems[@]}"; do
       git init --quiet --bare "$work/$gem.git"
       git remote add origin "$work/$gem.git"
       bundle exec rake release
+      # origin/main now: the files changed since its merge base, none
+      inspected="$(bundle exec rake rubocop:changed)"
+      [[ "$inspected" =~ (^|$'\n')"0 files inspected" ]] ||
+        fail "rake rubocop:changed inspected files nothing changed: $inspected"
       # a release's CITATION.cff: `rake bump` sets its version and date, under an ASCII locale too;
       # the date UTC's, the changelog's, in a zone whose date is another, whatever the hour: UTC+14
       # from 11:00 UTC, UTC-12 before, either a day off from 10:00 to 12:00 (POSIX zones, which need

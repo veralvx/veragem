@@ -13,8 +13,12 @@ require "rubocop/rake_task"
 require "steep/rake_task"
 require "yard"
 
-# Coverage, `rake test`'s alone: started in the tests' process before they load lib/ (.simplecov)
-TEST_TASK = Minitest::TestTask.create { self.test_prelude = %(require "simplecov"; SimpleCov.start) }
+# Coverage, `rake test`'s alone: started in the tests' process before they load lib/ (.simplecov);
+# then the helper, whatever order the test files load in (shuffled): one loaded before it would only
+# print its parse-time warnings
+TEST_TASK = Minitest::TestTask.create do
+  self.test_prelude = %(require "simplecov"; SimpleCov.start; require "test_helper")
+end
 RuboCop::RakeTask.new
 Steep::RakeTask.new
 Bundler::Audit::Task.new
@@ -86,13 +90,26 @@ end
 desc "Mutate lib/ against the tests. A change none catches fails it (mutineer, .mutineer.yml)"
 task(mutation: "mutation:ignores") { mutate }
 
-# The lines changed since the branch left origin/main, uncommitted ones too, and every line of a file
-# git does not track (a new one before `git add`), unless git ignores it; every line where there is
-# no origin/main (a gem never pushed)
+# The commit the branch left origin/main at; nil where there is no origin/main (a gem never pushed)
+def merge_base
+  base = IO.popen(%w[git merge-base HEAD origin/main], err: File::NULL, &:read).chomp
+  base unless base.empty?
+end
+
+# The lines changed since the merge base, uncommitted ones too, and every line of a file git does
+# not track (a new one before `git add`), unless git ignores it; every line where there is none
 desc "Mutate lib/'s lines changed since origin/main. `rake mutation` mutates all of them"
 task "mutation:changed" => "mutation:ignores" do
-  base = IO.popen(%w[git merge-base HEAD origin/main], err: File::NULL, &:read).chomp
-  mutate(*(["--since", base, "--allow-empty"] unless base.empty?))
+  base = merge_base
+  mutate(*(["--since", base, "--allow-empty"] if base))
+end
+
+# The files changed since the merge base, uncommitted and untracked ones too (`--changed`); every
+# file where there is none
+desc "Run RuboCop on the files changed since origin/main. `rake rubocop` checks them all"
+task "rubocop:changed" do
+  base = merge_base
+  sh "rubocop", *("--changed=#{base}" if base)
 end
 
 desc "Lint lib/'s YARD documentation with yard-lint. Its rules: .yard-lint.yml"

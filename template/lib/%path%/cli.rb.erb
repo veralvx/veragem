@@ -6,7 +6,8 @@ require_relative "../<%= File.basename(path) %>"
 <%# `::` where one of the gem's modules is named OptionParser, which its lookup would find first -%>
 <%- option_parser = "#{"::" if modules.include?("OptionParser")}OptionParser" -%>
 <%= nest(<<~RUBY)
-  # The command line: `#{name} [NAME]` prints the greeting.
+  # The command line, `#{name} [options] [NAME]`:
+  # it greets NAME, or prints the help or the version.
   module CLI
     # Runs the command line with +argv+.
     # @param argv [Array<String>] the command's arguments
@@ -19,7 +20,7 @@ require_relative "../<%= File.basename(path) %>"
       puts output(options, name.to_s)
       0
     rescue #{option_parser}::ParseError => e
-      warn e, parser
+      warn "#{name}: \#{e}", parser
       2
     end
 
@@ -33,7 +34,8 @@ require_relative "../<%= File.basename(path) %>"
       end
     end
 
-    # --help as an option of its own: OptionParser's built-in one exits the process.
+    # --help and --version as options of their own: OptionParser's own exit the process, as its
+    # shell completion still does (--*-completion-bash=WORD).
     private_class_method def self.parser
       #{option_parser}.new("Usage: #{name} [options] [NAME]") do |opts|
         opts.program_name = "#{name}"

@@ -1,7 +1,9 @@
 # veragem
 
-A Bundler plugin that generates a Ruby gem with its toolchain wired up: the Ruby counterpart of
-the [templates](https://github.com/veralvx/templates) repository's Python and Rust templates.
+A Bundler plugin that generates a Ruby 4.0+ gem with its toolchain wired up: Steep types,
+RuboCop, Minitest at 100% coverage with mutation testing, YARD, CI on Linux, macOS and Windows, a
+Nix flake and releases by Trusted Publishing. It is the Ruby counterpart of the
+[templates](https://github.com/veralvx/templates) repository's Python and Rust templates.
 `bundle gem` gives a gemspec, a Rakefile, Minitest and RuboCop; `bundle veragem NAME` gives that
 and the rest:
 
@@ -20,16 +22,16 @@ and the rest:
   coverage (`rake yard` writes it to `doc/`).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
   `strict` profile: every line, branch and method of `lib/` covered; a warning from `lib/` or the
-  tests fails them. [mutineer](https://github.com/davidteren/mutineer) mutates `lib/`, and one
-  mutant no test catches, or an ignore that names none, fails it: `rake checks` the lines changed
+  tests fails them. [mutineer](https://github.com/davidteren/mutineer) mutates `lib/`: one mutant
+  no test catches, or an ignore that names none, fails it. `rake checks` mutates the lines changed
   since `origin/main`, CI every line (`rake mutation`).
 - **Links**: lychee checks the links of the files git tracks but the tests' (`rake links`), in
   `rake checks` and monthly (`links.yml`).
 - **Security**: bundler-audit over `Gemfile.lock`, daily and on every pull request; a pull request's
   new gems reviewed for their licences and advisories, its new actions for their licences
-  (`dependency-review.yml`, advisory, as in the Python and Rust templates); zizmor over the
-  workflows and Dependabot's configuration; Dependabot for the gems, the actions and the flake, a
-  release proposed once a week old.
+  (`dependency-review.yml`, not a required check, as in the Python and Rust templates); zizmor over
+  the workflows and Dependabot's configuration; Dependabot for the gems, the actions and the flake,
+  each update proposed once its release is a week old.
 - **Commits and releases**: Conventional Commits (cocogitto, in CI and opt-in git hooks), a
   changelog written by git-cliff at each release, `rake "bump[minor]"` then Bundler's own
   `rake release`; the tag publishes to RubyGems by Trusted Publishing, no API key stored, the gem
@@ -55,7 +57,8 @@ bundle plugin install veragem
 
 Run outside a project, it installs for your user, and `bundle veragem` then works anywhere. From
 the repository instead: `bundle plugin install veragem --git https://github.com/veralvx/veragem`
-(or `--path` a local checkout).
+(or `--path` a local checkout). This README follows `main`, which can be ahead of the release:
+[CHANGELOG.md](CHANGELOG.md) lists what each release holds, and `--git` installs `main`.
 
 ## Usage
 
@@ -91,8 +94,9 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 | `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated           |
 
 A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
-expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, a value git's
-config gives that veragem refuses names its key and the option or options that replace it.
+expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, when veragem
+refuses a value from git's config, its error names the key and the option or options that replace
+it.
 
 ### Questions
 
@@ -107,18 +111,18 @@ questions) nothing is asked: the defaults apply, and a missing name, author, Git
 
 ### CITATION.cff
 
-`CITATION.cff` (Citation File Format 1.2.0) is for software meant to be cited, research's: GitHub
+`CITATION.cff` (Citation File Format 1.2.0) is for research software meant to be cited: GitHub
 offers its "Cite this repository", and Zenodo, once the repository is enabled there (the generated
 CONTRIBUTING.md's first steps), archives each release with its values and gives it a DOI. Its
 author is a person, family names required, given names, alias, ORCID iD and keywords optional.
 Asked at a terminal, the family names offer the author's last word, the given names the words before
 the family names, where the author ends with them, and the alias, asked last, the GitHub user. That
 user may be an organization, so it is only offered: without a terminal, there is no alias unless
-`--alias` gives one. Its values need a citation: without one they are refused, and at a terminal
-its question takes y alone.
+`--alias` gives one. The citation's options need `--citation`: given without it, they are refused,
+and at a terminal they make its question take y alone.
 
-It holds what GitHub and Zenodo read, written as Zenodo's import takes it, narrower than CFF, but
-for the licences, written as CFF has them:
+It holds what GitHub and Zenodo read, written as Zenodo's import takes it (narrower than CFF), but
+the licences as CFF writes them:
 
 - one licence as its SPDX identifier, and `dual`'s two as a list, CFF's OR: Zenodo's import refuses
   a list, so it archives no release of a dual-licensed gem until
@@ -180,7 +184,9 @@ Rakefile              `rake`: RuboCop, Steep, the tests, yard-lint; `rake checks
                       `rake "bump[level]"`, `rake release`; `rake -T` lists them all
 Steepfile, sig/       the types; typeprof.conf.jsonc, TypeProf's editor support
 .rubocop.yml          RuboCop and its extensions; .yard-lint.yml, the documentation's lint
-lib/, test/           starter code: typed, documented, every line and branch tested
+.simplecov, .mutineer.yml  the coverage gate; the mutation test's operators and its ignores
+lib/, test/, exe/     starter code (exe/NAME with --exe): typed, documented, every line and
+                      branch tested
 bin/setup, bin/console
 flake.nix, flake.lock the dev shell, the package (and the command's image), `nix fmt`, the checks
 .githooks/            opt-in (`rake hooks`): the quick checks before a commit, Conventional Commits

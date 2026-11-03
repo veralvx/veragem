@@ -23,7 +23,8 @@ CI (nixpkgs packages few of them, and older).
 - **[lychee](https://lychee.cli.rs/)** -- checks the links of the files git tracks but the
   tests', online (`rake links`; `links.yml` monthly too).
 - **[Nix](https://nixos.org)** for the last of `rake checks`, the flake's checks (`rake nix`):
-  without it, `rake checks` stops there, every other check passed.
+  without it, `rake checks` stops there, every other check passed. `rake format` needs it too, for
+  `nix fmt`, before shfmt and RuboCop.
 
 ## Setup
 
@@ -42,8 +43,9 @@ bin/setup
 
 ## Guidelines
 
-Before you start, read [AGENTS.md](AGENTS.md): the lint and type policy, and what to do when a
-cop or a diagnostic fires. It applies to human and AI-assisted contributions alike.
+Before you start, read [AGENTS.md](AGENTS.md): the lint and type policy, what to do when a cop or a
+diagnostic fires, the comments, the commits, and what a change passes before it is done. It applies
+to human and AI-assisted contributions alike.
 
 ## Testing
 
@@ -53,11 +55,12 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
   `Pbt.assert { Pbt.property(...) { ... } }`): it is checked on many generated inputs, and a
   failure is shrunk to its smallest counterexample, with the seed that reproduces it.
 - **Regressions:** if you are fixing a bug, include a test that reproduces the previous failure.
-- **Coverage:** every line, branch and method of `lib/` (SimpleCov's `strict` profile,
-  configured in `.simplecov`, started by `rake test`). Code a test cannot reach is questioned
-  before it is excluded. Some tests (`bundle exec rake test N=/version/`) run fewer than the gate
-  counts: their exit fails, the tests' own verdict above it. One file run alone
-  (`bundle exec ruby -Ilib -Itest test/test_<%= underscored %>.rb`) is not measured.
+- **Coverage:** every line, branch and method of `lib/` (SimpleCov's `strict` profile, configured in
+  `.simplecov`, started by `rake test`). Code no test needs is deleted, not excluded (AGENTS.md,
+  §4). Some tests alone (`bundle exec rake test N=/version/`) fail the gate (exit 2) though they
+  pass: Minitest's verdict is printed above SimpleCov's. One file run alone is not measured, its
+  warnings raised as `rake test` raises them (the helper first, before the file is parsed):
+  `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_<%= underscored %>.rb`.
 - **Warnings:** one from `lib/` or the tests fails them, every category of Ruby's on
   (`test/test_helper.rb`); a gem's only prints.
 - **Mutations:** `bundle exec rake mutation` changes `lib/` a mutant at a time (mutineer,
@@ -76,14 +79,15 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
 2. Run the checks. The Rakefile runs the workflows' commands:
 
 ```sh
-bundle exec rake          # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
-bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the links,
-                          # the changed lines' mutations, the flake's checks
-bundle exec rake format   # dprint, nixfmt, shfmt and RuboCop's corrections, in place
-bundle exec rake typeprof # the signatures TypeProf infers from lib/, to start sig/ from
-bundle exec rake yard     # the documentation of lib/, in doc/
-bundle exec rake graph    # its classes and modules, for Graphviz: | dot -Tsvg -o graph.svg
-nix build                 # the gem, built and installed by Nix (flake.nix)
+bundle exec rake                 # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
+bundle exec rake checks          # and bundler-audit, dprint, cog, the shell, the workflows, the
+                                 # links, the changed lines' mutations, the flake's checks
+bundle exec rake rubocop:changed # RuboCop on the files changed since origin/main
+bundle exec rake format          # dprint, nixfmt, shfmt and RuboCop's corrections, in place
+bundle exec rake typeprof        # the signatures TypeProf infers from lib/, to start sig/ from
+bundle exec rake yard            # the documentation of lib/, in doc/
+bundle exec rake graph           # its classes and modules, for Graphviz: | dot -Tsvg -o graph.svg
+nix build                        # the gem, built and installed by Nix (flake.nix)
 ```
 
 `bundle exec rake -T` lists every task, and `bundle exec rake -D` describes each in full.
@@ -96,7 +100,8 @@ new tool goes in the Gemfile, which the built gem never holds: its dependencies 
 alone. `bundle install` then updates the lock. Steep reads a library's signatures when the
 Steepfile names it (`library "json"`): the standard library's, and a gem's own (its `sig/`). A gem
 that ships none may have them in gem_rbs_collection, read through an RBS collection
-(`rbs collection init`, then `rbs collection install`, as rbs's `docs/collection.md` describes).
+(`rbs collection init`, then `rbs collection install`, as rbs's `docs/collection.md` describes;
+`steep check` installs it from the committed lock where it is missing, as in CI).
 
 ## Creating a Pull Request
 
@@ -135,11 +140,12 @@ Then, in whichever order suits you:
 - Enable the dependency graph (Settings → Advanced Security), if it is off: the dependency review
   (`dependency-review.yml`) fails without it. A private repository's needs GitHub Code Security
   too, an organization's; without it, delete the workflow.
-- Add a pending trusted publisher on [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers)
-  for the gem `<%= name %>`: this repository, the workflow `release.yml`, the environment
-  `release` (a publisher without one admits any of the workflow's jobs, its signing job's too). A
-  release tag then publishes without a stored key, its first version too, and its GitHub release
-  follows RubyGems': without the publisher, neither is made.
+- Add a pending trusted publisher on
+  [RubyGems](https://rubygems.org/profile/oidc/pending_trusted_publishers) for the gem
+  `<%= name %>`: this repository, the workflow `release.yml`, the environment `release` (a
+  publisher without one admits any of the workflow's jobs, its signing job's too). A release tag
+  then publishes without a stored key, its first version too, and its GitHub release follows
+  RubyGems': without the publisher, neither is made.
 - Limit the `release` environment's deployments to the release tags (Settings → Environments, a
   rule of ref type Tag, `v*`): a trusted publisher names the environment, not a ref, so without the
   rule a workflow pushed to any branch could publish the gem. And limit who creates the release tags
@@ -189,9 +195,9 @@ bundle exec rake release
 
 `rake bump` refuses a release with nothing in it: no commit since the last tag, merges and fixups
 aside, which the changelog leaves out. It refuses a shallow clone, a clone missing the tags
-(`git fetch --tags`), and a version bumped but not yet released. It sets the version in
-`lib/<%= path %>/version.rb` (the first release keeps the version declared, whatever the level),
-updates the lock, writes the changelog (git-cliff) and commits.
+(`git fetch --tags`), a version bumped but not yet released, and one already tagged. It sets the
+version in `lib/<%= path %>/version.rb` (the first release keeps the version declared, whatever the
+level), updates the lock, writes the changelog (git-cliff) and commits.
 <%- if citation -%>
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
 <%- end -%>
@@ -217,20 +223,20 @@ gem fetch <%= name %> --version VERSION
 gh release create vVERSION <%= name %>-VERSION.gem --verify-tag --title vVERSION --notes-file notes.md
 ```
 
-`rake release` pushes to `main` directly: with "Require a pull request before merging" on, the
-maintainer cutting it needs the rule's bypass. A refused push leaves the release commit and
-removes the tag (Bundler's doing): run `rake release` again once allowed. An interrupted push
-(Ctrl-C) can keep the tag, and a second `rake release` then pushes nothing: delete it first
-(`git tag -d v<version>`).
+`rake release` pushes to `main` directly, and a `v*` tag: with "Require a pull request before
+merging" on, the maintainer cutting it needs the rule's bypass, and the tag ruleset's leave to
+create the tag. A refused push leaves the release commit and removes the tag (Bundler's doing): run
+`rake release` again once allowed. An interrupted push (Ctrl-C) can keep the tag, and a second
+`rake release` then pushes nothing: delete it first (`git tag -d v<version>`).
 
 ## Updating the tools
 
-Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake's inputs
-monthly; `dependabot-automerge.yml` merges the minor and patch bumps once the checks pass. An
-advisory with no fixed version yet fails `security.yml` on every pull request until you weigh it:
-its ID under `ignore:` in `.bundler-audit.yml` (bundler-audit's own file) lets the checks pass.
+Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake's inputs monthly;
+`dependabot-automerge.yml` merges the minor and patch bumps once the checks pass. An advisory with
+no fixed version yet fails `security.yml` on every pull request until you weigh it: its ID under
+`ignore:` in `.bundler-audit.yml` (bundler-audit's own file, created then) lets the checks pass.
 dprint's plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop
-brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any.
-A bump the new cops fail stays unmerged: its failed run's summary holds RuboCop's safe corrections
-as a patch, to `git apply` on its branch (no workflow pushes code the bumped gems wrote); what
-they leave is yours to fix.
+brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any. A
+bump the new cops fail stays unmerged: its failed run's summary holds RuboCop's safe corrections as
+a patch, to `git apply` on its branch (no workflow pushes code the bumped gems wrote); what they
+leave is yours to fix.

@@ -115,7 +115,7 @@ module Veragem
     # @return [String]
     def path = Name.path(name)
 
-    # Its name, its words joined by `_` alone: its test's and its CLI's file names.
+    # Its name, its words joined by `_` alone: its test's file name.
     # @return [String]
     def underscored = Name.underscored(name)
 
