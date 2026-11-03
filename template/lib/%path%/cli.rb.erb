@@ -34,8 +34,8 @@ require_relative "../<%= File.basename(path) %>"
       end
     end
 
-    # --help and --version as options of their own: OptionParser's exit the process, as its shell
-    # completion's still do (--*-completion-bash=WORD).
+    # --help and --version as options of their own: OptionParser's own exit the process, as its
+    # shell completion still does (--*-completion-bash=WORD).
     private_class_method def self.parser
       #{option_parser}.new("Usage: #{name} [options] [NAME]") do |opts|
         opts.program_name = "#{name}"
