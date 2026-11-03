@@ -6,6 +6,7 @@
 
 require "bundler/audit/task"
 require "bundler/gem_tasks"
+require "csv"
 require "json"
 require "minitest/test_task"
 require "rubocop/rake_task"
@@ -22,7 +23,21 @@ Bundler::Audit::Task.new
 # over several lines.
 YARD::Rake::YardocTask.new { it.files = ["lib/**/*.rb"] }
 
-task default: %i[rubocop steep test yard_lint]
+task default: %i[rubocop steep steep:typed test yard_lint]
+
+# A call is untyped where its receiver is: steep check passes it, and a steep:ignore leaves it so.
+# steep stats counts them, exiting 0 whatever it counts; a file it cannot type (status error, as a
+# syntax error, which strict steep check reports as information) it counts as none.
+desc "Check that Steep types each call of lib/. steep stats counts the untyped calls"
+task "steep:typed" do
+  stats = CSV.parse(output("steep", "stats", "--format=csv"), headers: true)
+  failed = stats.filter_map do |row|
+    next "#{row["File"]}: not typed (#{row["Status"]})" unless row["Status"] == "success"
+
+    "#{row["File"]}: #{row["Untyped calls"]} untyped" unless row["Untyped calls"] == "0"
+  end
+  abort "error: calls Steep does not type:\n#{failed.join("\n")}" unless failed.empty?
+end
 
 # Steep, against sig/, is the gate. TypeProf reads Ruby's core signatures alone, not the standard
 # library's.

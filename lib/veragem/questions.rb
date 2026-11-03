@@ -74,7 +74,7 @@ module Veragem
         values[key] = ask(format(question, name:), offer,
                           from: source(key), check:, optional: Project::OPTIONAL.key?(key))
       end
-      values
+      values #: Project::values
     end
 
     private
