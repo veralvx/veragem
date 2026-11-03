@@ -7,10 +7,17 @@
 # it in `nix develop`. smoke.yml's. A failed run keeps its files and says where.
 set -euo pipefail
 
-# none of the caller's settings reach the gems: `bundle exec`'s (its PATH, RUBYOPT, BUNDLER_SETUP,
-# which RubyGems requires, BUNDLE_GEMFILE), Bundler's and git's (a signed tag, a hook of theirs)
-PATH="${BUNDLER_ORIG_PATH:-$PATH}"
-unset CDPATH RUBYOPT "${!BUNDLE_@}" "${!BUNDLER_@}"
+# none of the caller's settings reach the gems: what `bundle exec` changed put back, as Bundler's
+# with_original_env does (its BUNDLER_SETUP RubyGems would require, its RUBYOPT, BUNDLE_GEMFILE,
+# PATH), then Bundler's settings and git's (a signed tag, a hook of theirs) dropped
+for saved in "${!BUNDLER_ORIG_@}"; do
+  if [ "${!saved}" = BUNDLER_ENVIRONMENT_PRESERVER_INTENTIONALLY_NIL ]; then
+    unset "${saved#BUNDLER_ORIG_}"
+  else
+    export "${saved#BUNDLER_ORIG_}=${!saved}"
+  fi
+done
+unset CDPATH "${!BUNDLE_@}" "${!BUNDLER_@}"
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -33,13 +40,16 @@ fail() {
 has() {
   local file=$1 line
   shift
+  [ -f "$file" ] || fail "no $file"
   for line; do grep -qxF -- "$line" "$file" && return; done
   cat -- "$file" >&2
   fail "$file has none of: $*"
 }
 # the work tree as committed, but what .gitignore ignores
 committed() {
-  [ -z "$(git status --porcelain)" ] || fail "$PWD changed: $(git status --short)"
+  local changes
+  changes="$(git status --porcelain)"
+  [ -z "$changes" ] || fail "$PWD changed: $changes"
 }
 
 gems=()
@@ -62,13 +72,15 @@ for gem in "${gems[@]}"; do
   (
     cd "$gem"
     bin/setup
-    # in git's config, which the commit-msg hook's cog reads; not ASCII, as the changelog writes it
+    # in git's config, which the commit-msg hook's cog reads; not ASCII, as `rake bump` reads it
+    # from git-cliff's commits, under an ASCII locale too
     git config user.name "Smöke Test"
     git config user.email smoke@example.com
     bundle exec rake hooks
     git add .
     git commit --quiet --message "chore: initial commit from veragem"
-    if git commit --quiet --allow-empty --message "not a Conventional Commit" 2> /dev/null; then
+    echo "not a Conventional Commit" > "$work/message"
+    if .githooks/commit-msg "$work/message" 2> /dev/null; then
       fail "the commit-msg hook took a message that is not a Conventional Commit"
     fi
     # `rake checks` but its links, links.yml's: a host's outage would fail an unrelated pull request
@@ -97,7 +109,7 @@ for gem in "${gems[@]}"; do
       elif [ "${GITHUB_ACTIONS:-}" = true ]; then
         fail "no Docker to run the image"
       else
-        echo "smoke: no Docker here: the image is built (rake nix), not run" >&2
+        echo "smoke: no Docker daemon here: the image is not run (on Linux, rake nix builds it)" >&2
       fi
     fi
     if [ -e CITATION.cff ]; then
@@ -110,15 +122,13 @@ for gem in "${gems[@]}"; do
       git init --quiet --bare "$work/$gem.git"
       git remote add origin "$work/$gem.git"
       bundle exec rake release
-      git -C "$work/$gem.git" rev-parse --quiet --verify refs/tags/v0.1.0 > /dev/null ||
-        fail "rake release pushed no v0.1.0"
       # a release's CITATION.cff: `rake bump` sets its version and date, under an ASCII locale too;
       # the date UTC's, the changelog's, in a zone whose date is another, whatever the hour: UTC+14
-      # from 12:00 UTC, UTC-12 before (POSIX zones, which need no tzdata). Either day, should the
-      # bump cross midnight.
+      # from 11:00 UTC, UTC-12 before, either a day off from 10:00 to 12:00 (POSIX zones, which need
+      # no tzdata). Either day, should the bump cross midnight.
       git commit --quiet --allow-empty --message "fix: a smöke release"
       zone='<-12>+12'
-      if [ "$(date -u +%H)" -ge 12 ]; then zone='<+14>-14'; fi
+      if [ "$(date -u +%H)" -ge 11 ]; then zone='<+14>-14'; fi
       day="$(date -u +%F)"
       LC_ALL=C TZ="$zone" bundle exec rake "bump[patch]"
       has CITATION.cff 'version: "0.1.1"'
@@ -129,11 +139,20 @@ for gem in "${gems[@]}"; do
         fail "release-notes.sh gave 0.1.0's notes, which are not the newest"
       fi
       committed
+      bundle exec rake release
       # a minor release zeroes the patch number
       git commit --quiet --allow-empty --message "feat: a smöke feature"
       bundle exec rake "bump[minor]"
       has CITATION.cff 'version: "0.2.0"'
+      .github/release-notes.sh CHANGELOG.md 0.2.0 > /dev/null
+      # 0.1.1's section kept, as released
+      grep -q '^## \[0\.1\.1\](' CHANGELOG.md || fail "CHANGELOG.md lost 0.1.1's section"
       committed
+      bundle exec rake release
+      for tag in v0.1.0 v0.1.1 v0.2.0; do
+        git -C "$work/$gem.git" rev-parse --quiet --verify "refs/tags/$tag" > /dev/null ||
+          fail "rake release pushed no $tag"
+      done
     fi
   )
 done
