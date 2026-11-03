@@ -144,6 +144,10 @@ for gem in "${gems[@]}"; do
       git commit --quiet --allow-empty --message "feat: a smöke feature"
       bundle exec rake "bump[minor]"
       has CITATION.cff 'version: "0.2.0"'
+      # a version bumped and not yet released is not bumped again
+      if refusal="$(bundle exec rake "bump[patch]" 2>&1)" || [[ $refusal != *"v0.2.0 is not tagged"* ]]; then
+        fail "rake bump did not refuse to bump v0.2.0, which is not released: $refusal"
+      fi
       .github/release-notes.sh CHANGELOG.md 0.2.0 > /dev/null
       # 0.1.1's section kept, as released
       grep -q '^## \[0\.1\.1\](' CHANGELOG.md || fail "CHANGELOG.md lost 0.1.1's section"
