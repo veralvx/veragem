@@ -215,11 +215,16 @@ jobs:
         run: |
           set -euo pipefail
           # GitHub's latest release is the highest final one, as image.yml's `latest` is: by default,
-          # GitHub makes each new release the latest, a patch to an older line too
+          # GitHub makes each new release the latest, a patch to an older line or a pre-release too
           highest="$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" --paginate \
             --jq '.[].ref | ltrimstr("refs/tags/v")' \
             | { grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -n 1)"
+          version="${GITHUB_REF_NAME#v}"
           latest=false
-          if [[ ${GITHUB_REF_NAME#v} == "$highest" ]]; then latest=true; fi
+          if [[ $version == "$highest" ]]; then latest=true; fi
+          # a pre-release as RubyGems reads one: a letter in its version (Gem::Version#prerelease?)
+          prerelease=false
+          if [[ $version =~ [a-zA-Z] ]]; then prerelease=true; fi
           gh release create "$GITHUB_REF_NAME" "$GEM" --repo "$GITHUB_REPOSITORY" --verify-tag \
-            --title "$GITHUB_REF_NAME" --notes-file notes.md --latest="$latest"
+            --title "$GITHUB_REF_NAME" --notes-file notes.md --latest="$latest" \
+            --prerelease="$prerelease"

@@ -199,13 +199,21 @@ tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`), the
 (`gem build`, no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted
 Publishing, which shows the gem's provenance, then the GitHub release of the same gem, its notes
 the changelog's new section.
-Should a run fail, re-run its failed jobs, not all of them: those keep the build's gem and
-digests, and RubyGems refuses a version pushed twice. If the gem reached RubyGems but its job
-failed anyway, make the GitHub release by hand (`gh release create`).
 <%- if exe -%>
 Beside `release.yml`, waiting for no RubyGems push, `image.yml` publishes the command's OCI image
 to GHCR (`nix build .#image` builds it here).
 <%- end -%>
+
+Should a run fail, re-run its failed jobs, not all of them: those keep the build's gem and
+digests, and RubyGems refuses a version pushed twice. If the gem reached RubyGems but its job
+failed anyway, the release job cannot run: make the GitHub release as it would, at the tag, with
+`--latest=false` unless it is the highest release and `--prerelease` for a pre-release:
+
+```sh
+gem fetch <%= name %> --version VERSION
+.github/release-notes.sh CHANGELOG.md VERSION > notes.md
+gh release create vVERSION <%= name %>-VERSION.gem --verify-tag --title vVERSION --notes-file notes.md
+```
 
 `rake release` pushes to `main` directly: with "Require a pull request before merging" on, the
 maintainer cutting it needs the rule's bypass. A refused push leaves the release commit and
