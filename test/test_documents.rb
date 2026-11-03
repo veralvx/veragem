@@ -20,4 +20,13 @@ class TestDocuments < Minitest::Test
       refute_includes read(dir, "no_email/CODE_OF_CONDUCT.md"), "maintainers at"
     end
   end
+
+  # as Markdown's text, which would read _jane_ as emphasis
+  def test_the_email_is_written_as_given
+    in_tmpdir do |dir|
+      Veragem::Generator.generate(project(email: "_jane_@example.com"), File.join(dir, "my_gem"))
+
+      assert_includes read(dir, "my_gem/CODE_OF_CONDUCT.md"), "maintainers at \\_jane\\_@example.com."
+    end
+  end
 end

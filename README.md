@@ -141,9 +141,11 @@ CFF's schema (cffconvert): a check of the schema alone, which passes files Zenod
 The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/my_gem.rb`, `my-gem`
 is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 
-- whose module is already defined, by Ruby, Bundler, Rake or Minitest, or by its top-level library
-  where this Ruby has one (`set`, `option_parser`, `date-holidays`: Date is a class);
-- whose file would shadow a library this Ruby has (`ripper`: lib/ripper.rb);
+- whose module is already defined, by Ruby, by what its tools load with its code (Bundler, the
+  Rakefile and its tasks, the tests: `c_s_v`, `j_s_o_n`), where installed, or by its top-level
+  library where this Ruby has one (`set`, `option_parser`, `date-holidays`: Date is a class);
+- whose file would shadow a library this Ruby has, in any case, as macOS and Windows ignore it
+  (`ripper`: lib/ripper.rb; `english`: English.rb);
 - whose module its tests or `gem build` would take for Minitest's or RubyGems' own
   (`lifecycle_hooks`, `date_like`);
 - that `bundle gem` would refuse or mangle (`1gem`, `my--gem`);
@@ -151,6 +153,7 @@ is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
   would resolve it to the new gem;
 - `test_helper`, whose lib/test_helper.rb would shadow the tests', or one that would write a
   template file twice (`helper`: test/test_helper.rb);
+- one of Windows' device names, a word between its dashes (`con`, `my-nul`), no file's there;
 - longer than 40 characters or deeper than 4 modules (the generated code's lines fit RuboCop's);
 - with `--exe`, whose module is CLI or VERSION (`my-c_l_i`: its command line would find another
   first).
@@ -163,7 +166,8 @@ with its escapes shown, and its spaces single, as dprint writes them; GitHub's e
 alone it cannot keep. It is the module's comment too, so one the gem's yard-lint or RuboCop would
 not take as its documentation is refused: a tag first, YARD's (`@param`, `(see`) or written
 informally (`Note:`, `See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic
-comment (`encoding:`), a backtick or `**` left open.
+comment (`encoding:`, `warn_indent:`), Markdown yard-lint refuses (an em or en dash, a `•` list
+marker or a code fence first), a backtick or `**` left open.
 
 ## What you get
 

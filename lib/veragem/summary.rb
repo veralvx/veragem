@@ -12,29 +12,40 @@ module Veragem
     # a colon, spaces before it or not, or a space -- but a sentence's capitalized first word, a word
     # after it (a summary, stripped, has one after a space).
     ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)\b(\s*:)?(\s+)?/i
-    # A magic comment as RuboCop reads one -- an encoding's anywhere, lower-case (Ruby's rule), a
-    # frozen string literal's first, in any case -- or a RuboCop directive, which would turn its cops
-    # off, or fail them.
-    MAGIC = /\b(?:en)?coding\s*[:=]|\A(?i:frozen[_-]string[_-]literal):|(?i:\brubocop\s*:)/
-    private_constant :TAG, :ANNOTATION, :MAGIC
+    # A magic comment -- an encoding's anywhere, lower-case (Ruby's rule); Ruby's others first or
+    # within -*-, in any case, `-` for `_` (a frozen string literal's after code, a warning: one
+    # the tests raise) -- or a RuboCop directive, which would turn its cops off, or fail them.
+    MAGIC = /\b(?:en)?coding\s*[:=]|(?:\A|-\*-.*)(?i:(?:frozen[_-]string[_-]literal|warn[_-]indent|
+             shareable[_-]constant[_-]value)\s*:)|(?i:\brubocop\s*:)/x
+    # What yard-lint's Markdown and text checks refuse: a list marker (• ·) or a code block's fence
+    # first, an em or en dash (.yard-lint.yml's TextSubstitution).
+    MARKDOWN = /\A(?:[•·]|```)|[—–]/
+    private_constant :TAG, :ANNOTATION, :MAGIC, :MARKDOWN
 
-    # +summary+, refused where it holds a tag, an annotation or a magic comment, or leaves a backtick
-    # or bold open -- a `**` outside code with a non-space beside it, as yard-lint counts (`x ** 2` is
-    # no bold).
+    # +summary+, refused where it holds a tag, an annotation, a magic comment or Markdown yard-lint
+    # refuses, or leaves a backtick or bold open -- a `**` outside code with a non-space beside it, as
+    # yard-lint counts (`x ** 2` is no bold).
     # @param summary [String] one line of text, as Project.check passes it
     # @return [String] +summary+
     # @raise [Veragem::Error] the gem's yard-lint or RuboCop would not take it
     def self.check(summary)
-      raise Error, "invalid summary #{summary.inspect}: YARD would read a tag" if summary.match?(TAG)
-
-      misread = annotation?(summary) || summary.match?(MAGIC)
-      raise Error, "invalid summary #{summary.inspect}: RuboCop would read an annotation or a directive" if misread
-
-      bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size
-      left_open = summary.count("`").odd? || bold.odd?
-      raise Error, "invalid summary #{summary.inspect}: a backtick or ** left open" if left_open
+      why = refusal(summary)
+      raise Error, "invalid summary #{summary.inspect}: #{why}" if why
 
       summary
+    end
+
+    private_class_method def self.refusal(summary)
+      return "YARD would read a tag" if summary.match?(TAG)
+      return "RuboCop or Ruby would read an annotation or a directive" if annotation?(summary) || summary.match?(MAGIC)
+      return "yard-lint would refuse its Markdown" if summary.match?(MARKDOWN)
+
+      "a backtick or ** left open" if left_open?(summary)
+    end
+
+    private_class_method def self.left_open?(summary)
+      bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size
+      summary.count("`").odd? || bold.odd?
     end
 
     private_class_method def self.annotation?(summary)

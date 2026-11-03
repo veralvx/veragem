@@ -50,7 +50,7 @@ module Veragem
     # @param exe [Boolean] whether --exe is given
     # @param citation [Boolean] whether --citation, or a citation's value, is given
     # @return [String]
-    # @raise [Veragem::Error] +given+ is refused, or nothing is answered
+    # @raise [Veragem::Error] +given+ is refused, nothing is answered, or the terminal cannot be asked
     def name(given, exe:, citation:)
       return check_name(given, exe, citation) if given
 
@@ -112,7 +112,8 @@ module Veragem
       default unless default.nil? || checked(question, default, check, " (#{from}, not offered)").nil?
     end
 
-    # A line's text, nil when empty; one its encoding cannot read as bytes, as an argument's.
+    # A line's text, nil when empty: its bytes as UTF-8 (whatever the locale's encoding), or as bytes
+    # where they are no UTF-8, as an argument's; stripped after, as Project strips a value.
     def read(question, default, optional)
       line = terminal(question) do
         @output.print "#{question}#{" (- for none)" if optional}#{" [#{default}]" if default}: "
@@ -120,7 +121,8 @@ module Veragem
       end
       raise Error, "no answer to #{question}" unless line
 
-      answer = Project.strip(line.valid_encoding? ? line : line.b)
+      text = line.dup.force_encoding(Encoding::UTF_8)
+      answer = Project.strip(text.valid_encoding? ? text : text.b)
       answer unless answer.empty?
     end
 

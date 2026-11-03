@@ -104,7 +104,9 @@ module Veragem
         replaced = ["--#{key}", Project::OPTIONAL[key]].compact.join(" or ")
         raise Error, "#{e} (git config #{name}; #{replaced} replaces it)"
       end
-      defaults.merge(given).tap { check_present(it) }.compact #: Project::values
+      values = defaults.merge(given) #: Hash[Symbol, String | bool | nil]
+      check_present(values)
+      values #: Project::values
     end
 
     # The author and the GitHub user, which nothing but git defaults.

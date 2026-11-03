@@ -8,6 +8,8 @@ module Veragem
     # `bundle gem`'s names, lower-case: words of letters and digits joined by `_` (one constant,
     # `my_gem` is MyGem) or `-` (a namespace, `my-gem` is My::Gem), each constant a letter first.
     PATTERN = /\A[a-z][a-z0-9]*(?:_[a-z0-9]+)*(?:-[a-z][a-z0-9]*(?:_[a-z0-9]+)*)*\z/
+    # Windows' devices, whose names no file there takes: a path's word, of its dashes
+    RESERVED = /\A(?:con|prn|aux|nul|com\d|lpt\d)\z/
 
     # Its modules, as `bundle gem` names them: `my-gem_tools`' My, GemTools.
     # @param name [String] one PATTERN matches
@@ -38,9 +40,8 @@ module Veragem
       if name.length > 40 || name.count("-") > 3
         raise Error, "invalid gem name #{name}: at most 40 characters and 4 modules deep"
       end
-      # lib/test_helper.rb would shadow the tests' own (Minitest's -Ilib:test)
-      raise Error, "invalid gem name #{name}: its lib/test_helper.rb would shadow the tests'" if name == "test_helper"
 
+      check_paths(name)
       name
     end
 
@@ -56,20 +57,39 @@ module Veragem
       check_defined(name, nestings.zip(answers.drop(2)).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
     end
 
+    # What the gem's tools load with its code, where installed: Bundler's CLI, which reads its gemspec
+    # (bin/setup's `bundle install`); the Rakefile's libraries and its tasks' (RuboCop's, YARD's ERB),
+    # which load after the gemspec; its tests' (SimpleCov, Pbt).
+    LIBRARIES = %w[bundler bundler/cli rake bundler/audit/task csv json minitest/test_task rubocop/rake_task
+                   steep/rake_task yard rubocop erb simplecov minitest/autorun pbt].freeze
+    # Its files' paths: lib/test_helper.rb would shadow the tests' own (Minitest's -Ilib:test); a
+    # device's name, whatever its extension, is no file of Windows' (lib/con.rb), nor git's there.
+    private_class_method def self.check_paths(name)
+      raise Error, "invalid gem name #{name}: its lib/test_helper.rb would shadow the tests'" if name == "test_helper"
+
+      reserved = name.split("-").grep(RESERVED).first
+      raise Error, "invalid gem name #{name}: Windows reserves #{reserved} as a file's name" if reserved
+    end
+
     # The child: no stdin, a scratch directory, its arguments cleared before the libraries load, their
-    # own output kept from the answers, no exit hooks.
-    PROBE = <<~RUBY
+    # own output kept from the answers, no exit hooks (minitest/autorun's). A file shadowed in any
+    # case: a file system may ignore it (macOS', Windows').
+    PROBE = <<~RUBY.freeze
       library, path, *nestings = ARGV
       first = nestings.fetch(0)
       ARGV.clear
       answers = $stdout.dup
       $stdout.reopen($stderr)
-      ["bundler", "bundler/cli", "rake", "minitest", library].each do |feature|
+      [*#{LIBRARIES.inspect}, library].each do |feature|
         require feature
       rescue StandardError, ScriptError
         nil
       end
-      answers.puts($LOAD_PATH.resolve_feature_path(path)&.last)
+      files = "\#{path.gsub(/[a-z]/) { "[\#{it}\#{it.upcase}]" }}.{rb,\#{RbConfig::CONFIG["DLEXT"]}}"
+      shadowed = $LOAD_PATH.resolve_feature_path(path)&.last ||
+                 $LOAD_PATH.lazy.flat_map { |dir| Dir.glob(files, base: dir).map { File.join(dir, it) } }
+                           .first
+      answers.puts(shadowed)
       readers = { "its tests" => defined?(Minitest::Test) && Minitest::Test, "gem build" => Gem::Specification }
       found = readers.filter_map do |reader, context|
         owner = context && (context.ancestors - Object.ancestors).find { it.const_defined?(first, false) }
@@ -84,17 +104,17 @@ module Veragem
       answers.flush
       exit!(0)
     RUBY
-    private_constant :PROBE
+    private_constant :RESERVED, :LIBRARIES, :PROBE
     # Each probe's answers: a question asked once a process
     @probed = {} #: Hash[[String, String, Array[String]], Array[String]]
 
     # The file +path+ already requires, what a Minitest::Test or Gem::Specification finds for the
     # first of +nestings+, then each nesting's class (Module, Class...), each "" when none, where the
-    # gem meets them: in Bundler's CLI, which reads its gemspec (bin/setup's `bundle install`), in
-    # Rake and Minitest, and with its top-level +library+ (`date-holidays`: date), which its tools
-    # may require. Asked of a Ruby of its own, the same however this one was started (RUBYOPT's
-    # options would print before the answers), and once a process: the answer cannot change. The
-    # child answers once the libraries are loaded, then exits: fewer answers are a failure.
+    # gem meets them: with what its tools load (LIBRARIES), and its top-level +library+
+    # (`date-holidays`: date), which they may require. Asked of a Ruby of its own, the same however
+    # this one was started (RUBYOPT's options would print before the answers), and once a process:
+    # the answer cannot change. The child answers once the libraries are loaded, then exits: fewer
+    # answers are a failure.
     # @param library [String] the gem's top-level library
     # @param path [String] the file the gem requires, lib/'s
     # @param nestings [Array<String>] its modules' full names, outermost first
@@ -124,7 +144,7 @@ module Veragem
     end
 
     # Its lib/<path>.rb, first on the load path, must not shadow a library its tools may require:
-    # this Ruby's (lib/json.rb, JSON's), an installed gem's too; its tests' classes, Minitest::Test's,
+    # this Ruby's (lib/json.rb, JSON's), a gem's they load too; its tests' classes, Minitest::Test's,
     # and its gemspec, which `gem build` evaluates in Gem::Specification, must find its module, not
     # one of theirs (`lifecycle_hooks`: Minitest::Test::LifecycleHooks).
     private_class_method def self.check_shadowing(name, shadowed, found)

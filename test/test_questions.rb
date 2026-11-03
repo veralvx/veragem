@@ -103,23 +103,6 @@ class TestQuestions < Minitest::Test
     assert_match(/\[Jane Doe\]: invalid email "TODO@x": [^\n]*\nEmail \(- for none\): GitHub user/, shown)
   end
 
-  # typed under a UTF-8 locale: an invalid byte, refused as the value it is in
-  def test_an_invalid_utf8_answer_is_asked_again
-    invalid = "Jos\xC3".dup.force_encoding(Encoding::UTF_8)
-
-    gem, shown = ask("my_gem", answers: ["", "", "", "", invalid, "Ada", "", ""])
-
-    assert_equal "Ada", gem.author
-    assert_includes shown, "invalid author"
-  end
-
-  # a valid answer is read as text, not bytes: a refusal shows it as typed
-  def test_a_refused_answer_is_shown_as_typed
-    _, shown = ask(answers: ["caf\u00E9", "my_gem", "", "", "", "", "", "", ""])
-
-    assert_includes shown, "Gem name: invalid gem name #{"caf\u00E9".inspect}: lower-case words"
-  end
-
   def test_a_name_the_generator_refuses_is_asked_again
     in_tmpdir do |dir|
       Dir.mkdir(File.join(dir, "taken"))

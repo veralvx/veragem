@@ -18,8 +18,45 @@ module Veragem
                  orcid: "leave --orcid out", keywords: "leave --keywords out" }.freeze
     private_constant :GITHUB, :FIELDS, :MARKUP
 
-    attr_reader :name, :author, :email, :github, :summary, :license, :exe, :citation, :given_names, :family_names,
-                :alias_name, :orcid, :keywords
+    # The gem's name.
+    # @return [String]
+    attr_reader :name
+    # Its author.
+    # @return [String]
+    attr_reader :author
+    # The author's email, none nil.
+    # @return [String, nil]
+    attr_reader :email
+    # The GitHub user or organization.
+    # @return [String]
+    attr_reader :github
+    # Its summary.
+    # @return [String]
+    attr_reader :summary
+    # Its licence's choice: mit, apache or dual.
+    # @return [String]
+    attr_reader :license
+    # Whether it has a command line.
+    # @return [Boolean]
+    attr_reader :exe
+    # Whether it has CITATION.cff.
+    # @return [Boolean]
+    attr_reader :citation
+    # CITATION.cff's given names, none nil.
+    # @return [String, nil]
+    attr_reader :given_names
+    # CITATION.cff's family names, nil without a citation.
+    # @return [String, nil]
+    attr_reader :family_names
+    # CITATION.cff's alias, none nil.
+    # @return [String, nil]
+    attr_reader :alias_name
+    # CITATION.cff's ORCID iD, its URL; none nil.
+    # @return [String, nil]
+    attr_reader :orcid
+    # CITATION.cff's keywords, none nil.
+    # @return [Array<String>, nil]
+    attr_reader :keywords
 
     # The value +key+ names, as a refusal names it: `GitHub user` :github, `given names` :given_names.
     # @param key [Symbol] a value's
@@ -49,10 +86,10 @@ module Veragem
       return Citation.check(key, value) { |name, text| line(name, text) } if Citation::KEYS.include?(key)
 
       case key
-      when :github then github(value)
+      when :github then github(strip(value))
       when :license then License.check(strip(value))
-      when :summary then Summary.check(text("summary", value))
-      else text(key.name, value)
+      when :summary then Summary.check(text(field(key), value))
+      else text(field(key), value)
       end
     end
 
@@ -151,22 +188,21 @@ module Veragem
       raise Error, "invalid #{field(:github)} #{value.inspect}: 1 to 39 ASCII letters, digits and inner single hyphens"
     end
 
-    # A value a file quotes, which RubyGems does not refuse as unfinished.
+    # A value the gemspec quotes: short enough for its line (RuboCop's 120 columns), and not one
+    # RubyGems refuses as unfinished.
     private_class_method def self.text(field, value)
       line = line(field, value)
-      unfinished = line.match?(/\A(TODO|FIXME)/)
-      raise Error, "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME" if unfinished
+      raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
+      return line unless line.match?(/\A(TODO|FIXME)/)
 
-      line
+      raise Error, "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
     end
 
-    # One line, its surrounding spaces stripped (Unicode's too), short enough for the gemspec's line
-    # (RuboCop's 120 columns). U+FFFE and U+FFFF are outside YAML's printable characters:
-    # CITATION.cff's.
+    # One line, its surrounding spaces stripped (Unicode's too). U+FFFE and U+FFFF are outside YAML's
+    # printable characters: CITATION.cff's.
     private_class_method def self.line(field, value)
       line = value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/) ? "" : strip(value)
       raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
-      raise Error, "invalid #{field}: too long, its Ruby string at most 100 characters" if quote(line).length > 100
 
       line
     end

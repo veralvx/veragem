@@ -129,7 +129,7 @@ module Veragem
       File.binwrite(destination, file.end_with?(".erb") ? render(source, project) : File.binread(source))
       return unless EXECUTABLES.include?(file)
 
-      # executable where readable, as `chmod +x` under the umask
+      # executable where readable: the umask decides, as it does the read bits
       mode = File.stat(destination).mode
       File.chmod(mode | ((mode & 0o444) >> 2), destination)
     end
