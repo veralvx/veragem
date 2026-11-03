@@ -22,7 +22,17 @@ Bundler::Audit::Task.new
 # over several lines.
 YARD::Rake::YardocTask.new { it.files = ["lib/**/*.rb"] }
 
-task default: %i[rubocop steep test yard_lint]
+task default: %i[rubocop steep steep:typed test yard_lint]
+
+# A call is untyped where its receiver is untyped, which steep check passes; steep stats counts those
+# of each file (CSV: target, file, status, typed, untyped, ...) and exits 0 whatever it counts. A
+# steep:ignore'd call it counts as neither.
+desc "Check that Steep types each call of lib/. steep stats counts the untyped"
+task "steep:typed" do
+  rows = output("steep", "stats", "--format=csv").lines(chomp: true).drop(1).map { it.split(",") }
+  untyped = rows.filter_map { |_, file, _, _, count| "#{file}: #{count}" unless count == "0" }
+  abort "error: untyped calls, each file's:\n#{untyped.join("\n")}" unless untyped.empty?
+end
 
 # Steep, against sig/, is the gate. TypeProf reads Ruby's core signatures alone, not the standard
 # library's.

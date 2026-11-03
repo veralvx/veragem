@@ -11,8 +11,9 @@ RuboCop runs with its defaults, a few cops beyond them, and every new cop as it 
 (`NewCops: enable`), its Minitest, packaging, performance and Rake extensions on, and the project
 indexed first (`UseProjectIndex`, the rubydex gem) for the cops that look across files
 (`.rubocop.yml`). Steep checks `lib/` against the signatures in `sig/`, its `strict` diagnostics on
-(`Steepfile`): every method of `lib/` is declared in `sig/`, and a warning fails as an error does.
-Gemfile.lock pins both, so the verdict is the same locally and in CI. YARD documents `lib/`, and
+(`Steepfile`): every method of `lib/` is declared in `sig/`, a warning fails as an error does, and
+a call on an untyped receiver fails too (`rake steep:typed`, from `steep stats`). Gemfile.lock pins
+both, so the verdict is the same locally and in CI. YARD documents `lib/`, and
 yard-lint holds it (`.yard-lint.yml`).
 
 The shell is held as the code is: shfmt formats it (`.editorconfig` holds its style) and it passes
@@ -49,8 +50,9 @@ configuration, zizmor's security audit.
 one's too (it has no YARD tags): look a method's up in `sig/veragem.rbs`.
 `bundle exec rake typeprof` prints the signatures TypeProf infers from `lib/`: a start for a new
 method's, never a replacement for reading them -- it says `untyped` where it cannot tell. A
-signature is as narrow as the code allows: `untyped` only where the value truly is any value. When
-a diagnostic has to stay, ignore it on its line, the reason on the line above (text after the
+signature is as narrow as the code allows: `untyped` only where the value truly is any value, and
+a call on one fails `rake steep:typed` until a guard or an assertion (`value #: String`) narrows it.
+When a diagnostic has to stay, ignore it on its line, the reason on the line above (text after the
 diagnostic's name voids the ignore):
 
 ```ruby
