@@ -19,7 +19,7 @@ class TestSummary < Minitest::Test
                        "warn_indent: maybe", "Warn-Indent : x", "SHAREABLE_CONSTANT_VALUE: literal",
                        "frozen_string_literal : x", "A -*- warn-indent: x -*-", "A -*- x; frozen_string_literal: y -*-",
                        "Greets — fast", "Fast – small", "• A list", "· A list", "```x``` blocks",
-                       "'warn_indent: x'", ":warn_indent: x", "; frozen_string_literal: x"].freeze
+                       "'warn_indent: x'", ":warn_indent: x", "; frozen_string_literal: x", "\"warn_indent: x"].freeze
   TAKEN_SUMMARIES = ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.",
                      "Squares: x ** 2.", "Code `a **b` too.", "Code `a`** b.", "Code ``** b.", "Review the code",
                      "Todo later", "Notebook support",
@@ -63,7 +63,7 @@ class TestSummary < Minitest::Test
     { "x" * 99 => "invalid summary: too long, its Ruby string at most 100 characters",
       "@param x" => 'invalid summary "@param x": YARD would read a tag',
       "Hack: a fix" => 'invalid summary "Hack: a fix": RuboCop or Ruby would read an annotation or a directive',
-      "Fast — and small" => 'invalid summary "Fast — and small": yard-lint would refuse its Markdown',
+      "Fast — and small" => "invalid summary #{"Fast — and small".inspect}: yard-lint would refuse its Markdown",
       "Parses `foo" => 'invalid summary "Parses `foo": a backtick or ** left open' }.each do |summary, why|
       assert_equal why, assert_raises(Veragem::Error) { Veragem::Project.check(:summary, summary) }.message
     end

@@ -95,8 +95,8 @@ class TestRefusals < Minitest::Test
     in_tmpdir do |dir|
       other = File.join(dir, "other")
       git(dir, "init", "--quiet", other)
-      git = File.join(other, ".git")
-      with_env("GIT_DIR" => git, "GIT_WORK_TREE" => other, "GIT_INDEX_FILE" => File.join(git, "index")) do
+      repository = File.join(other, ".git")
+      with_env("GIT_DIR" => repository, "GIT_WORK_TREE" => other, "GIT_INDEX_FILE" => File.join(repository, "index")) do
         Veragem::Generator.generate(project, File.join(dir, "my_gem"))
       end
 
