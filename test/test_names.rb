@@ -26,7 +26,9 @@ class TestNames < Minitest::Test
 
   def test_a_name_whose_module_is_already_defined_is_refused
     { "set" => "Set", "comparable" => "Comparable",
-      "bundler-thor" => "Bundler::Thor", "option_parser" => "OptionParser" }
+      "bundler-thor" => "Bundler::Thor", "option_parser" => "OptionParser",
+      # what the Rakefile loads after the gemspec, and the tests
+      "c_s_v" => "CSV", "j_s_o_n" => "JSON" }
       .each do |name, defined|
         error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
@@ -34,13 +36,14 @@ class TestNames < Minitest::Test
       end
   end
 
-  # lib/json.rb, first on the load path, would be every tool's `require "json"`
+  # lib/json.rb, first on the load path, would be every tool's `require "json"`; lib/english.rb,
+  # `require "English"` where the file system ignores case
   def test_a_name_whose_library_would_shadow_another_is_refused
-    %w[json logger bundler bundler-plugin].each do |name|
+    %w[json logger bundler bundler-plugin english].each do |name|
       error = assert_raises(Veragem::Error) { Veragem::Name.check_modules(name) }
 
       path = name.tr("-", "/")
-      shadowed = error.message[%r{\Ainvalid gem name #{name}: its lib/#{path}\.rb would shadow (.*/#{path}\.rb)\z}, 1]
+      shadowed = error.message[%r{\Ainvalid gem name #{name}: its lib/#{path}\.rb would shadow (.*/#{path}\.rb)\z}i, 1]
 
       assert_operator File, :absolute_path?, shadowed.to_s, error.message
     end
@@ -94,6 +97,15 @@ class TestNames < Minitest::Test
     assert_raises(Veragem::Error) { project("test_helper") }
   end
 
+  # a device's name alone, as a word of the path
+  def test_windows_devices_are_no_names
+    %w[con prn aux nul com0 lpt9 my-nul].each { |name| assert_raises(Veragem::Error, name) { project(name) } }
+    %w[con_x console bacon lpt10 com].each { assert_equal it, project(it).name }
+    error = assert_raises(Veragem::Error) { project("con-nul") }
+
+    assert_equal "invalid gem name con-nul: Windows reserves con as a file's name", error.message
+  end
+
   # the whole message: what is refused, as given, and the rule
   def test_a_refused_name_says_why
     { "My_gem" => "invalid gem name \"My_gem\": lower-case words of letters and digits, each a letter first " \
@@ -111,7 +123,8 @@ class TestNames < Minitest::Test
   # Over names of a few letters, digits, underscores and dashes: one accepted is bundle gem's
   # constant, each part a valid one.
   def test_an_accepted_name_is_bundle_gems_constant
-    Pbt.assert do
+    # most draws are no name: enough runs for many that are
+    Pbt.assert(num_runs: 1000) do
       Pbt.property(Pbt.array(Pbt.one_of("a", "b", "0", "_", "-"), min: 1, max: 8)) do |chars|
         name = chars.join
         next unless Veragem::Name::PATTERN.match?(name)

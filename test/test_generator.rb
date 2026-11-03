@@ -5,7 +5,6 @@ require "prism"
 require "yaml"
 
 class TestGenerator < Minitest::Test
-  include Veragem::TestSupport
   include Veragem::GeneratedSupport
 
   RUBY = %r{\.(rb|gemspec)\z|\A(Gemfile|Rakefile|Steepfile|\.simplecov|bin/console|bin/setup|exe/.*)\z}
@@ -83,7 +82,10 @@ class TestGenerator < Minitest::Test
     each_kind do |gem, target, _|
       shipped = spec_of(target, gem)["files"]
 
-      assert_includes shipped, "sig/#{gem.path}.rbs"
+      code = %W[lib/#{gem.path}.rb lib/#{gem.path}/version.rb sig/#{gem.path}.rbs]
+      code += %W[exe/#{gem.name} lib/#{gem.path}/cli.rb] if gem.exe
+
+      assert_empty code - shipped
       assert_empty shipped.grep_v(%r{\A(lib|sig|exe)/|\A(README\.md|LICENSE-MIT|LICENSE-APACHE)\z})
     end
   end

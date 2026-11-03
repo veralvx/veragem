@@ -39,8 +39,18 @@ module Veragem
 
     def in_tmpdir(&) = Dir.mktmpdir("veragem-test", &)
 
-    # git's output in +dir+'s repository, whatever repository a git hook running the tests points at
-    def git(dir, *args) = IO.popen(Generator.const_get(:GIT_LOCAL), ["git", *args], chdir: dir, &:read)
+    # git's output in +dir+'s repository, whatever repository a git hook running the tests points at;
+    # a failure raises, not read as no output
+    def git(dir, *args)
+      output = IO.popen(Generator.const_get(:GIT_LOCAL), ["git", *args], chdir: dir, &:read)
+      raise "git #{args.join(" ")} failed in #{dir}" unless Process.last_status.success?
+
+      output
+    end
+
+    # Pbt's printable strings, and its ASCII's: Unicode's alone hardly hold a quote, a backslash or
+    # markup
+    def texts = [Pbt.printable_string, Pbt.printable_ascii_string]
 
     # the block with +object+'s method +name+ replaced by +stub+: then its own again, or the one it
     # inherits
@@ -91,22 +101,28 @@ module Veragem
     # +answers+ typed at a terminal, one a line
     def terminal(*answers) = StringIO.new(answers.map { "#{it}\n" }.join).tap { |io| def io.tty? = true }
 
-    # the project, and what the terminal showed
+    # the project, and what the terminal showed: every answer read
     def ask(*argv, answers: [], config: CONFIG, dir: nil)
-      output = StringIO.new
-      [at_terminal(argv, answers:, config:, dir:, output:), output.string]
+      input = terminal(*answers)
+      output = screen
+      gem = at_terminal(argv, input:, config:, dir:, output:)
+
+      assert_empty input.read, "answers left unread"
+      [gem, output.string]
     end
 
     # the refusal, and what the terminal showed by then
     def refused(*argv, answers: [], config: CONFIG, dir: nil)
-      output = StringIO.new
-      error = assert_raises(Error) { at_terminal(argv, answers:, config:, dir:, output:) }
+      output = screen
+      error = assert_raises(Error) { at_terminal(argv, input: terminal(*answers), config:, dir:, output:) }
       [error.message, output.string]
     end
 
+    # what the terminal shows, as UTF-8's text whatever the default external encoding
+    def screen = StringIO.new(+"")
+
     # +argv+ at a terminal, generating into +dir+, or else a directory of its own
-    def at_terminal(argv, answers:, config:, dir:, output:)
-      input = terminal(*answers)
+    def at_terminal(argv, input:, config:, dir:, output:)
       into = ->(target) { Options.parse(argv, dir: target, config: config.method(:[]), input:, output:) }
       dir ? into.call(dir) : in_tmpdir(&into)
     end
@@ -155,7 +171,8 @@ module Veragem
       script = "spec = Gem::Specification.load(ARGV[0]); " \
                "print JSON.dump(%w[name version authors email licenses homepage executables files summary]" \
                ".to_h { [it, spec.public_send(it).then { |v| v.is_a?(Gem::Version) ? v.to_s : v }] })"
-      JSON.parse(IO.popen([RbConfig.ruby, "-rjson", "-e", script, "#{gem.name}.gemspec"],
+      # without RUBYOPT, whose options (-v) would print before the JSON
+      JSON.parse(IO.popen({ "RUBYOPT" => nil }, [RbConfig.ruby, "-rjson", "-e", script, "#{gem.name}.gemspec"],
                           chdir: target, external_encoding: Encoding::UTF_8, &:read))
     end
   end

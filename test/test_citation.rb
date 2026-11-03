@@ -71,7 +71,9 @@ class TestCitation < Minitest::Test
     gem = parse("my_gem", "--citation", "--family-names=Doe", "--keywords= ruby, gem,, ruby ,\u00A0,")
 
     assert_equal %w[ruby gem], gem.keywords
-    [",", " , ", "a\tb", "x" * 99].each do |given|
+    # written to CITATION.cff alone: no Ruby string's limit
+    assert_equal ["x" * 200], parse("my_gem", "--citation", "--family-names=Doe", "--keywords=#{"x" * 200}").keywords
+    [",", " , ", "a\tb"].each do |given|
       error = assert_raises(Veragem::Error) { parse("my_gem", "--citation", "--family-names=Doe", "--keywords=#{given}") }
 
       assert_match(/\Ainvalid keyword/, error.message)
@@ -84,7 +86,7 @@ class TestCitation < Minitest::Test
       check = ->(name, citation) { Veragem::Generator.check(name, exe: false, citation:, target: File.join(dir, name)) }
       error = assert_raises(Veragem::Error) { check.call("ab", true) }
 
-      assert_equal "invalid gem name ab with --citation: Zenodo takes a title of 3 characters or more", error.message
+      assert_equal "invalid gem name ab for a citation: Zenodo takes a title of 3 characters or more", error.message
       assert_equal %w[abc ab], [check.call("abc", true), check.call("ab", false)]
       Veragem::Generator.generate(project("ab"), File.join(dir, "ab"))
     end

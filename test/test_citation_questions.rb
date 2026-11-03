@@ -112,15 +112,15 @@ class TestCitationQuestions < Minitest::Test
   def test_at_a_terminal_a_short_name_cannot_have_a_citation
     why, shown = refused("ab", "--citation")
 
-    assert_match(/\Ainvalid gem name ab with --citation/, why)
+    assert_match(/\Ainvalid gem name ab for a citation/, why)
     assert_empty shown
     _, shown = ask("--citation", answers: ["ab", "abc", "", "", "", "", "", "", "", "", "", "", ""])
 
-    assert_includes shown, "Gem name: invalid gem name ab with --citation"
+    assert_includes shown, "Gem name: invalid gem name ab for a citation"
     gem, shown = ask("ab", answers: ["", "y", "n", "", "", "", "", ""])
 
     assert_equal ["ab", false], [gem.name, gem.citation]
-    assert_includes shown, "(y/n) [n]: invalid gem name ab with --citation"
+    assert_includes shown, "(y/n) [n]: invalid gem name ab for a citation"
   end
 
   # --no-citation with a citation's value: refused before any question, as a licence is
@@ -142,11 +142,11 @@ class TestCitationQuestions < Minitest::Test
   def test_at_a_terminal_a_citations_values_given_refuse_a_short_name
     why, shown = refused("ab", "--family-names=Doe")
 
-    assert_match(/\Ainvalid gem name ab with --citation/, why)
+    assert_match(/\Ainvalid gem name ab for a citation/, why)
     assert_empty shown
     gem, shown = ask("--orcid=0000-0002-1825-0097", answers: ["ab", "abc", "", "y", "", "", "", "", "", "", "", "", ""])
 
     assert_equal ["abc", true, ORCID], [gem.name, gem.citation, gem.orcid]
-    assert_includes shown, "Gem name: invalid gem name ab with --citation"
+    assert_includes shown, "Gem name: invalid gem name ab for a citation"
   end
 end

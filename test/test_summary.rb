@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "yaml"
 
 # The summary: the module's comment too, which the gem's yard-lint and RuboCop take, and the README's
 # text, as written.
@@ -14,13 +15,19 @@ class TestSummary < Minitest::Test
                        "Frozen_string_literal: true", "frozen-string-literal: x", "rubocop:disable all",
                        "Parses C# rubocop:disable all", "Rubocop:disable all", "Important: x", "Todo: x",
                        "Fixme: x", "Warning: x", "Deprecated: x", "Author: x", "Version: x", "Since: x",
-                       "Returns: x", "Raises: x", "Optimize: x", "optimize the code"].freeze
+                       "Returns: x", "Raises: x", "Optimize: x", "optimize the code",
+                       "warn_indent: maybe", "Warn-Indent : x", "SHAREABLE_CONSTANT_VALUE: literal",
+                       "frozen_string_literal : x", "A -*- warn-indent: x -*-", "A -*- x; frozen_string_literal: y -*-",
+                       "Greets — fast", "Fast – small", "• A list", "· A list", "```x``` blocks",
+                       "'warn_indent: x'", ":warn_indent: x", "; frozen_string_literal: x", "\"warn_indent: x"].freeze
   TAKEN_SUMMARIES = ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.",
                      "Squares: x ** 2.", "Code `a **b` too.", "Code `a`** b.", "Code ``** b.", "Review the code",
                      "Todo later", "Notebook support",
                      "Decoding: utf-8 fast", "see the docs", "Note-taking app", "Hack's toolkit", "Note.", "Review",
                      "note-taking app", "Notes: x", "Encoding: helpers", "Coding: kata", "Encoding=x",
-                     "Frozen string literal: x", "A frozen_string_literal: true"].freeze
+                     "Frozen string literal: x", "A frozen_string_literal: true", "A warn_indent: x",
+                     "warn_indent maybe", "A -*- note -*-", "A - dash", "A • x", "Code ```x``` too",
+                     "Ranges `a—b` too"].freeze
 
   # each value, and the README's text of it
   MARKDOWN = { "A Ruby gem." => "A Ruby gem.", "A _fast_ my_gem" => "A \\_fast\\_ my_gem", "a  b" => "a b",
@@ -42,11 +49,21 @@ class TestSummary < Minitest::Test
     TAKEN_SUMMARIES.each { assert_equal it, Veragem::Project.check(:summary, it) }
   end
 
+  # what yard-lint's configuration substitutes (TextSubstitution), wherever in the summary
+  def test_a_summary_yard_lint_would_substitute_is_refused
+    config = YAML.load_file(File.join(Veragem::Generator::TEMPLATE, ".yard-lint.yml"))
+    substituted = config.dig("Documentation/TextSubstitution", "Substitutions").keys
+
+    refute_empty substituted
+    substituted.each { |text| assert_raises(Veragem::Error, text) { Veragem::Project.check(:summary, "A #{text} b") } }
+  end
+
   # the whole message: what is refused, as given, and why
   def test_a_refused_summary_says_why
     { "x" * 99 => "invalid summary: too long, its Ruby string at most 100 characters",
       "@param x" => 'invalid summary "@param x": YARD would read a tag',
-      "Hack: a fix" => 'invalid summary "Hack: a fix": RuboCop would read an annotation or a directive',
+      "Hack: a fix" => 'invalid summary "Hack: a fix": RuboCop or Ruby would read an annotation or a directive',
+      "Fast — and small" => "invalid summary #{"Fast — and small".inspect}: yard-lint would refuse its Markdown",
       "Parses `foo" => 'invalid summary "Parses `foo": a backtick or ** left open' }.each do |summary, why|
       assert_equal why, assert_raises(Veragem::Error) { Veragem::Project.check(:summary, summary) }.message
     end
@@ -55,10 +72,14 @@ class TestSummary < Minitest::Test
   # as written, as RubyGems shows it, whatever Markdown would make of it, a URL unlinked: its escapes
   # alone added, its spaces single, as dprint writes them (each case checked so in a generated gem)
   def test_a_markdown_value_shows_as_written
-    MARKDOWN.each { |value, text| assert_equal text, project.markdown(value) }
-    Pbt.assert do
-      Pbt.property(Pbt.printable_string) do |value|
-        assert_equal value.squeeze(" "), project.markdown(value).gsub(/\\(.)/m, "\\1")
+    gem = project
+
+    MARKDOWN.each { |value, text| assert_equal text, gem.markdown(value) }
+    texts.each do |text|
+      Pbt.assert do
+        Pbt.property(text) do |value|
+          assert_equal value.squeeze(" "), gem.markdown(value).gsub(/\\(.)/m, "\\1")
+        end
       end
     end
   end

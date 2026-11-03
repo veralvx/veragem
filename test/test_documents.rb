@@ -4,7 +4,6 @@ require "test_helper"
 
 # The generated documents: what a reader of the new gem is sent to.
 class TestDocuments < Minitest::Test
-  include Veragem::TestSupport
   include Veragem::GeneratedSupport
 
   # where the documents send a reporter: the gem's own advisories, its maintainer's email alone where
@@ -19,6 +18,15 @@ class TestDocuments < Minitest::Test
 
       assert_includes read(dir, "my_gem/CODE_OF_CONDUCT.md"), "maintainers at jane@example.com."
       refute_includes read(dir, "no_email/CODE_OF_CONDUCT.md"), "maintainers at"
+    end
+  end
+
+  # as Markdown's text, which would read _jane_ as emphasis
+  def test_the_email_is_written_as_given
+    in_tmpdir do |dir|
+      Veragem::Generator.generate(project(email: "_jane_@example.com"), File.join(dir, "my_gem"))
+
+      assert_includes read(dir, "my_gem/CODE_OF_CONDUCT.md"), "maintainers at \\_jane\\_@example.com."
     end
   end
 end

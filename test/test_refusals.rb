@@ -4,7 +4,7 @@ require "test_helper"
 
 # What the generator refuses, and what a refusal leaves.
 class TestRefusals < Minitest::Test
-  include Veragem::TestSupport
+  include Veragem::GeneratedSupport
 
   def test_a_symlink_is_refused_and_kept
     in_tmpdir do |dir|
@@ -94,9 +94,9 @@ class TestRefusals < Minitest::Test
   def test_another_repository_is_left_alone
     in_tmpdir do |dir|
       other = File.join(dir, "other")
-      system("git", "init", "--quiet", other, exception: true)
-      git = File.join(other, ".git")
-      with_env("GIT_DIR" => git, "GIT_WORK_TREE" => other, "GIT_INDEX_FILE" => File.join(git, "index")) do
+      git(dir, "init", "--quiet", other)
+      repository = File.join(other, ".git")
+      with_env("GIT_DIR" => repository, "GIT_WORK_TREE" => other, "GIT_INDEX_FILE" => File.join(repository, "index")) do
         Veragem::Generator.generate(project, File.join(dir, "my_gem"))
       end
 
@@ -113,7 +113,7 @@ class TestRefusals < Minitest::Test
       target = File.join(dir, "my_gem")
       with_git_config(dir, "[core]\n  excludesFile = #{excludes}\n") { Veragem::Generator.generate(project, target) }
 
-      assert_includes git(target, "ls-files").lines(chomp: true), "my_gem.gemspec"
+      assert_equal files_in(target).sort, git(target, "ls-files").lines(chomp: true).sort
     end
   end
 

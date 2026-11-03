@@ -10,6 +10,8 @@ class TestProject < Minitest::Test
   def test_the_github_user_follows_githubs_rule
     ["jane", "jane-doe", "J4ne", "jAne-Doe", "a" * 39].each { assert_equal it, project(github: it).github }
 
+    assert_equal "jane", project(github: " jane\u00A0").github
+
     ["-jane", "jane-", "jane--doe", "jane_doe", "a" * 40, "ſam", "\u212Aate", nil].each do |github|
       assert_raises(Veragem::Error, github.inspect) { project(github:) }
     end
@@ -64,18 +66,24 @@ class TestProject < Minitest::Test
 
   def test_a_quoted_value_reads_back_as_itself
     gem = project
-    ["José \"Q\" \\ \#{x} \#@y \#$z # done"].each { assert_equal it, eval(gem.quote(it)) } # rubocop:disable Security/Eval -- the test's own strings
-    Pbt.assert do
-      Pbt.property(Pbt.printable_string) do |value|
-        assert_equal value, eval(gem.quote(value)) # rubocop:disable Security/Eval -- generated strings, read back
+    example = "José \"Q\" \\ \#{x} \#@y \#$z # done"
+
+    assert_equal example, eval(gem.quote(example)) # rubocop:disable Security/Eval -- the test's own string
+    texts.each do |text|
+      Pbt.assert do
+        Pbt.property(text) do |value|
+          assert_equal value, eval(gem.quote(value)) # rubocop:disable Security/Eval -- generated strings, read back
+        end
       end
     end
   end
 
   def test_a_yaml_value_reads_back_as_itself
     gem = project
-    Pbt.assert do
-      Pbt.property(Pbt.printable_string) { |value| assert_equal value, YAML.safe_load("v: #{gem.yaml(value)}")["v"] }
+    texts.each do |text|
+      Pbt.assert do
+        Pbt.property(text) { |value| assert_equal value, YAML.safe_load("v: #{gem.yaml(value)}")["v"] }
+      end
     end
   end
 
@@ -93,10 +101,16 @@ class TestProject < Minitest::Test
   end
 
   # UTC's, as git-cliff dates the changelog: in the zones 14 hours ahead and 12 behind, one of them
-  # on another day whatever the hour
+  # on another day whatever the hour. POSIX zones, which need no tzdata: their days differ, or TZ
+  # was not read.
   def test_today_is_utcs
-    %w[Etc/GMT-14 Etc/GMT+12].each do |zone|
-      with_env("TZ" => zone) { assert_equal Time.now.utc.strftime("%F"), project.today, zone }
+    days = %w[AAA-14 BBB+12].map do |zone|
+      with_env("TZ" => zone) do
+        assert_equal Time.now.utc.strftime("%F"), project.today, zone
+        Time.now.strftime("%F")
+      end
     end
+
+    refute_equal(*days)
   end
 end

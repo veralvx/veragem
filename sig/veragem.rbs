@@ -8,6 +8,8 @@ module Veragem
 
   module Name
     PATTERN: Regexp
+    RESERVED: Regexp
+    LIBRARIES: Array[String]
     PROBE: String
 
     self.@probed: Hash[[String, String, Array[String]], Array[String]]
@@ -16,6 +18,7 @@ module Veragem
     def self.path: (String name) -> String
     def self.underscored: (String name) -> String
     def self.check: (String name) -> String
+    private def self.check_paths: (String name) -> void
     def self.check_modules: (String name) -> void
     def self.probe: (String library, String path, Array[String] nestings) -> Array[String]
     private def self.answers: (String library, String path, Array[String] nestings) -> Array[String]
@@ -36,9 +39,9 @@ module Veragem
     def self.check_name: (String name, bool citation) -> void
     def self.check: (Symbol key, String value) { (String field, String text) -> String } -> String
     def self.default: (Symbol key, Hash[Symbol, String | bool | nil] values) -> String?
-    def self.names: (String field, String names) -> String
-    def self.keywords: (String value) { (String keyword) -> String } -> Array[String]
-    def self.orcid: (String value) -> String
+    private def self.names: (String field, String names) -> String
+    private def self.keywords: (String value) { (String keyword) -> String } -> Array[String]
+    private def self.orcid: (String value) -> String
     private def self.valid?: (String digits) -> bool
   end
 
@@ -53,8 +56,13 @@ module Veragem
     TAG: Regexp
     ANNOTATION: Regexp
     MAGIC: Regexp
+    MARKDOWN: Regexp
+    DASH: Regexp
 
     def self.check: (String summary) -> String
+    private def self.refusal: (String summary) -> String?
+    private def self.left_open?: (String summary) -> bool
+    private def self.prose: (String summary) -> String
     private def self.annotation?: (String summary) -> bool
   end
 
@@ -79,7 +87,7 @@ module Veragem
     attr_reader keywords: Array[String]?
 
     # each key's own type, which no Hash type has: Options' and Questions' hashes, asserted (#:)
-    # one. Steep checks each field against Questions' Hash values; Options' compact is untyped.
+    # one. Steep checks each field against the Hash's values.
     type values = { author: String, github: String, summary: String, license: String, ?exe: bool,
                     ?citation: bool, ?email: (String | false)?, ?given_names: (String | false)?,
                     ?family_names: String, ?alias: (String | false)?, ?orcid: String?, ?keywords: String? }
@@ -168,7 +176,7 @@ module Veragem
                            Questions questions) -> Project
     private def self.name_of: (Array[String] names) -> String
     private def self.required: (Hash[Symbol, String] defaults, Hash[Symbol, String | bool] given) -> Project::values
-    private def self.check_present: (Hash[Symbol, String | bool] values) -> void
+    private def self.check_present: (Hash[Symbol, String | bool | nil] values) -> void
     private def self.parser: () -> OptionParser
     private def self.git_config: (String key) -> String?
   end

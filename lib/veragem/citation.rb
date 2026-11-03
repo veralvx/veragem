@@ -59,7 +59,7 @@ module Veragem
     def self.check_name(name, citation)
       return unless citation && name.length < 3
 
-      raise Error, "invalid gem name #{name} with --citation: Zenodo takes a title of 3 characters or more"
+      raise Error, "invalid gem name #{name} for a citation: Zenodo takes a title of 3 characters or more"
     end
 
     # What a citation's question offers. The citation, y where its values are given, which need one.
@@ -81,23 +81,15 @@ module Veragem
 
     # An author's names, as one line: no comma, which Zenodo reads as the family names' end
     # ("family, given"), so "Smith, Jr." would lose its given names.
-    # @param field [String] "given names" or "family names", as a refusal names them
-    # @param names [String] one line of text
-    # @return [String] +names+
-    # @raise [Veragem::Error] they hold a comma
-    def self.names(field, names)
+    private_class_method def self.names(field, names)
       return names unless names.include?(",")
 
       raise Error, "invalid #{field} #{names.inspect}: no comma, Zenodo's divide of family and given names"
     end
 
-    # Keywords, comma-separated, as CFF's list takes them: blanks and repeats dropped.
-    # @param value [String] valid UTF-8, as Project.check passes it
-    # @yieldparam keyword [String] each keyword
-    # @yieldreturn [String] it checked, one line
-    # @return [Array<String>]
-    # @raise [Veragem::Error] none is left
-    def self.keywords(value, &)
+    # Keywords, comma-separated, as CFF's list takes them: blanks and repeats dropped, each checked
+    # by the block.
+    private_class_method def self.keywords(value, &)
       words = value.split(",").grep_v(/\A[[:space:]]*\z/).map(&).uniq
       return words unless words.empty?
 
@@ -107,10 +99,7 @@ module Veragem
     # An ORCID iD as CFF writes it, its URL, checked as Zenodo's import checks it (idutils' is_orcid):
     # its check digit ISO 7064 MOD 11-2's, its number in a block ORCID issues. Zenodo refuses the
     # whole citation for a bad one.
-    # @param value [String] bare or its URL, valid UTF-8 as Project.check passes it
-    # @return [String] its https://orcid.org/ URL
-    # @raise [Veragem::Error] it is no ORCID iD
-    def self.orcid(value)
+    private_class_method def self.orcid(value)
       id = value.downcase(:ascii)[ORCID, 1]&.upcase
       return "https://orcid.org/#{id}" if id && valid?(id.delete("-"))
 
