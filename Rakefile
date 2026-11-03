@@ -14,7 +14,7 @@ require "steep/rake_task"
 require "yard"
 
 # Coverage, `rake test`'s alone: started in the tests' process before they load lib/ (.simplecov)
-TESTS = Minitest::TestTask.create { self.test_prelude = %(require "simplecov"; SimpleCov.start) }
+TEST_TASK = Minitest::TestTask.create { self.test_prelude = %(require "simplecov"; SimpleCov.start) }
 RuboCop::RakeTask.new
 Steep::RakeTask.new
 Bundler::Audit::Task.new
@@ -72,7 +72,7 @@ end
 # none: mutineer pairs lib/a/b.rb with one test file by its path (test/a/test_b.rb), and a test may
 # reach any file.
 def mutate(*options)
-  tests = FileList[*TESTS.test_globs].exclude("test/test_helper.rb").flat_map { ["--test", it] }
+  tests = FileList[*TEST_TASK.test_globs].exclude("test/test_helper.rb").uniq.flat_map { ["--test", it] }
   sh "mutineer", "run", *options, *FileList["lib/**/*.rb"], *tests
 end
 
@@ -180,8 +180,7 @@ def release_tags
   tags = output("git", "tag", "--list", "v[0-9]*").lines(chomp: true)
   return tags unless tags.empty? && File.exist?("CHANGELOG.md")
 
-  abort "error: a CHANGELOG.md but no v* tag: git fetch --tags (a first release writes " \
-        "CHANGELOG.md, so has none before)"
+  abort "error: a CHANGELOG.md but no v* tag: git fetch --tags, or release the version bumped first"
 end
 
 # The version to release: the declared one at the first release (no tag yet), else +level+'s

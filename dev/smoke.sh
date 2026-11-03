@@ -51,6 +51,14 @@ committed() {
   changes="$(git status --porcelain)"
   [ -z "$changes" ] || fail "$PWD changed: $changes"
 }
+# COMMAND fails, its output naming MESSAGE
+refuses() {
+  local message=$1 output
+  shift
+  if output="$("$@" 2>&1)" || [[ $output != *"$message"* ]]; then
+    fail "$* did not refuse with \"$message\": $output"
+  fi
+}
 
 gems=()
 # no terminal for input: nothing asked, the defaults taken; a gem's own options last, which win
@@ -88,8 +96,8 @@ for gem in "${gems[@]}"; do
     mapfile -t checks < <(awk '$0 == "rake checks" { f = 1; next } /^rake / { f = 0 } f && $1 != "links" { print $1 }' <<< "$prerequisites")
     [[ " ${checks[*]} " == *" default "* && " ${checks[*]} " == *" nix "* ]] ||
       fail "could not read the prerequisites of rake checks: ${checks[*]}"
-    # typeprof is advisory: its crash alone fails it
-    bundle exec rake "${checks[@]}" typeprof build
+    # typeprof is advisory: its crash alone fails it. `rake format` changes nothing generated
+    bundle exec rake "${checks[@]}" typeprof build format
     committed
     # the flake's description, read from the gemspec by a pattern: the summary, as Ruby reads it
     summary="$(ruby -e 'print Gem::Specification.load(ARGV[0]).summary' "$gem.gemspec")"
@@ -145,9 +153,7 @@ for gem in "${gems[@]}"; do
       bundle exec rake "bump[minor]"
       has CITATION.cff 'version: "0.2.0"'
       # a version bumped and not yet released is not bumped again
-      if refusal="$(bundle exec rake "bump[patch]" 2>&1)" || [[ $refusal != *"v0.2.0 is not tagged"* ]]; then
-        fail "rake bump did not refuse to bump v0.2.0, which is not released: $refusal"
-      fi
+      refuses "v0.2.0 is not tagged" bundle exec rake "bump[patch]"
       .github/release-notes.sh CHANGELOG.md 0.2.0 > /dev/null
       # 0.1.1's section kept, as released
       grep -q '^## \[0\.1\.1\](' CHANGELOG.md || fail "CHANGELOG.md lost 0.1.1's section"
@@ -157,6 +163,13 @@ for gem in "${gems[@]}"; do
         git -C "$work/$gem.git" rev-parse --quiet --verify "refs/tags/$tag" > /dev/null ||
           fail "rake release pushed no $tag"
       done
+      # a clone whose tags cannot tell the releases is not bumped: one without them, or shallow (the
+      # branch named: the bare remote's HEAD names git's default, not the gem's)
+      branch="$(git branch --show-current)"
+      git clone --quiet --branch "$branch" --no-tags "$work/$gem.git" "$work/no-tags"
+      (cd "$work/no-tags" && refuses "no v* tag" bundle exec rake "bump[patch]")
+      git clone --quiet --branch "$branch" --depth 1 "file://$work/$gem.git" "$work/shallow"
+      (cd "$work/shallow" && refuses "a shallow clone" bundle exec rake "bump[patch]")
     fi
   )
 done
