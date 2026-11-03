@@ -14,7 +14,7 @@ require "steep/rake_task"
 require "yard"
 
 # Coverage, `rake test`'s alone: started in the tests' process before they load lib/ (.simplecov)
-Minitest::TestTask.create { self.test_prelude = %(require "simplecov"; SimpleCov.start) }
+TEST_TASK = Minitest::TestTask.create { self.test_prelude = %(require "simplecov"; SimpleCov.start) }
 RuboCop::RakeTask.new
 Steep::RakeTask.new
 Bundler::Audit::Task.new
@@ -24,6 +24,20 @@ Bundler::Audit::Task.new
 YARD::Rake::YardocTask.new { it.files = ["lib/**/*.rb"] }
 
 task default: %i[rubocop steep steep:typed test yard_lint]
+
+# A command's standard output, as UTF-8 whatever the locale (git-cliff's commits, their authors' names);
+# its failure fails the task, as `sh`'s does.
+def output(*command)
+  IO.popen(command, external_encoding: Encoding::UTF_8, &:read).tap do
+    raise "#{command.join(" ")} failed" unless Process.last_status.success?
+  end
+end
+
+# The files git tracks, those still on disk
+def tracked = output("git", "ls-files", "-z").split("\0").select { File.file?(it) }
+
+# git's shell scripts, by name or shebang (shfmt --find)
+def scripts = output("shfmt", "--find", *tracked).lines(chomp: true)
 
 # A call is untyped where its receiver is: steep check passes it, and a steep:ignore leaves it so.
 # steep stats counts them, exiting 0 whatever it counts; a file it cannot type (status error, as a
@@ -54,10 +68,11 @@ task :graph do
   sh "yard", "graph", "--protected", "--private", "--full", "--dependencies"
 end
 
-# Every test file but test_helper.rb, which every test requires and holds none: mutineer pairs
-# lib/a/b.rb with one test file by its path (test/a/test_b.rb), and a test may reach any file.
+# Every test file `rake test` runs (its globs) but test_helper.rb, which every test requires and holds
+# none: mutineer pairs lib/a/b.rb with one test file by its path (test/a/test_b.rb), and a test may
+# reach any file.
 def mutate(*options)
-  tests = FileList["test/test_*.rb"].exclude("test/test_helper.rb").flat_map { ["--test", it] }
+  tests = FileList[*TEST_TASK.test_globs].exclude("test/test_helper.rb").uniq.flat_map { ["--test", it] }
   sh "mutineer", "run", *options, *FileList["lib/**/*.rb"], *tests
 end
 
@@ -71,8 +86,9 @@ end
 desc "Mutate lib/ against the tests. A change none catches fails it (mutineer, .mutineer.yml)"
 task(mutation: "mutation:ignores") { mutate }
 
-# The lines changed since the branch left origin/main, uncommitted ones too, of the files git tracks
-# (not a new one before `git add`); every line where there is no origin/main (a gem never pushed)
+# The lines changed since the branch left origin/main, uncommitted ones too, and every line of a file
+# git does not track (a new one before `git add`), unless git ignores it; every line where there is
+# no origin/main (a gem never pushed)
 desc "Mutate lib/'s lines changed since origin/main. `rake mutation` mutates all of them"
 task "mutation:changed" => "mutation:ignores" do
   base = IO.popen(%w[git merge-base HEAD origin/main], err: File::NULL, &:read).chomp
@@ -97,20 +113,11 @@ task :cog do
   sh "cog", "check"
 end
 
-# A command's standard output, as UTF-8 whatever the locale (git-cliff's commits, their authors' names);
-# its failure fails the task, as `sh`'s does.
-def output(*command)
-  IO.popen(command, external_encoding: Encoding::UTF_8, &:read).tap do
-    raise "#{command.join(" ")} failed" unless Process.last_status.success?
-  end
-end
-
 desc "Lint and format-check the shell scripts. It checks those git tracks, with shellcheck and shfmt"
 task :shell do
-  tracked = output("git", "ls-files", "-z").split("\0").select { File.file?(it) }
-  scripts = output("shfmt", "--find", *tracked).lines(chomp: true)
-  sh "shellcheck", *scripts
-  sh "shfmt", "--diff", *scripts
+  files = scripts
+  sh "shellcheck", *files
+  sh "shfmt", "--diff", *files
 end
 
 desc "Lint the workflows, audit their security. It runs actionlint and zizmor"
@@ -127,10 +134,13 @@ end
 desc "Run CI's checks, mutating the changed lines. It checks the links too; CI mutates every line"
 task checks: %i[default audit dprint cog shell workflows links mutation:changed nix]
 
-desc "Format the Ruby, Markdown, TOML and Nix files. It rewrites them in place"
-task format: "rubocop:autocorrect" do
+# RuboCop last: it fails on an offense it cannot correct, after the others have formatted
+desc "Format the Markdown, TOML, Nix, shell and Ruby files. It rewrites them in place"
+task :format do
   sh "dprint", "fmt"
   sh "nix", "fmt"
+  sh "shfmt", "--write", *scripts
+  Rake::Task["rubocop:autocorrect"].invoke
 end
 
 desc "Use .githooks/ for git's hooks. They run the quick checks before a commit, and check that every " \
@@ -150,7 +160,7 @@ cliff = ["git-cliff", "--offline", "--github-repo", repository]
 # and published.
 desc "Check the links in git's files with lychee. Not the tests', whose links are made up"
 task :links do
-  files = output("git", "ls-files", "-z").split("\0").select { File.file?(it) }.grep_v(%r{\Atest/})
+  files = tracked.grep_v(%r{\Atest/})
   own = [gemspec.homepage, "https://rubygems.org/gems/#{gemspec.name}", "https://rubydoc.info/gems/#{gemspec.name}"]
   skip = ["^#{Regexp.escape("https://github.com/")}$", "^(#{own.map { Regexp.escape(it) }.join("|")})($|/)"]
   sh "lychee", "--no-progress", "--cache", "--retry-wait-time", "10", *skip.flat_map { ["--exclude", it] }, *files
@@ -161,11 +171,27 @@ task :changelog do
   sh(*cliff, "--unreleased")
 end
 
+# The release tags, refused where they do not tell the releases: a shallow clone, or a clone without
+# them that has a CHANGELOG.md
+def release_tags
+  if output("git", "rev-parse", "--is-shallow-repository") == "true\n"
+    abort "error: a shallow clone, which the changelog cannot be written from: git fetch --unshallow"
+  end
+  tags = output("git", "tag", "--list", "v[0-9]*").lines(chomp: true)
+  return tags unless tags.empty? && File.exist?("CHANGELOG.md")
+
+  abort "error: a CHANGELOG.md but no v* tag: git fetch --tags, or release the version bumped first"
+end
+
 # The version to release: the declared one at the first release (no tag yet), else +level+'s
-# number bumped (0 major, 1 minor, 2 patch), those after it zeroed.
+# number bumped (0 major, 1 minor, 2 patch), those after it zeroed. The current version must be
+# tagged: else it was bumped and never released.
 def next_version(current, level)
   abort "error: #{current} is not MAJOR.MINOR.PATCH" unless current.match?(/\A\d+\.\d+\.\d+\z/)
-  return current if output("git", "tag", "--list", "v[0-9]*").empty?
+  tags = release_tags
+  return current if tags.empty?
+
+  abort "error: v#{current} is not tagged: git fetch --tags, or release it first" unless tags.include?("v#{current}")
 
   parts = current.split(".").map(&:to_i)
   parts[level] += 1
@@ -182,7 +208,7 @@ def cited(version)
   released.reduce(File.read("CITATION.cff", encoding: Encoding::UTF_8)) do |cff, (key, value)|
     abort "error: CITATION.cff has no #{key}: line" unless cff.match?(/^#{key}: /)
 
-    cff.sub(/^#{key}: .*$/, %(#{key}: "#{value}"))
+    cff.sub(/^#{key}: [^\r\n]*/, %(#{key}: "#{value}"))
   end
 end
 

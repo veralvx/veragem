@@ -79,7 +79,7 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
 bundle exec rake          # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
 bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the links,
                           # the changed lines' mutations, the flake's checks
-bundle exec rake format   # RuboCop's corrections, dprint and nixfmt, in place
+bundle exec rake format   # dprint, nixfmt, shfmt and RuboCop's corrections, in place
 bundle exec rake typeprof # the signatures TypeProf infers from lib/, to start sig/ from
 bundle exec rake yard     # the documentation of lib/, in doc/
 bundle exec rake graph    # its classes and modules, for Graphviz: | dot -Tsvg -o graph.svg
@@ -188,9 +188,10 @@ bundle exec rake release
 ```
 
 `rake bump` refuses a release with nothing in it: no commit since the last tag, merges and fixups
-aside, which the changelog leaves out. It sets the version in `lib/<%= path %>/version.rb` (the
-first release keeps the version declared, whatever the level), updates the lock, writes the
-changelog (git-cliff) and commits.
+aside, which the changelog leaves out. It refuses a shallow clone, a clone missing the tags
+(`git fetch --tags`), and a version bumped but not yet released. It sets the version in
+`lib/<%= path %>/version.rb` (the first release keeps the version declared, whatever the level),
+updates the lock, writes the changelog (git-cliff) and commits.
 <%- if citation -%>
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
 <%- end -%>
@@ -218,7 +219,9 @@ gh release create vVERSION <%= name %>-VERSION.gem --verify-tag --title vVERSION
 
 `rake release` pushes to `main` directly: with "Require a pull request before merging" on, the
 maintainer cutting it needs the rule's bypass. A refused push leaves the release commit and
-removes the tag (Bundler's doing): run `rake release` again once allowed.
+removes the tag (Bundler's doing): run `rake release` again once allowed. An interrupted push
+(Ctrl-C) can keep the tag, and a second `rake release` then pushes nothing: delete it first
+(`git tag -d v<version>`).
 
 ## Updating the tools
 

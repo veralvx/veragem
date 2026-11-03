@@ -124,8 +124,9 @@ bundle exec rake release
 ```
 
 `rake bump` sets the version and `CITATION.cff`'s version and date, updates the lock, writes the
-changelog (git-cliff) and commits; `rake release`, Bundler's own, tags `v<version>` and pushes the
-branch and the tag. The tag runs `release.yml`: the Ruby checks (`rake`), then the build
+changelog (git-cliff) and commits; it refuses a shallow clone, a clone missing the tags
+(`git fetch --tags`), and a version bumped but not yet released. `rake release`, Bundler's own,
+tags `v<version>` and pushes the branch and the tag. The tag runs `release.yml`: the Ruby checks (`rake`), then the build
 (`gem build`, no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted
 Publishing, then the GitHub release.
 
