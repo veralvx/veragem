@@ -101,9 +101,9 @@ class TestNames < Minitest::Test
   def test_windows_devices_are_no_names
     %w[con prn aux nul com0 lpt9 my-nul].each { |name| assert_raises(Veragem::Error, name) { project(name) } }
     %w[con_x console bacon lpt10 com].each { assert_equal it, project(it).name }
-    error = assert_raises(Veragem::Error) { project("x-con") }
+    error = assert_raises(Veragem::Error) { project("con-nul") }
 
-    assert_equal "invalid gem name x-con: Windows reserves con as a file's name", error.message
+    assert_equal "invalid gem name con-nul: Windows reserves con as a file's name", error.message
   end
 
   # the whole message: what is refused, as given, and the rule
