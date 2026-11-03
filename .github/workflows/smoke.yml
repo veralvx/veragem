@@ -1,7 +1,8 @@
 # The plugin end to end (dev/smoke.sh): installed from this checkout, it generates a gem of each
-# kind and licence, and each passes its own checks, in this repository's dev shell -- the
-# template's. Weekly too: the generated gems take each tool's newest release, which can break them
-# with nothing changed here.
+# kind and licence, and each passes its own checks and is released, in this repository's dev shell
+# -- the template's. Weekly too: the generated gems lock each gem's newest release (the dev shell's
+# tools are flake.lock's), which can break them with nothing changed here. GitHub disables a public
+# repository's schedule after 60 days without activity ("Events that trigger workflows").
 name: Smoke
 
 on:
@@ -12,7 +13,7 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: "0 6 * * 1" # Mondays, 06:00 UTC
+    - cron: "37 5 * * 1" # Mondays, 05:37 UTC: GitHub delays the runs scheduled on the hour
 
 # a pull request's newest run cancels its older ones; any other run, a group of its own: every
 # commit on main checked (in a shared group, a pending run gives way to the newest: the default)
@@ -27,6 +28,8 @@ jobs:
   smoke:
     name: Generate and check each kind
     runs-on: ubuntu-latest
+    # a run takes minutes; a hung download would otherwise hold this required check for 6 hours
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
