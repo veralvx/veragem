@@ -46,11 +46,12 @@ module Veragem
     # @raise [Veragem::Error] +key+ cannot take it
     def self.check(key, value)
       value = utf8(key, value)
+      return Citation.check(key, value) { |name, text| line(name, text) } if Citation::KEYS.include?(key)
+
       case key
       when :github then github(value)
       when :license then License.check(strip(value))
       when :summary then Summary.check(text("summary", value))
-      when *Citation::KEYS then Citation.check(key, value) { |name, text| line(name, text) }
       else text(key.name, value)
       end
     end
@@ -66,7 +67,7 @@ module Veragem
     def initialize(name, values)
       @name = Name.check(name)
       @author = Project.check(:author, values[:author])
-      @email = (Project.check(:email, values[:email]) if values[:email])
+      @email = optional(:email, values[:email])
       @github = Project.check(:github, values[:github])
       @summary = Project.check(:summary, values[:summary])
       @license = Project.check(:license, values[:license])
@@ -174,22 +175,26 @@ module Veragem
 
     # What the gem holds beyond the library: a command line, a citation.
     def extras(values)
-      @exe, @citation = values.values_at(:exe, :citation).map { it == true }
+      @exe = values[:exe] == true
+      @citation = values[:citation] == true
       Citation.check_values(values, citation)
       cite(values) if citation
     end
 
     # CITATION.cff's author is a person: the family names it needs, the rest it may have.
     def cite(values)
-      given, family, aka, orcid, keywords = values.values_at(:given_names, :family_names, :alias, :orcid, :keywords)
+      family = values[:family_names]
       raise Error, "no family names: --family-names, CITATION.cff's author" unless family
 
-      @given_names = (Project.check(:given_names, given) if given)
+      @given_names = optional(:given_names, values[:given_names])
       @family_names = Project.check(:family_names, family)
-      @alias_name = (Project.check(:alias, aka) if aka)
-      @orcid = (Project.check(:orcid, orcid) if orcid)
-      @keywords = (Project.check(:keywords, keywords).split(", ") if keywords)
+      @alias_name = optional(:alias, values[:alias])
+      @orcid = optional(:orcid, values[:orcid])
+      @keywords = optional(:keywords, values[:keywords])&.split(", ")
     end
+
+    # A value OPTIONAL names, checked, or nil for none
+    def optional(key, value) = (Project.check(key, value) if value)
 
     # a blank line left blank, no trailing spaces
     def indent(code) = code.gsub(/^(?=.)/, "  ")

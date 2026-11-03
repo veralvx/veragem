@@ -78,9 +78,13 @@ module Veragem
     attr_reader orcid: String?
     attr_reader keywords: Array[String]?
 
-    # each key's value its own type (author a String, email a String or false, exe a bool), which no
-    # Hash type says: untyped
-    def initialize: (String name, Hash[Symbol, untyped] values) -> void
+    # the values given, each key its own type, as no Hash type has it: Options' and Questions' hashes,
+    # asserted one (#:)
+    type values = { ?author: String?, ?email: (String | false)?, ?github: String?, ?summary: String?,
+                    ?license: String?, ?exe: bool?, ?citation: bool?, ?given_names: (String | false)?,
+                    ?family_names: String?, ?alias: (String | false)?, ?orcid: String?, ?keywords: String? }
+
+    def initialize: (String name, values values) -> void
     def path: () -> String
     def underscored: () -> String
     def constant: () -> String
@@ -103,8 +107,9 @@ module Veragem
 
     private
 
-    def extras: (Hash[Symbol, untyped] values) -> void
-    def cite: (Hash[Symbol, untyped] values) -> void
+    def extras: (values values) -> void
+    def cite: (values values) -> void
+    def optional: (Symbol key, (String | false)? value) -> String?
     def indent: (String code) -> String
   end
 
@@ -131,7 +136,7 @@ module Veragem
     def initialize: (_Input input, _Output output, String dir, ?git: Hash[Symbol, String]) -> void
     def name: (String? given, exe: bool, citation: bool) -> String
     def values: (String name, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults)
-              -> Hash[Symbol, String | bool | nil]
+              -> Project::values
 
     private
 
@@ -162,7 +167,7 @@ module Veragem
     private def self.ask: (Array[String] names, Hash[Symbol, String | bool] given, Hash[Symbol, String] defaults,
                            Questions questions) -> Project
     private def self.name_of: (Array[String] names) -> String
-    private def self.required: (Hash[Symbol, String] defaults, Hash[Symbol, String | bool] given) -> Hash[Symbol, String | bool]
+    private def self.required: (Hash[Symbol, String] defaults, Hash[Symbol, String | bool] given) -> Project::values
     private def self.check_present: (Hash[Symbol, String | bool] values) -> void
     private def self.parser: () -> OptionParser
     private def self.git_config: (String key) -> String?
