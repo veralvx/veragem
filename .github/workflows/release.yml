@@ -8,7 +8,7 @@
 # checks, which load the bundle's gems, write nothing; the build, apart from them, loads no bundle,
 # so no tool's gem touches the file published; its path and digest, job outputs no later job can
 # rewrite, name the one file signed, pushed and released, checked first; the signing job, which runs
-# sigstore-cli's gems, signs as this workflow outside the environment the publisher names, so it
+# Sigstore's action, signs as this workflow outside the environment the publisher names, so it
 # mints no key; only the RubyGems job can mint one, with nothing checked out, no Gemfile or Rakefile
 # loaded and no action but the artifacts' download, setup-ruby's and the credentials'; only the
 # release job can write the repository.
@@ -121,21 +121,17 @@ jobs:
           name: gem
           path: pkg/
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
-        with:
-          ruby-version: "4.0"
-          bundler: none
-
       - name: Sign
-        # as rubygems/release-gem signs, with its version of sigstore-cli (its
-        # rubygems-attestation-patch.rb): the code that can sign as this workflow, pinned (its
-        # dependencies float in its bounds) and moved by hand, as no Dependabot reads it. A bad
-        # one can fail the push, not change the gem (its digest) nor add one: the jobs after it
-        # take the build's path alone
-        env:
-          GEM: ${{ needs.build.outputs.gem }}
-        run: gem exec sigstore-cli:0.2.3 sign "$GEM" --bundle "$GEM.sigstore.json"
+        # Sigstore's action, which writes the bundle beside the gem (<gem>.sigstore.json), and
+        # RubyGems takes any v0.3 bundle that verifies (rubygems.org's Pusher). The code that can
+        # sign as this workflow: pinned, as every action here, its sigstore-python too (its
+        # hash-pinned requirements), and moved by Dependabot. A bad one can fail the push, not
+        # change the gem (its digest) nor add one: the jobs after it take the build's path alone.
+        # release-signing-artifacts off: else it signs the source archives too, on any event
+        uses: sigstore/gh-action-sigstore-python@790bc6befb9d733738f18d8f895854b453640ec9 # v3.5.0
+        with:
+          inputs: ${{ needs.build.outputs.gem }}
+          release-signing-artifacts: false
 
       - name: Keep the attestation
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -166,7 +162,7 @@ jobs:
           path: pkg/
 
       - name: The build's gem, unchanged
-        # its artifact replaceable by a later job of the run (the signing job's gems): its digest is
+        # its artifact replaceable by a later job of the run (the signing job's code): its digest is
         # the build's output
         env:
           SHA256: ${{ needs.build.outputs.sha256 }}
