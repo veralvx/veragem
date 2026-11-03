@@ -163,10 +163,13 @@ for gem in "${gems[@]}"; do
         git -C "$work/$gem.git" rev-parse --quiet --verify "refs/tags/$tag" > /dev/null ||
           fail "rake release pushed no $tag"
       done
-      # a clone whose tags cannot tell the releases is not bumped: one without them, or shallow (the
-      # branch named: the bare remote's HEAD names git's default, not the gem's)
+      # a clone whose tags cannot tell the releases is not bumped: one without them (deleted: git's
+      # newer releases bring a local clone's tags despite --no-tags), or shallow. The branch named:
+      # the bare remote's HEAD names git's default, not the gem's
       branch="$(git branch --show-current)"
-      git clone --quiet --branch "$branch" --no-tags "$work/$gem.git" "$work/no-tags"
+      git clone --quiet --branch "$branch" "$work/$gem.git" "$work/no-tags"
+      git -C "$work/no-tags" for-each-ref --format="delete %(refname)" refs/tags |
+        git -C "$work/no-tags" update-ref --stdin
       (cd "$work/no-tags" && refuses "no v* tag" bundle exec rake "bump[patch]")
       git clone --quiet --branch "$branch" --depth 1 "file://$work/$gem.git" "$work/shallow"
       (cd "$work/shallow" && refuses "a shallow clone" bundle exec rake "bump[patch]")
