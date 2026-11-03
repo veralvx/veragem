@@ -14,7 +14,7 @@ require "steep/rake_task"
 require "yard"
 
 # Coverage, `rake test`'s alone: started in the tests' process before they load lib/ (.simplecov)
-Minitest::TestTask.create { self.test_prelude = %(require "simplecov"; SimpleCov.start) }
+TESTS = Minitest::TestTask.create { self.test_prelude = %(require "simplecov"; SimpleCov.start) }
 RuboCop::RakeTask.new
 Steep::RakeTask.new
 Bundler::Audit::Task.new
@@ -68,11 +68,11 @@ task :graph do
   sh "yard", "graph", "--protected", "--private", "--full", "--dependencies"
 end
 
-# Every test file `rake test` runs (Minitest's test/**/test_*.rb) but test_helper.rb, which every test
-# requires and holds none: mutineer pairs lib/a/b.rb with one test file by its path
-# (test/a/test_b.rb), and a test may reach any file.
+# Every test file `rake test` runs (its globs) but test_helper.rb, which every test requires and holds
+# none: mutineer pairs lib/a/b.rb with one test file by its path (test/a/test_b.rb), and a test may
+# reach any file.
 def mutate(*options)
-  tests = FileList["test/**/test_*.rb"].exclude("test/test_helper.rb").flat_map { ["--test", it] }
+  tests = FileList[*TESTS.test_globs].exclude("test/test_helper.rb").flat_map { ["--test", it] }
   sh "mutineer", "run", *options, *FileList["lib/**/*.rb"], *tests
 end
 
@@ -87,8 +87,8 @@ desc "Mutate lib/ against the tests. A change none catches fails it (mutineer, .
 task(mutation: "mutation:ignores") { mutate }
 
 # The lines changed since the branch left origin/main, uncommitted ones too, and every line of a file
-# git does not track (a new one before `git add`) but ignores; every line where there is no
-# origin/main (a gem never pushed)
+# git does not track (a new one before `git add`), unless git ignores it; every line where there is
+# no origin/main (a gem never pushed)
 desc "Mutate lib/'s lines changed since origin/main. `rake mutation` mutates all of them"
 task "mutation:changed" => "mutation:ignores" do
   base = IO.popen(%w[git merge-base HEAD origin/main], err: File::NULL, &:read).chomp
@@ -172,7 +172,7 @@ task :changelog do
 end
 
 # The release tags, refused where they do not tell the releases: a shallow clone, or a clone without
-# them whose CHANGELOG.md lists one
+# them that has a CHANGELOG.md
 def release_tags
   if output("git", "rev-parse", "--is-shallow-repository") == "true\n"
     abort "error: a shallow clone, which the changelog cannot be written from: git fetch --unshallow"
@@ -180,8 +180,8 @@ def release_tags
   tags = output("git", "tag", "--list", "v[0-9]*").lines(chomp: true)
   return tags unless tags.empty? && File.exist?("CHANGELOG.md")
 
-  abort "error: CHANGELOG.md lists a release, but no v* tag is here: git fetch --tags, or " \
-        "`rake release` the release commit"
+  abort "error: a CHANGELOG.md but no v* tag: git fetch --tags (a first release writes " \
+        "CHANGELOG.md, so has none before)"
 end
 
 # The version to release: the declared one at the first release (no tag yet), else +level+'s
@@ -192,7 +192,7 @@ def next_version(current, level)
   tags = release_tags
   return current if tags.empty?
 
-  abort "error: v#{current} is not tagged: `rake release` it before the next bump" unless tags.include?("v#{current}")
+  abort "error: v#{current} is not tagged: git fetch --tags, or release it first" unless tags.include?("v#{current}")
 
   parts = current.split(".").map(&:to_i)
   parts[level] += 1

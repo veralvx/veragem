@@ -188,9 +188,11 @@ bundle exec rake release
 ```
 
 `rake bump` refuses a release with nothing in it: no commit since the last tag, merges and fixups
-aside, which the changelog leaves out. It sets the version in `lib/<%= path %>/version.rb` (the
-first release keeps the version declared, whatever the level), updates the lock, writes the
-changelog (git-cliff) and commits.
+aside, which the changelog leaves out. It refuses a clone the tags do not tell the releases from
+too: a shallow one, one without the tags (`git fetch --tags`), or a version bumped but not yet
+released. It sets the version in `lib/<%= path %>/version.rb` (the first release keeps the
+version declared, whatever the level), updates the lock, writes the changelog (git-cliff) and
+commits.
 <%- if citation -%>
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
 <%- end -%>
