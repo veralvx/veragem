@@ -82,8 +82,9 @@ own, GitHub and Nix's cache for the flake. A failed run keeps that directory and
 
 Coverage is measured by `rake test` alone (`.simplecov`). Some tests
 (`bundle exec rake test N=/probe/`) run fewer than its gate counts: their exit fails, the tests'
-own verdict above it. One file run alone (`bundle exec ruby -Ilib -Itest test/test_names.rb`) is
-not measured.
+own verdict above it. One file run alone is not measured, its warnings raised as `rake test` raises
+them: `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_names.rb` (the helper first, before
+the file is parsed).
 
 ## Development Workflow
 
