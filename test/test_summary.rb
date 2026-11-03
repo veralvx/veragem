@@ -26,7 +26,8 @@ class TestSummary < Minitest::Test
                      "Decoding: utf-8 fast", "see the docs", "Note-taking app", "Hack's toolkit", "Note.", "Review",
                      "note-taking app", "Notes: x", "Encoding: helpers", "Coding: kata", "Encoding=x",
                      "Frozen string literal: x", "A frozen_string_literal: true", "A warn_indent: x",
-                     "warn_indent maybe", "A -*- note -*-", "A - dash", "A • x", "Code ```x``` too"].freeze
+                     "warn_indent maybe", "A -*- note -*-", "A - dash", "A • x", "Code ```x``` too",
+                     "Ranges `a—b` too"].freeze
 
   # each value, and the README's text of it
   MARKDOWN = { "A Ruby gem." => "A Ruby gem.", "A _fast_ my_gem" => "A \\_fast\\_ my_gem", "a  b" => "a b",

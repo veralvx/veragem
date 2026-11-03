@@ -167,8 +167,8 @@ with its escapes shown, and its spaces single, as dprint writes them; GitHub's e
 alone it cannot keep. It is the module's comment too, so one the gem's yard-lint or RuboCop would
 not take as its documentation is refused: a tag first, YARD's (`@param`, `(see`) or written
 informally (`Note:`, `See also:`), a RuboCop annotation (`HACK:`, `review the code`), a magic
-comment (`encoding:`, `warn_indent:`), Markdown yard-lint refuses (an em or en dash, a `•` list
-marker or a code fence first), a backtick or `**` left open.
+comment (`encoding:`, `warn_indent:`), Markdown yard-lint refuses (an em or en dash outside code,
+a `•` list marker or a code fence first), a backtick or `**` left open.
 
 ## What you get
 

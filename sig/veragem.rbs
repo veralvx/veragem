@@ -57,10 +57,12 @@ module Veragem
     ANNOTATION: Regexp
     MAGIC: Regexp
     MARKDOWN: Regexp
+    DASH: Regexp
 
     def self.check: (String summary) -> String
     private def self.refusal: (String summary) -> String?
     private def self.left_open?: (String summary) -> bool
+    private def self.prose: (String summary) -> String
     private def self.annotation?: (String summary) -> bool
   end
 

@@ -19,9 +19,10 @@ module Veragem
     MAGIC = /\b(?:en)?coding\s*[:=]|(?:\A['":;\s]*|-\*-.*)(?i:(?:frozen[_-]string[_-]literal|warn[_-]indent|
              shareable[_-]constant[_-]value)\s*:)|(?i:\brubocop\s*:)/x
     # What yard-lint's Markdown and text checks refuse: a list marker (• ·) or a code block's fence
-    # first, an em or en dash (.yard-lint.yml's TextSubstitution).
-    MARKDOWN = /\A(?:[•·]|```)|[—–]/
-    private_constant :TAG, :ANNOTATION, :MAGIC, :MARKDOWN
+    # first, an em or en dash outside code (.yard-lint.yml's TextSubstitution).
+    MARKDOWN = /\A(?:[•·]|```)/
+    DASH = /[—–]/
+    private_constant :TAG, :ANNOTATION, :MAGIC, :MARKDOWN, :DASH
 
     # +summary+, refused where it holds a tag, an annotation, a magic comment or Markdown yard-lint
     # refuses, or leaves a backtick or bold open -- a `**` outside code with a non-space beside it, as
@@ -39,15 +40,17 @@ module Veragem
     private_class_method def self.refusal(summary)
       return "YARD would read a tag" if summary.match?(TAG)
       return "RuboCop or Ruby would read an annotation or a directive" if annotation?(summary) || summary.match?(MAGIC)
-      return "yard-lint would refuse its Markdown" if summary.match?(MARKDOWN)
+      return "yard-lint would refuse its Markdown" if summary.match?(MARKDOWN) || prose(summary).match?(DASH)
 
       "a backtick or ** left open" if left_open?(summary)
     end
 
     private_class_method def self.left_open?(summary)
-      bold = summary.gsub(/`[^`]*`/, "").scan(/(?<=\S)\*\*|\*\*(?=\S)/).size
-      summary.count("`").odd? || bold.odd?
+      summary.count("`").odd? || prose(summary).scan(/(?<=\S)\*\*|\*\*(?=\S)/).size.odd?
     end
+
+    # Its code's spans aside, as yard-lint reads the prose.
+    private_class_method def self.prose(summary) = summary.gsub(/`[^`]*`/, "")
 
     private_class_method def self.annotation?(summary)
       keyword, colon, space = summary.match(ANNOTATION)&.captures
