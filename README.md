@@ -9,8 +9,8 @@ and the rest:
   Gemfile.lock holds Windows' platform (`bin/setup`), `.gitattributes` keeps every text file LF,
   and the executables' mode is in git's index, which a commit keeps where the file system has none.
 - **Types**: Steep checks `lib/` against the signatures in `sig/`, its `strict` diagnostics on, and
-  that it types each call (`steep stats`: none on an untyped receiver); TypeProf infers signatures
-  to start them from, and its editor support is configured.
+  that each call is typed (`rake steep:typed`: none on an untyped receiver); TypeProf infers
+  signatures to start them from, and its editor support is configured.
 - **Lint and format**: RuboCop with every new cop, rubocop-minitest, rubocop-packaging,
   rubocop-performance and rubocop-rake; the project is indexed first (rubydex), so the cops that see
   across files do. In CI, offences are annotated on the pull request and a failed run's summary
