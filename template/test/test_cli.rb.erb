@@ -30,11 +30,15 @@ class Test<%= constant.delete(":") %>CLI < Minitest::Test
   end
 
   def test_an_unknown_option_is_refused
-    assert_output("", /invalid option: --nope/) { assert_equal 2, COMMAND_LINE.run(["--nope"]) }
+    assert_output("", /\A<%= name %>: invalid option: --nope\nUsage: /) do
+      assert_equal 2, COMMAND_LINE.run(["--nope"])
+    end
   end
 
   def test_more_than_one_name_is_refused
-    assert_output("", /needless argument: Bob\n/) { assert_equal 2, COMMAND_LINE.run(%w[Ada Bob]) }
+    assert_output("", /\A<%= name %>: needless argument: Bob\n/) do
+      assert_equal 2, COMMAND_LINE.run(%w[Ada Bob])
+    end
   end
 
   def test_the_executable_runs_it

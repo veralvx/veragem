@@ -180,7 +180,8 @@ Rakefile              `rake`: RuboCop, Steep, the tests, yard-lint; `rake checks
                       `rake "bump[level]"`, `rake release`; `rake -T` lists them all
 Steepfile, sig/       the types; typeprof.conf.jsonc, TypeProf's editor support
 .rubocop.yml          RuboCop and its extensions; .yard-lint.yml, the documentation's lint
-lib/, test/           starter code: typed, documented, every line and branch tested
+lib/, test/, exe/     starter code: typed, documented, every line and branch tested; exe/NAME with
+                      --exe
 bin/setup, bin/console
 flake.nix, flake.lock the dev shell, the package (and the command's image), `nix fmt`, the checks
 .githooks/            opt-in (`rake hooks`): the quick checks before a commit, Conventional Commits

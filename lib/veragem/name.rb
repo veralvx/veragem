@@ -21,7 +21,7 @@ module Veragem
     # @return [String]
     def self.path(name) = name.tr("-", "/")
 
-    # Its words joined by `_` alone: `my-gem`'s my_gem, its test's and its CLI's file names.
+    # Its words joined by `_` alone: `my-gem`'s my_gem, its test's file name.
     # @param name [String] one PATTERN matches
     # @return [String]
     def self.underscored(name) = name.tr("-", "_")
