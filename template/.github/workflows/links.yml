@@ -5,7 +5,7 @@ name: Links
 
 on:
   schedule:
-    - cron: "0 5 1 * *" # the 1st of each month, 05:00 UTC
+    - cron: "47 4 1 * *" # the 1st of each month, 04:47 UTC: off the hour, when GitHub delays runs
   workflow_dispatch:
 
 permissions:
