@@ -215,7 +215,7 @@ jobs:
         run: |
           set -euo pipefail
           # GitHub's latest release is the highest final one, as image.yml's `latest` is: by default,
-          # GitHub makes each new release the latest, a patch to an older line or a pre-release too
+          # GitHub makes each new release the latest, a patch to an older line too
           highest="$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" --paginate \
             --jq '.[].ref | ltrimstr("refs/tags/v")' \
             | { grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -n 1)"

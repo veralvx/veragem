@@ -131,10 +131,11 @@ Publishing, then the GitHub release.
 
 Should a run fail, re-run its failed jobs, not all of them: those keep the build's gem and
 digests, and RubyGems refuses a version pushed twice. If the gem reached RubyGems but its job
-failed anyway, the release job cannot run: make the GitHub release as it would, at the tag, with
+failed anyway, the release job cannot run: make the GitHub release as it would, from the tag, with
 `--latest=false` unless it is the highest release and `--prerelease` for a pre-release:
 
 ```sh
+git checkout vVERSION
 gem fetch veragem --version VERSION
 .github/release-notes.sh CHANGELOG.md VERSION > notes.md
 gh release create vVERSION veragem-VERSION.gem --verify-tag --title vVERSION --notes-file notes.md
