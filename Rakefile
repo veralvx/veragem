@@ -13,8 +13,12 @@ require "rubocop/rake_task"
 require "steep/rake_task"
 require "yard"
 
-# Coverage, `rake test`'s alone: started in the tests' process before they load lib/ (.simplecov)
-TEST_TASK = Minitest::TestTask.create { self.test_prelude = %(require "simplecov"; SimpleCov.start) }
+# Coverage, `rake test`'s alone: started in the tests' process before they load lib/ (.simplecov);
+# then the helper, whatever order the test files load in (shuffled): one loaded before it would only
+# print its parse-time warnings
+TEST_TASK = Minitest::TestTask.create do
+  self.test_prelude = %(require "simplecov"; SimpleCov.start; require "test_helper")
+end
 RuboCop::RakeTask.new
 Steep::RakeTask.new
 Bundler::Audit::Task.new
