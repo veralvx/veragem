@@ -75,9 +75,10 @@ mutineer (`.mutineer.yml`'s `threshold: 100`): `rake checks` mutates the lines c
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
 left unrendered, each file parsing, the executables' modes, the gemspec, the git repository. The
 smoke test installs the plugin from this checkout, generates each kind, and runs each one's
-`rake checks`, but the links (`links.yml`'s), and build, its tools the dev shell's (the
-template's): a change to the template is finished when it passes. It needs the network:
-rubygems.org for the gems, GitHub and Nix's cache for the flake.
+`rake checks`, its git hooks on, but the links (`links.yml`'s), and build, and releases the
+citation's, its tools the dev shell's (the template's): a change to the template is finished when
+it passes. It needs the network: rubygems.org for the gems, which it installs in a directory of its
+own, GitHub and Nix's cache for the flake. A failed run keeps that directory and says where.
 
 Coverage is measured by `rake test` alone (`.simplecov`). Some tests
 (`bundle exec rake test N=/probe/`) run fewer than its gate counts: their exit fails, the tests'

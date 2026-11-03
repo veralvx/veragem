@@ -4,6 +4,8 @@
 # same (test/test_sync.rb), so a pull request moves both: one a dependency, across the directories
 # (`group-by`). The template's Gemfile is the root's, whose lock pins it; a generated gem writes
 # its own.
+# No time: Dependabot picks one for the repository (docs.github.com, "Dependabot options
+# reference").
 version: 2
 updates:
   - package-ecosystem: "bundler"
@@ -11,8 +13,6 @@ updates:
     schedule:
       interval: "weekly"
       day: "sunday"
-      time: "07:00"
-      timezone: "UTC"
     open-pull-requests-limit: 5
     # `chore(deps): ...` -- a Miscellaneous Task in the changelog, no feature or fix: the lock is not
     # in the gem, whose users resolve its gemspec's requirements themselves
@@ -42,8 +42,6 @@ updates:
     schedule:
       interval: "weekly"
       day: "sunday"
-      time: "07:00"
-      timezone: "UTC"
     open-pull-requests-limit: 5
     # `ci(deps): ...` -- nothing a user of the gem meets, so no changelog entry
     commit-message:
@@ -70,8 +68,6 @@ updates:
     directories: ["/", "/template"]
     schedule:
       interval: "monthly"
-      time: "06:00"
-      timezone: "UTC"
     open-pull-requests-limit: 1
     # `chore(deps): ...` -- the flake is the development shell, the checks and the Nix package,
     # nothing RubyGems ships: a command's image takes the new inputs at its next release
