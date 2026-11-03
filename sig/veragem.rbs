@@ -78,11 +78,11 @@ module Veragem
     attr_reader orcid: String?
     attr_reader keywords: Array[String]?
 
-    # the values given, each key its own type, as no Hash type has it: Options' and Questions' hashes,
-    # asserted one (#:)
-    type values = { ?author: String?, ?email: (String | false)?, ?github: String?, ?summary: String?,
-                    ?license: String?, ?exe: bool?, ?citation: bool?, ?given_names: (String | false)?,
-                    ?family_names: String?, ?alias: (String | false)?, ?orcid: String?, ?keywords: String? }
+    # each key's own type, which no Hash type has: Options' and Questions' hashes, asserted (#:)
+    # one. Steep checks each field against Questions' Hash values; Options' compact is untyped.
+    type values = { author: String, github: String, summary: String, license: String, ?exe: bool,
+                    ?citation: bool, ?email: (String | false)?, ?given_names: (String | false)?,
+                    ?family_names: String, ?alias: (String | false)?, ?orcid: String?, ?keywords: String? }
 
     def initialize: (String name, values values) -> void
     def path: () -> String

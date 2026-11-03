@@ -193,7 +193,7 @@ module Veragem
       @keywords = optional(:keywords, values[:keywords])&.split(", ")
     end
 
-    # A value OPTIONAL names, checked, or nil for none
+    # A value OPTIONAL names: none, false or nil, is nil.
     def optional(key, value) = (Project.check(key, value) if value)
 
     # a blank line left blank, no trailing spaces
