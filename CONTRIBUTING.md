@@ -7,15 +7,15 @@ Thank you for considering contributing to `veragem`!
 Either **Nix** -- `nix develop` gives Ruby and every tool below at the versions `flake.lock` pins
 -- or, installed yourself: **Ruby 4.0** or later (with Bundler, Ruby's own), **ShellCheck**,
 **shfmt**, **actionlint**, **zizmor**, **dprint**, **cocogitto** (`cog`), **git-cliff**,
-**lychee**, and **Nix** for the last of `rake checks`. `bin/setup` installs the gems
-`Gemfile.lock` pins.
+**lychee**, and **Nix** for the last of `rake checks`, for `rake format` (`nix fmt`) and for the
+smoke test. `bin/setup` installs the gems `Gemfile.lock` pins.
 
 ## Setup
 
 ```sh
 git clone https://github.com/<you>/veragem && cd veragem
 bin/setup
-bundle exec rake hooks   # optional: the quick checks before a commit, Conventional Commits
+bundle exec rake hooks   # optional: the quick checks before a commit and a push
 ```
 
 ## Layout
@@ -65,7 +65,11 @@ bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workf
                           # the changed lines' mutations, the flake's checks
 nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
 bundle exec rake mutation # every line of lib/ mutated: what no test catches (mutineer), minutes
+bundle exec rake rubocop:changed     # RuboCop on the files changed since origin/main
+bundle exec rake format   # dprint, nixfmt, shfmt and RuboCop's corrections, in place
 ```
+
+`bundle exec rake -T` lists every task, and `bundle exec rake -D` describes each in full.
 
 A warning from `lib/` or the tests fails them (`test/test_helper.rb`). One surviving mutant fails
 mutineer (`.mutineer.yml`'s `threshold: 100`): `rake checks` mutates the lines changed since
@@ -73,25 +77,26 @@ mutineer (`.mutineer.yml`'s `threshold: 100`): `rake checks` mutates the lines c
 (`rake mutation:ignores`). `links.yml` runs `rake links` monthly.
 
 The tests render every kind and licence and hold what they generate: the files each holds, nothing
-left unrendered, each file parsing, the executables' modes, the gemspec, the git repository. The
-smoke test installs the plugin from this checkout, generates each kind, and runs each one's
-`rake checks`, its git hooks on, but the links (`links.yml`'s), and build, and releases the
-citation's, its tools the dev shell's (the template's): a change to the template is finished when
-it passes. It needs the network: rubygems.org for the gems, which it installs in a directory of its
-own, GitHub and Nix's cache for the flake. A failed run keeps that directory and says where.
+left unrendered, the Ruby, the YAML and the lock parsing, the executables' modes, the gemspec, the
+git repository. The smoke test installs the plugin from this checkout, generates each kind, and runs
+each one's `rake checks`, its git hooks on, but the links (`links.yml`'s), builds it, runs the
+command's image where Docker runs, and releases the citation's, its tools the dev shell's (the
+template's): a change to the template is finished when it passes. It needs the network: rubygems.org
+for the gems, which it installs in a directory of its own, GitHub and Nix's cache for the flake. A
+failed run keeps that directory and says where.
 
-Coverage is measured by `rake test` alone (`.simplecov`). Some tests
-(`bundle exec rake test N=/probe/`) run fewer than its gate counts: their exit fails, the tests'
-own verdict above it. One file run alone is not measured, its warnings raised as `rake test` raises
-them: `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_names.rb` (the helper first, before
-the file is parsed).
+Coverage is measured by `rake test` alone (`.simplecov`). Some tests alone
+(`bundle exec rake test N=/probe/`) fail its gate (exit 2) though they pass: Minitest's verdict is
+printed above SimpleCov's. One file run alone is not measured, its warnings raised as `rake test`
+raises them: `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_names.rb` (the helper first,
+before the file is parsed).
 
 ## Development Workflow
 
 [Conventional Commits](https://www.conventionalcommits.org/), enforced by `cog check` locally and
 in CI; a commit's subject is its changelog entry. Read [AGENTS.md](AGENTS.md) before writing code.
 Open a pull request against `main`, titled as a conventional commit, once
-`bundle exec rake checks` and the smoke test pass.
+`bundle exec rake checks` passes, and the smoke test for a change to the template.
 
 ## Maintainers
 
@@ -109,10 +114,8 @@ Open a pull request against `main`, titled as a conventional commit, once
   admits any of the workflow's jobs) -- and limit that environment's deployments to the tags `v*`
   (Settings → Environments, a rule of ref type Tag): a trusted publisher names the environment,
   not a ref, so without the rule a workflow pushed to any branch could publish. Limit who creates
-  those tags too (Settings → Rules → Rulesets, a tag ruleset on `v*`): a tag pushed on any commit
-  runs that commit's workflows in the environment.
-- An advisory with no fixed version yet fails `security.yml` on every pull request until weighed:
-  its ID under `ignore:` in `.bundler-audit.yml` (bundler-audit's own file) lets the checks pass.
+  those tags too (Settings → Rules → Rulesets, a tag ruleset on `v*`): a tag pushed on any
+  commit runs that commit's workflows in the environment.
 
 ### Releasing
 
@@ -120,16 +123,17 @@ From a clean `main`, CI green on it:
 
 ```sh
 bundle exec rake changelog          # the changes the next release will list
-bundle exec rake "bump[minor]"      # or major, or patch; a first release keeps the declared version
+bundle exec rake "bump[minor]"      # or major, or patch
 bundle exec rake release
 ```
 
-`rake bump` sets the version and `CITATION.cff`'s version and date, updates the lock, writes the
-changelog (git-cliff) and commits; it refuses a shallow clone, a clone missing the tags
-(`git fetch --tags`), and a version bumped but not yet released. `rake release`, Bundler's own,
-tags `v<version>` and pushes the branch and the tag. The tag runs `release.yml`: the Ruby checks (`rake`), then the build
-(`gem build`, no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted
-Publishing, then the GitHub release.
+`rake bump` sets the version (`lib/veragem/version.rb`) and `CITATION.cff`'s version and date,
+updates the lock, writes the changelog (git-cliff) and commits; it refuses a release with nothing in
+it, a shallow clone, a clone missing the tags (`git fetch --tags`), a version bumped but not yet
+released, and one already tagged. `rake release`, Bundler's own, builds the gem, tags `v<version>`
+and pushes the branch and the tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks
+(`rake`), then the build (`gem build`, no bundle loaded) and its Sigstore attestation, the push to
+RubyGems by Trusted Publishing, then the GitHub release.
 
 Should a run fail, re-run its failed jobs, not all of them: those keep the build's gem and
 digests, and RubyGems refuses a version pushed twice. If the gem reached RubyGems but its job
@@ -142,3 +146,23 @@ gem fetch veragem --version VERSION
 .github/release-notes.sh CHANGELOG.md VERSION > notes.md
 gh release create vVERSION veragem-VERSION.gem --verify-tag --title vVERSION --notes-file notes.md
 ```
+
+`rake release` pushes to `main` directly, and a `v*` tag: with "Require a pull request before
+merging" on, the maintainer cutting it needs the rule's bypass, and the tag ruleset's leave to
+create the tag. A refused push leaves the release commit and removes the tag (Bundler's doing): run
+`rake release` again once allowed. An interrupted push (Ctrl-C) can keep the tag, and a second
+`rake release` then pushes nothing: delete it first (`git tag -d v<version>`).
+
+## Updating the tools
+
+Dependabot moves the gems (`Gemfile.lock`) and the actions weekly, and the flake's inputs monthly;
+`dependabot-automerge.yml` merges the minor and patch bumps once the checks pass. An action's
+updates are grouped across this repository's workflows and the template's, which `test/test_sync.rb`
+holds equal; a security update is not grouped: join its two pull requests. An advisory with no fixed
+version yet fails `security.yml` on every pull request until weighed: its ID under `ignore:` in
+`.bundler-audit.yml` (bundler-audit's own file, created then) lets the checks pass. dprint's
+plugins, pinned in `dprint.json`, move by hand: `dprint config update`. A new RuboCop brings new
+cops (`NewCops: enable`), a new Steep new diagnostics: read them before silencing any. A bump the
+new cops fail stays unmerged: its failed run's summary holds RuboCop's safe corrections as a patch,
+to `git apply` on its branch (no workflow pushes code the bumped gems wrote); what they leave is
+yours to fix.
