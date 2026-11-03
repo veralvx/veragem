@@ -8,8 +8,8 @@ name: Smoke
 on:
   push:
     branches: [main]
-  # every pull request, whatever it touches: a path-filtered workflow never reports, and a
-  # required check that never reports blocks the merge
+  # every pull request, whatever it touches: a path-filtered workflow does not report on one
+  # outside its paths, and a required check that does not report blocks the merge
   pull_request:
   workflow_dispatch:
   schedule:

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The repositories a release's image goes to, one a line, each logged in before anything is
 # pushed: GHCR's always (the job's token), Docker Hub's when both vars.DOCKERHUB_USERNAME and
-# secrets.DOCKERHUB_TOKEN are set -- the name vars.DOCKERHUB_REPOSITORY, else <username>/<the
-# GitHub repository's name>. image.yml's; it passes GH_TOKEN and DOCKERHUB_USERNAME,
+# secrets.DOCKERHUB_TOKEN are set -- vars.DOCKERHUB_REPOSITORY (<namespace>/<name>), else
+# <username>/<the GitHub repository's name>. image.yml's; it passes GH_TOKEN and DOCKERHUB_USERNAME,
 # DOCKERHUB_TOKEN and DOCKERHUB_REPOSITORY (empty when unset).
 set -euo pipefail
 
@@ -24,7 +24,8 @@ repository=${repository,,}
 name=${repository#*/}
 if [[ ! $repository =~ ^[a-z0-9]+((\.|_|__|-+)[a-z0-9]+)*/[a-z0-9]+((_|__|-+)[a-z0-9]+)*$ ]] ||
   ((${#name} < 2 || ${#name} > 255)); then
-  echo "error: '$repository' is no Docker Hub repository: set vars.DOCKERHUB_REPOSITORY" >&2
+  echo "error: '$repository' is no Docker Hub repository:" \
+    "set vars.DOCKERHUB_REPOSITORY to <namespace>/<name>" >&2
   exit 1
 fi
 docker login docker.io --username "$username" --password-stdin <<< "$token" >&2
