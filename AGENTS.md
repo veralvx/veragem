@@ -57,8 +57,9 @@ call on one fails `rake steep:typed` until `when String` or an assertion (`value
 it (`value.is_a?(String)` is itself such a call). A library Steep has no signatures of is an error
 to it: name one that ships them in the Steepfile (`library "json"`), take a gem's from
 gem_rbs_collection (`template/CONTRIBUTING.md.erb`), and declare in `sig/` what `lib/` calls of one
-with none. When a diagnostic has to stay, ignore it on its line, the reason on the line above (text
-after the diagnostic's name voids the ignore; an ignore leaves an untyped call untyped):
+with none. A method removed takes its signature with it: Steep passes one `lib/` no longer defines.
+When a diagnostic has to stay, ignore it on its line, the reason on the line above (text after the
+diagnostic's name voids the ignore; an ignore leaves an untyped call untyped):
 
 ```ruby
 # the library's signature lacks the method
@@ -74,9 +75,10 @@ noise, and it goes stale. A change that falsifies a comment rewrites it.
 ## 3. Commits
 
 [Conventional Commits](https://www.conventionalcommits.org/) are enforced by `cog check` locally and
-in CI. The changelog is generated from the commits (`cliff.toml`), so the subject line is
-user-facing text; it lists every commit cog checks but the release's own, `chore` and `ci` as
-Miscellaneous Tasks, and `!` or a `BREAKING CHANGE` footer lists a commit first:
+in CI. The changelog is generated from the commits (`cliff.toml`) and shows each one's subject
+alone, so a subject is user-facing text, and a commit does what its subject says, nothing beside it.
+The changelog lists every commit cog checks but the release's own, `chore` and `ci` as Miscellaneous
+Tasks, and `!` or a `BREAKING CHANGE` footer lists a commit first:
 
 ```
 feat(template): the gem as a Nix package, and a command's OCI image
@@ -97,6 +99,10 @@ dprint, the commit messages, the shell, the workflows, the links (CI's, monthly)
 the changed lines (CI's, of every line), and the flake's checks. It stops at the first that fails:
 run the rest by name (`bundle exec rake mutation:changed nix`). Reporting "done" on a change that
 has not passed it is the one thing that wastes the most time here.
+
+A fix comes with a test that fails without it: run it before the fix, then after. Code no test needs
+is deleted, not hidden: `# simplecov:disable` leaves its mutants to fail the mutation test, and an
+ignore in `.mutineer.yml` is for a mutant that keeps the behaviour alone, its reason with it.
 
 If a check fails for reasons unrelated to your change, say so explicitly rather than working
 around it -- a broken check that everyone routes around stops protecting anything.
