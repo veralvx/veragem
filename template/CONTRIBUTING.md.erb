@@ -80,6 +80,7 @@ cop or a diagnostic fires. It applies to human and AI-assisted contributions ali
 bundle exec rake          # RuboCop, Steep, the tests, yard-lint: ruby-ci.yml
 bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workflows, the links,
                           # the changed lines' mutations, the flake's checks
+bundle exec rake rubocop:changed # RuboCop on the files changed since origin/main
 bundle exec rake format   # dprint, nixfmt, shfmt and RuboCop's corrections, in place
 bundle exec rake typeprof # the signatures TypeProf infers from lib/, to start sig/ from
 bundle exec rake yard     # the documentation of lib/, in doc/

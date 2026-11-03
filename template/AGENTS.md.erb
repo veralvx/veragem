@@ -21,9 +21,8 @@ configuration, zizmor's security audit.
 
 ### 1.1. RuboCop
 
-- Before finishing, check what you changed since your branch left main with
-  `bundle exec rubocop --changed="$(git merge-base HEAD origin/main)" --format json` (`--changed`
-  alone: since the last commit; with no origin/main yet, run it without `--changed`).
+- Before finishing, check the files you changed since your branch left main with
+  `bundle exec rake rubocop:changed` (every file where there is no origin/main yet).
 - Fix offenses with `bundle exec rubocop -a FILES`. Don't use `-A` unless asked.
 - If an offense is unclear, run `bundle exec rubocop --explain Department/CopName`.
 - Don't edit `.rubocop.yml` to make offenses go away.
