@@ -18,7 +18,8 @@ class TestSummary < Minitest::Test
                        "Returns: x", "Raises: x", "Optimize: x", "optimize the code",
                        "warn_indent: maybe", "Warn-Indent : x", "SHAREABLE_CONSTANT_VALUE: literal",
                        "frozen_string_literal : x", "A -*- warn-indent: x -*-", "A -*- x; frozen_string_literal: y -*-",
-                       "Greets — fast", "Fast – small", "• A list", "· A list", "```x``` blocks"].freeze
+                       "Greets — fast", "Fast – small", "• A list", "· A list", "```x``` blocks",
+                       "'warn_indent: x'", ":warn_indent: x", "; frozen_string_literal: x"].freeze
   TAKEN_SUMMARIES = ["A note: inside.", "Note a fork.", "Parses `foo` files.", "Bold **text** too.",
                      "Squares: x ** 2.", "Code `a **b` too.", "Code `a`** b.", "Code ``** b.", "Review the code",
                      "Todo later", "Notebook support",

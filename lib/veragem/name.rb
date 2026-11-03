@@ -58,10 +58,10 @@ module Veragem
     end
 
     # What the gem's tools load with its code, where installed: Bundler's CLI, which reads its gemspec
-    # (bin/setup's `bundle install`); the Rakefile's libraries and its tasks' (RuboCop's, YARD's ERB),
-    # which load after the gemspec; its tests' (SimpleCov, Pbt).
+    # (bin/setup's `bundle install`); the Rakefile's libraries and its tasks' (RuboCop's, Steep's,
+    # YARD's ERB); bin/console's IRB; its tests' (SimpleCov, Pbt).
     LIBRARIES = %w[bundler bundler/cli rake bundler/audit/task csv json minitest/test_task rubocop/rake_task
-                   steep/rake_task yard rubocop erb simplecov minitest/autorun pbt].freeze
+                   steep/rake_task yard rubocop steep erb irb simplecov minitest/autorun pbt].freeze
     # Its files' paths: lib/test_helper.rb would shadow the tests' own (Minitest's -Ilib:test); a
     # device's name, whatever its extension, is no file of Windows' (lib/con.rb), nor git's there.
     private_class_method def self.check_paths(name)

@@ -12,10 +12,11 @@ module Veragem
     # a colon, spaces before it or not, or a space -- but a sentence's capitalized first word, a word
     # after it (a summary, stripped, has one after a space).
     ANNOTATION = /\A(todo|fixme|optimize|hack|review|note)\b(\s*:)?(\s+)?/i
-    # A magic comment -- an encoding's anywhere, lower-case (Ruby's rule); Ruby's others first or
-    # within -*-, in any case, `-` for `_` (a frozen string literal's after code, a warning: one
-    # the tests raise) -- or a RuboCop directive, which would turn its cops off, or fail them.
-    MAGIC = /\b(?:en)?coding\s*[:=]|(?:\A|-\*-.*)(?i:(?:frozen[_-]string[_-]literal|warn[_-]indent|
+    # A magic comment -- an encoding's anywhere, lower-case (Ruby's rule); Ruby's others first (past
+    # the ' " : ; it skips) or within -*-, in any case, `-` for `_` (a frozen string literal's after
+    # code, a warning: one the tests raise) -- or a RuboCop directive, which would turn its cops off,
+    # or fail them.
+    MAGIC = /\b(?:en)?coding\s*[:=]|(?:\A['":;\s]*|-\*-.*)(?i:(?:frozen[_-]string[_-]literal|warn[_-]indent|
              shareable[_-]constant[_-]value)\s*:)|(?i:\brubocop\s*:)/x
     # What yard-lint's Markdown and text checks refuse: a list marker (• ·) or a code block's fence
     # first, an em or en dash (.yard-lint.yml's TextSubstitution).

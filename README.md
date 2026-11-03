@@ -142,8 +142,9 @@ The name follows `bundle gem`'s rules, lower-case: `my_gem` is `MyGem` in `lib/m
 is `My::Gem` in `lib/my/gem.rb`. Refused before anything is written, a name:
 
 - whose module is already defined, by Ruby, by what its tools load with its code (Bundler, the
-  Rakefile and its tasks, the tests: `c_s_v`, `j_s_o_n`), where installed, or by its top-level
-  library where this Ruby has one (`set`, `option_parser`, `date-holidays`: Date is a class);
+  Rakefile and its tasks, the console, the tests: `c_s_v`, `j_s_o_n`, `weak_ref`), where installed,
+  or by its top-level library where this Ruby has one (`set`, `option_parser`, `date-holidays`: Date
+  is a class);
 - whose file would shadow a library this Ruby has, in any case, as macOS and Windows ignore it
   (`ripper`: lib/ripper.rb; `english`: English.rb);
 - whose module its tests or `gem build` would take for Minitest's or RubyGems' own
