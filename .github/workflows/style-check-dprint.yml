@@ -14,8 +14,8 @@ on:
       - "**/*.toml"
       - ".github/workflows/style-check-dprint.yml"
       - "dprint.json"
-  # every pull request, whatever it touches: a path-filtered workflow never reports, and a
-  # required check that never reports blocks the merge
+  # every pull request, whatever it touches: a path-filtered workflow does not report on one
+  # outside its paths, and a required check that does not report blocks the merge
   pull_request:
 
 # a pull request's newest run cancels its older ones; any other run, a group of its own: every
