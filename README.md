@@ -206,8 +206,9 @@ packages few of them, and older).
   this repository's checks, and a command line's own (`image.yml`) by the smoke test's command
   gem.
 - The smoke test (`dev/smoke.sh`, `smoke.yml`, weekly too): the plugin installed from this checkout
-  generates a gem of each kind and licence, and each passes its own `rake checks`, but the links
-  (`links.yml`'s), and builds; the citation's gem releases twice (`rake bump`), a patch and a minor.
+  generates a gem of each kind and licence, and each, its git hooks on, passes its own
+  `rake checks`, but the links (`links.yml`'s), and builds; the citation's gem is released three
+  times: its first release (`rake bump`, then `rake release` to a local remote), a patch and a minor.
 
 ## Contributing
 
