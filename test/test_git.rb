@@ -99,11 +99,14 @@ class TestGit < Minitest::Test
 
   private
 
-  # git's messages untranslated (LC_ALL=C), as the tests match them
+  # git's messages untranslated (LC_ALL=C), as the tests match them; no repository's config, neither
+  # one a git hook's variables name nor one around the temporary directory
   def in_git_home
     Dir.mktmpdir do |home|
-      with_env("HOME" => home, "GIT_CONFIG_GLOBAL" => File.join(home, ".gitconfig"), "GIT_CONFIG_NOSYSTEM" => "1",
-               "GIT_CONFIG_COUNT" => nil, "GIT_CONFIG_PARAMETERS" => nil, "LC_ALL" => "C") { yield home }
+      env = { "HOME" => home, "GIT_CONFIG_GLOBAL" => File.join(home, ".gitconfig"), "GIT_CONFIG_NOSYSTEM" => "1",
+              "GIT_CONFIG_COUNT" => nil, "GIT_CONFIG_PARAMETERS" => nil,
+              "GIT_CEILING_DIRECTORIES" => File.dirname(home), "LC_ALL" => "C" }
+      with_env(Veragem::Generator.const_get(:GIT_LOCAL).merge(env)) { yield home }
     end
   end
 end

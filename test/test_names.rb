@@ -111,7 +111,8 @@ class TestNames < Minitest::Test
   # Over names of a few letters, digits, underscores and dashes: one accepted is bundle gem's
   # constant, each part a valid one.
   def test_an_accepted_name_is_bundle_gems_constant
-    Pbt.assert do
+    # most draws are no name: enough runs for many that are
+    Pbt.assert(num_runs: 1000) do
       Pbt.property(Pbt.array(Pbt.one_of("a", "b", "0", "_", "-"), min: 1, max: 8)) do |chars|
         name = chars.join
         next unless Veragem::Name::PATTERN.match?(name)

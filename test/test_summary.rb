@@ -55,10 +55,14 @@ class TestSummary < Minitest::Test
   # as written, as RubyGems shows it, whatever Markdown would make of it, a URL unlinked: its escapes
   # alone added, its spaces single, as dprint writes them (each case checked so in a generated gem)
   def test_a_markdown_value_shows_as_written
-    MARKDOWN.each { |value, text| assert_equal text, project.markdown(value) }
-    Pbt.assert do
-      Pbt.property(Pbt.printable_string) do |value|
-        assert_equal value.squeeze(" "), project.markdown(value).gsub(/\\(.)/m, "\\1")
+    gem = project
+
+    MARKDOWN.each { |value, text| assert_equal text, gem.markdown(value) }
+    texts.each do |text|
+      Pbt.assert do
+        Pbt.property(text) do |value|
+          assert_equal value.squeeze(" "), gem.markdown(value).gsub(/\\(.)/m, "\\1")
+        end
       end
     end
   end
