@@ -130,7 +130,8 @@ bundle exec rake release
 `rake bump` sets the version (`lib/veragem/version.rb`) and `CITATION.cff`'s version and date,
 updates the lock, writes the changelog (git-cliff) and commits; it refuses a release with nothing in
 it, a shallow clone, a clone missing the tags (`git fetch --tags`), a version bumped but not yet
-released, one already tagged, and a release file (the lock, the changelog) not committed.
+released, one already tagged, and a file it commits that git does not track (the version file, the
+lock, the changelog, `CITATION.cff`). `rake changelog` refuses the same clones.
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the tag;
 it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`), then the build (`gem build`,
 no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted Publishing, then the
