@@ -2,7 +2,6 @@
 
 require "test_helper"
 
-# From a terminal: what is refused before any question, and what stops the questions.
 class TestQuestionsRefused < Minitest::Test
   include Veragem::TerminalSupport
 

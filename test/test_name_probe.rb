@@ -2,8 +2,7 @@
 
 require "test_helper"
 
-# The probe: a Ruby of its own that tells what a gem's modules and file would meet.
-class TestProbe < Minitest::Test
+class TestNameProbe < Minitest::Test
   include Veragem::TestSupport
 
   # in a Ruby of its own: nothing the library prints is taken for an answer, and it loads with no

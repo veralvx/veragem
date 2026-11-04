@@ -2,7 +2,6 @@
 
 require "test_helper"
 
-# CITATION.cff's values, as options give them: a citation's alone, checked as Zenodo's import takes them.
 class TestCitation < Minitest::Test
   include Veragem::TestSupport
   include Veragem::CitationSupport

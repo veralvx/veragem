@@ -2,8 +2,7 @@
 
 require "test_helper"
 
-# The executables' mode, in git's index on every platform, in the file system where it has one.
-class TestModes < Minitest::Test
+class TestGeneratorModes < Minitest::Test
   include Veragem::GeneratedSupport
 
   EXECUTABLES = %w[bin/console bin/setup .githooks/commit-msg .githooks/pre-commit .githooks/pre-push

@@ -3,7 +3,6 @@
 require "test_helper"
 require "yaml"
 
-# CITATION.cff as written: a citation's alone, its values read back as given.
 class TestCitationFile < Minitest::Test
   include Veragem::GeneratedSupport
   include Veragem::CitationSupport

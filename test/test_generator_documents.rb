@@ -2,8 +2,7 @@
 
 require "test_helper"
 
-# The generated documents: what a reader of the new gem is sent to.
-class TestDocuments < Minitest::Test
+class TestGeneratorDocuments < Minitest::Test
   include Veragem::GeneratedSupport
 
   # where the documents send a reporter: the gem's own advisories, its maintainer's email alone where

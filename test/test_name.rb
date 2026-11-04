@@ -2,8 +2,7 @@
 
 require "test_helper"
 
-# A gem's name: bundle gem's rules, and what the template can generate.
-class TestNames < Minitest::Test
+class TestName < Minitest::Test
   include Veragem::TestSupport
 
   def test_an_underscore_joins_words_into_one_constant

@@ -3,7 +3,6 @@
 require "test_helper"
 require "yaml"
 
-# A project's values, checked, and what follows from them.
 class TestProject < Minitest::Test
   include Veragem::TestSupport
 

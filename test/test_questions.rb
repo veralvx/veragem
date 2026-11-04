@@ -2,7 +2,6 @@
 
 require "test_helper"
 
-# From a terminal: what no option gives, asked for.
 class TestQuestions < Minitest::Test
   include Veragem::TerminalSupport
 

@@ -3,8 +3,6 @@
 require "test_helper"
 require "yaml"
 
-# The summary: the module's comment too, which the gem's yard-lint and RuboCop take, and the README's
-# text, as written.
 class TestSummary < Minitest::Test
   include Veragem::TestSupport
 

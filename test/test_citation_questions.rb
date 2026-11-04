@@ -2,7 +2,6 @@
 
 require "test_helper"
 
-# From a terminal: a citation's values, asked only for a citation.
 class TestCitationQuestions < Minitest::Test
   include Veragem::TerminalSupport
   include Veragem::CitationSupport

@@ -120,7 +120,7 @@ class TestGenerator < Minitest::Test
     end
   end
 
-  # an interrupt while the files are written leaves nothing behind, as a failure does (test_refusals.rb)
+  # an interrupt while the files are written leaves nothing behind, as a failure does (test_generator_refusals.rb)
   def test_an_interrupt_leaves_nothing_behind
     in_tmpdir do |dir|
       target = File.join(dir, "my_gem")

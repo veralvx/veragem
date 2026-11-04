@@ -88,7 +88,7 @@ failed run keeps that directory and says where.
 Coverage is measured by `rake test` alone (`.simplecov`). Some tests alone
 (`bundle exec rake test N=/probe/`) fail its gate (exit 2) though they pass: Minitest's verdict is
 printed above SimpleCov's. One file run alone is not measured, its warnings raised as `rake test`
-raises them: `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_names.rb` (the helper first,
+raises them: `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_name.rb` (the helper first,
 before the file is parsed).
 
 ## Development Workflow

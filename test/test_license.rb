@@ -2,9 +2,7 @@
 
 require "test_helper"
 
-# A licence, as an option or an answer gives it: in any case, as its SPDX expression or abbreviated
-# where one alone starts so.
-class TestLicenses < Minitest::Test
+class TestLicense < Minitest::Test
   include Veragem::TerminalSupport
 
   TAKEN = { "MIT" => "mit", "Ap" => "apache", "d" => "dual", "dual" => "dual", "Apache-2.0" => "apache",
