@@ -23,7 +23,7 @@ class TestOptions < Minitest::Test
     gem = parse("my_gem")
 
     assert_equal ["my_gem", "Jane Doe", "jane@example.com", "jane", "A Ruby gem.", "dual", false],
-                 [gem.name, gem.author, gem.email, gem.github, gem.summary, gem.license, gem.exe]
+                 [gem.name, gem.author, gem.email, gem.github, gem.summary, gem.license, gem.exe?]
   end
 
   def test_the_options_override_them
@@ -31,7 +31,7 @@ class TestOptions < Minitest::Test
                 "--github=ada", "--summary", "Greets.")
 
     assert_equal ["Ada", "ada@example.com", "ada", "Greets.", "mit", true],
-                 [gem.author, gem.email, gem.github, gem.summary, gem.license, gem.exe]
+                 [gem.author, gem.email, gem.github, gem.summary, gem.license, gem.exe?]
   end
 
   def test_the_email_may_be_unset
@@ -73,6 +73,13 @@ class TestOptions < Minitest::Test
     end
   end
 
+  # without a terminal as at one: the name, then git's values
+  def test_the_name_is_refused_before_a_missing_value
+    error = assert_raises(Veragem::Error) { parse("My_Gem", config: {}) }
+
+    assert_match(/\Ainvalid gem name "My_Gem": /, error.message)
+  end
+
   def test_one_name_is_required
     { [] => "no gem name", %w[one two] => "one gem name, not 2" }.each do |argv, why|
       error = assert_raises(Veragem::Error) { parse(*argv) }
@@ -109,10 +116,10 @@ class TestOptions < Minitest::Test
 
   def test_options_may_come_first_whatever_posixly_correct
     with_env("POSIXLY_CORRECT" => "1") do
-      assert parse("--exe", "my_gem").exe
-      assert parse("my_gem", "--exe").exe
+      assert_predicate parse("--exe", "my_gem"), :exe?
+      assert_predicate parse("my_gem", "--exe"), :exe?
     end
-    refute parse("my_gem", "--no-exe").exe
+    refute_predicate parse("my_gem", "--no-exe"), :exe?
   end
 
   def test_the_help_says_what_each_option_does

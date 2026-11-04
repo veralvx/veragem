@@ -32,8 +32,8 @@ module Veragem
     private_constant :GIT_CONFIG, :DEFAULTS, :BANNER, :OPTIONS
 
     # The Project +argv+ gives, what it does not asked of +input+ when a terminal, the questions on
-    # +output+ (stderr, as a prompt is): at a terminal the name checked for +dir+ before any question,
-    # the generation's check otherwise.
+    # +output+ (stderr, as a prompt is): at a terminal the name checked for +dir+ before any question;
+    # otherwise its own rules before git's values, and the generation's check after.
     # @param argv [Array<String>] the command's arguments
     # @param dir [String] where the gem is to be generated
     # @param config [#call] a git config key's value, nil when unset
@@ -45,7 +45,7 @@ module Veragem
       names, given = arguments(argv)
       defaults = { **DEFAULTS, **GIT_CONFIG.transform_values(&config).compact }
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
-      return Project.new(name_of(names), required(defaults, given)) unless input.tty?
+      return Project.new(Name.check(name_of(names)), required(defaults, given)) unless input.tty?
 
       ask(names, given, defaults, Questions.new(input, output, dir, git: GIT_CONFIG))
     rescue OptionParser::ParseError => e
@@ -56,7 +56,8 @@ module Veragem
     # any question.
     private_class_method def self.arguments(argv)
       given = {} #: Hash[Symbol, String | bool]
-      # an argument of invalid UTF-8 as bytes: OptionParser's matching raises on it, Project refuses it
+      # an argument its encoding (the locale's) cannot read, as bytes: OptionParser's matching raises on
+      # it, Project reads them as UTF-8
       names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: given)
       # OptionParser keys --given-names as :"given-names"; Project's are :given_names
       given.transform_keys! { it.name.tr("-", "_").to_sym }
@@ -94,12 +95,12 @@ module Veragem
       raise Error, "one gem name, not #{names.size} (bundle veragem --help)"
     end
 
-    # The options' values, and git's where none is given: one of git's refused says so, and which
-    # options replace it, as a missing author or GitHub user does.
+    # The options' values, and git's where none is given, checked as an option's: one of git's refused
+    # says so, and which options replace it, as a missing author or GitHub user does.
     private_class_method def self.required(defaults, given)
       GIT_CONFIG.except(*given.keys).each do |key, name|
         value = defaults[key] or next
-        Project.check(key, value)
+        checked(key, value)
       rescue Error => e
         replaced = ["--#{key}", Project::OPTIONAL[key]].compact.join(" or ")
         raise Error, "#{e} (git config #{name}; #{replaced} replaces it)"

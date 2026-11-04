@@ -39,8 +39,9 @@ and the rest:
   makes the GitHub release.
 - **Nix**: a flake with the development shell (Ruby and every tool the checks run), the gem as a
   package (`nix build`), `nix fmt`, and checks for the Nix, the shell scripts, the workflows and
-  the package. With `--exe`, `nix run` runs the command, and its OCI image (`nix build .#image`)
-  is published to GHCR at each release (`image.yml`), as in the Python and Rust templates.
+  the package. With `--exe`, `nix run` runs the command, and its OCI image (on Linux,
+  `nix build .#image`) is published to GHCR at each release (`image.yml`), as in the Python and Rust
+  templates.
 - dprint for the Markdown and TOML, an `.editorconfig`, the community documents (`CONTRIBUTING.md`,
   `AGENTS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`), issue and pull request templates.
 
@@ -77,21 +78,21 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 
 ### Options
 
-| Option                     | Default                                     | Goes into                                              |
-| -------------------------- | ------------------------------------------- | ------------------------------------------------------ |
-| `NAME`                     | --                                          | the gem, its module, its files: as `bundle gem`        |
-| `--[no-]exe`               | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/PATH/cli.rb`          |
-| `--license=LICENSE`        | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE        |
-| `--author=NAME`            | `git config user.name` (required)           | the gemspec, the licence's copyright line              |
-| `--[no-]email=EMAIL`       | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                       |
-| `--github=USER`            | `git config github.user` (required)         | the homepage, the repository's links                   |
-| `--summary=TEXT`           | `A Ruby gem.`                               | the gemspec, the README, the module's comment          |
-| `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository"        |
-| `--family-names=NAMES`     | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff`        |
-| `--[no-]given-names=NAMES` | optional; `--no-given-names`: none          | with `--citation`: the author's, `CITATION.cff`        |
-| `--[no-]alias=ALIAS`       | optional; `--no-alias`: none                | with `--citation`: the author's handle, `CITATION.cff` |
-| `--orcid=ID`               | optional                                    | with `--citation`: the author's ORCID iD               |
-| `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated           |
+| Option                     | Default                                     | Goes into                                                                                   |
+| -------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `NAME`                     | --                                          | the gem, its module, its files: as `bundle gem`                                             |
+| `--[no-]exe`               | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/PATH/cli.rb`                                               |
+| `--license=LICENSE`        | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE                                             |
+| `--author=NAME`            | `git config user.name` (required)           | the gemspec, the licence's copyright line                                                   |
+| `--[no-]email=EMAIL`       | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                                                            |
+| `--github=USER`            | `git config github.user` (required)         | the homepage, the repository's links                                                        |
+| `--summary=TEXT`           | `A Ruby gem.`                               | the gemspec, the README, the module's comment, the flake; with `--citation`, `CITATION.cff` |
+| `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository"                                             |
+| `--family-names=NAMES`     | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff`                                             |
+| `--[no-]given-names=NAMES` | optional; `--no-given-names`: none          | with `--citation`: the author's, `CITATION.cff`                                             |
+| `--[no-]alias=ALIAS`       | optional; `--no-alias`: none                | with `--citation`: the author's handle, `CITATION.cff`                                      |
+| `--orcid=ID`               | optional                                    | with `--citation`: the author's ORCID iD                                                    |
+| `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated                                                |
 
 A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
 expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, when veragem
@@ -113,13 +114,14 @@ questions) nothing is asked: the defaults apply, and a missing name, author, Git
 
 `CITATION.cff` (Citation File Format 1.2.0) is for research software meant to be cited: GitHub
 offers its "Cite this repository", and Zenodo, once the repository is enabled there (the generated
-CONTRIBUTING.md's first steps), archives each release with its values and gives it a DOI. Its
-author is a person, family names required, given names, alias, ORCID iD and keywords optional.
-Asked at a terminal, the family names offer the author's last word, the given names the words before
-the family names, where the author ends with them, and the alias, asked last, the GitHub user. That
-user may be an organization, so it is only offered: without a terminal, there is no alias unless
-`--alias` gives one. The citation's options need `--citation`: given without it, they are refused,
-and at a terminal they make its question take y alone.
+CONTRIBUTING.md's first steps), archives each release with its values and gives it a DOI. Its author
+is a person, family names required, given names, alias, ORCID iD and keywords optional. Asked at a
+terminal, the family names offer the author's last word, the given names the words before the family
+names, where the author ends with them, and the alias, asked last, the GitHub user. That user may be
+an organization, so it is only offered. Without a terminal nothing is offered: there are no given
+names or alias unless `--given-names` or `--alias` gives them. The citation's options need
+`--citation`: given without it, they are refused, and at a terminal they make its question take y
+alone.
 
 It holds what GitHub and Zenodo read, written as Zenodo's import takes it (narrower than CFF), but
 the licences as CFF writes them:

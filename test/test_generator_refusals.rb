@@ -2,8 +2,7 @@
 
 require "test_helper"
 
-# What the generator refuses, and what a refusal leaves.
-class TestRefusals < Minitest::Test
+class TestGeneratorRefusals < Minitest::Test
   include Veragem::GeneratedSupport
 
   def test_a_symlink_is_refused_and_kept
@@ -88,6 +87,14 @@ class TestRefusals < Minitest::Test
 
       assert_match(/bad config/, err)
     end
+  end
+
+  # every variable git sets in a hook to point at its repository (`git rev-parse --local-env-vars`),
+  # but -c's configuration, which git passes on, is unset
+  def test_gits_repository_variables_are_unset
+    local = IO.popen(%w[git rev-parse --local-env-vars], &:read).split
+
+    assert_empty local - %w[GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS] - Veragem::Generator.const_get(:GIT_LOCAL).keys
   end
 
   # as from a git hook, which points git at its own repository

@@ -3,7 +3,6 @@
 require "test_helper"
 require "yaml"
 
-# A project's values, checked, and what follows from them.
 class TestProject < Minitest::Test
   include Veragem::TestSupport
 
@@ -17,11 +16,19 @@ class TestProject < Minitest::Test
     end
   end
 
+  # one with no character shown: blank, or default-ignorable (a zero-width space, a BOM, a soft hyphen)
   def test_a_text_is_one_line_of_utf8_rubygems_takes
-    ["", " ", "\u3000", "two\nlines", "two\u2028lines", "tab\there", "TODO: write", " FIXME", "\xFF".b,
-     "x" * 99].each do |summary|
+    ["", " ", "\u3000", "\u200B", " \uFEFF\u2060 ", "\u00AD \u3164", "two\nlines", "two\u2028lines", "tab\there",
+     "TODO: write", " FIXME", "\xFF".b, "x" * 99].each do |summary|
       assert_raises(Veragem::Error, summary.inspect) { project(summary:) }
     end
+  end
+
+  # one shown blank by the refusal says why
+  def test_an_invisible_text_is_said_so
+    error = assert_raises(Veragem::Error) { project(author: "\u200B") }
+
+    assert_equal %(invalid author "\u200B": one line of visible text), error.message
   end
 
   # ARGV under the C locale is binary: the bytes are taken as UTF-8.
@@ -60,8 +67,8 @@ class TestProject < Minitest::Test
   end
 
   def test_exe_is_true_or_absent
-    assert project(exe: true).exe
-    refute project.exe
+    assert_predicate project(exe: true), :exe?
+    refute_predicate project, :exe?
   end
 
   def test_a_quoted_value_reads_back_as_itself

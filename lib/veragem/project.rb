@@ -36,12 +36,6 @@ module Veragem
     # Its licence's choice: mit, apache or dual.
     # @return [String]
     attr_reader :license
-    # Whether it has a command line.
-    # @return [Boolean]
-    attr_reader :exe
-    # Whether it has CITATION.cff.
-    # @return [Boolean]
-    attr_reader :citation
     # CITATION.cff's given names, none nil.
     # @return [String, nil]
     attr_reader :given_names
@@ -110,6 +104,14 @@ module Veragem
       @license = Project.check(:license, values[:license])
       extras(values)
     end
+
+    # Whether it has a command line.
+    # @return [Boolean]
+    def exe? = @exe
+
+    # Whether it has CITATION.cff.
+    # @return [Boolean]
+    def citation? = @citation
 
     # The file the gem requires, lib/'s: `my-gem`'s my/gem.
     # @return [String]
@@ -198,13 +200,14 @@ module Veragem
       raise Error, "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
     end
 
-    # One line, its surrounding spaces stripped (Unicode's too). U+FFFE and U+FFFF are outside YAML's
-    # printable characters: CITATION.cff's.
+    # One line, its surrounding spaces stripped (Unicode's too), a character in it shown: not all
+    # default-ignorable (a zero-width space, a BOM). U+FFFE and U+FFFF are outside YAML's printable
+    # characters: CITATION.cff's.
     private_class_method def self.line(field, value)
-      line = value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/) ? "" : strip(value)
-      raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
+      line = strip(value) unless value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/)
+      return line if line&.match?(/[^[:space:]\p{DI}]/)
 
-      line
+      raise Error, "invalid #{field} #{value.inspect}: one line of visible text"
     end
 
     private
@@ -213,8 +216,8 @@ module Veragem
     def extras(values)
       @exe = values[:exe] == true
       @citation = values[:citation] == true
-      Citation.check_values(values, citation)
-      cite(values) if citation
+      Citation.check_values(values, citation?)
+      cite(values) if citation?
     end
 
     # CITATION.cff's author is a person: the family names it needs, the rest it may have.

@@ -184,7 +184,9 @@ task :links do
 end
 
 desc "Preview the changelog's next section"
+# refused where `rake bump` would refuse it: its tags could not tell the releases
 task :changelog do
+  release_tags
   sh(*cliff, "--unreleased")
 end
 
@@ -229,11 +231,21 @@ def cited(version)
   end
 end
 
+# The tracked files committed (release:guard_clean), and the release commit's, where there, tracked:
+# its rollback (git reset --hard) would delete one HEAD lacks
+def committed(*paths)
+  Rake::Task["release:guard_clean"].invoke
+  untracked = output("git", "ls-files", "--others", "--", *paths).lines(chomp: true)
+  abort "error: #{untracked.join(", ")} not committed: commit first" unless untracked.empty?
+end
+
 # The release commit: the version, the lock, the changelog, and CITATION.cff's version and date.
 desc "Bump the version, write the changelog, commit. The level is major, minor or patch; a first release " \
      "keeps the declared version"
-task :bump, [:level] => "release:guard_clean" do |_, args|
+task :bump, [:level] do |_, args|
   level = %w[major minor patch].index(args[:level]) or abort 'usage: rake "bump[major|minor|patch]"'
+  file = "lib/#{gemspec.name.tr("-", "/")}/version.rb"
+  committed(file, "Gemfile.lock", "CHANGELOG.md", "CITATION.cff")
   current = gemspec.version.to_s
   version = next_version(current, level)
   tagged = system("git", "rev-parse", "--quiet", "--verify", "refs/tags/v#{version}", out: File::NULL)
@@ -241,7 +253,6 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
   entries = JSON.parse(output(*cliff, "--unreleased", "--context")).sum { it["commits"].size }
   abort "error: nothing to release: no commit since the last tag enters the changelog" if entries.zero?
 
-  file = "lib/#{gemspec.name.tr("-", "/")}/version.rb"
   abort "error: #{file} declares no \"#{current}\"" unless File.read(file).include?(%("#{current}"))
   citation = cited(version)
   first = !File.exist?("CHANGELOG.md")
@@ -253,7 +264,7 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
     sh "git", "add", file, "Gemfile.lock", "CHANGELOG.md", *("CITATION.cff" if citation)
     sh "git", "commit", "--message", "chore(release): v#{version}"
   rescue StandardError, Interrupt
-    # The tracked files were committed (release:guard_clean): put back what this changed.
+    # The files were committed (committed, above): put back what this changed.
     sh "git", "reset", "--hard", "--quiet"
     rm_f "CHANGELOG.md" if first
     raise

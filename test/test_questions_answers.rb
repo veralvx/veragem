@@ -2,8 +2,7 @@
 
 require "test_helper"
 
-# From a terminal: an answer's bytes read as UTF-8, whatever the locale.
-class TestAnswers < Minitest::Test
+class TestQuestionsAnswers < Minitest::Test
   include Veragem::TerminalSupport
 
   # typed under a UTF-8 locale: an invalid byte, refused as the value it is in

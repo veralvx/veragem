@@ -78,8 +78,8 @@ module Veragem
     attr_reader github: String
     attr_reader summary: String
     attr_reader license: String
-    attr_reader exe: bool
-    attr_reader citation: bool
+    @exe: bool
+    @citation: bool
     attr_reader given_names: String?
     attr_reader family_names: String?
     attr_reader alias_name: String?
@@ -93,6 +93,8 @@ module Veragem
                     ?family_names: String, ?alias: (String | false)?, ?orcid: String?, ?keywords: String? }
 
     def initialize: (String name, values values) -> void
+    def exe?: () -> bool
+    def citation?: () -> bool
     def path: () -> String
     def underscored: () -> String
     def constant: () -> String

@@ -2,9 +2,7 @@
 
 require "test_helper"
 
-# git's config, the defaults it gives, and git refused for what it is: missing, or unable to read its
-# config, or giving a value Project refuses.
-class TestGit < Minitest::Test
+class TestOptionsGit < Minitest::Test
   include Veragem::TerminalSupport
 
   # in a directory of no repository, whose own config would answer too
@@ -89,12 +87,12 @@ class TestGit < Minitest::Test
     assert_equal ["Ada", nil], [gem.author, gem.email]
   end
 
-  # every variable git sets in a hook to point at its repository (`git rev-parse --local-env-vars`),
-  # but -c's configuration, which git passes on, is unset
-  def test_gits_repository_variables_are_unset
-    local = IO.popen(%w[git rev-parse --local-env-vars], &:read).split
+  # "-", a question's none, refused from git as from an option: no gem's email
+  def test_gits_none_is_refused_as_an_options
+    error = assert_raises(Veragem::Error) { parse("my_gem", config: CONFIG.merge("user.email" => " -")) }
 
-    assert_empty local - %w[GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS] - Veragem::Generator.const_get(:GIT_LOCAL).keys
+    assert_equal %(invalid email "-": a question's none; for none, --no-email ) +
+                 "(git config user.email; --email or --no-email replaces it)", error.message
   end
 
   private

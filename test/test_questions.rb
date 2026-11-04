@@ -2,7 +2,6 @@
 
 require "test_helper"
 
-# From a terminal: what no option gives, asked for.
 class TestQuestions < Minitest::Test
   include Veragem::TerminalSupport
 
@@ -10,7 +9,7 @@ class TestQuestions < Minitest::Test
     gem, shown = ask(answers: ["my_gem", "", "", "", "", "", "", ""])
 
     assert_equal ["my_gem", false, "dual", "A Ruby gem.", "Jane Doe", "jane@example.com", "jane"],
-                 [gem.name, gem.exe, gem.license, gem.summary, gem.author, gem.email, gem.github]
+                 [gem.name, gem.exe?, gem.license, gem.summary, gem.author, gem.email, gem.github]
     assert_equal "Gem name: A command line, exe/my_gem (y/n) [n]: A citation file, CITATION.cff (y/n) [n]: " \
                  "License (mit, apache or dual) [dual]: Summary [A Ruby gem.]: Author [Jane Doe]: " \
                  "Email (- for none) [jane@example.com]: GitHub user [jane]: ", shown
@@ -20,13 +19,13 @@ class TestQuestions < Minitest::Test
     gem, = ask(answers: [" my-gem ", "\u3000y\u00A0", " n ", " M ", "Greets.", "Ada", "ada@example.com", "ada"])
 
     assert_equal ["my-gem", true, "mit", "Greets.", "Ada", "ada@example.com", "ada"],
-                 [gem.name, gem.exe, gem.license, gem.summary, gem.author, gem.email, gem.github]
+                 [gem.name, gem.exe?, gem.license, gem.summary, gem.author, gem.email, gem.github]
   end
 
   def test_what_the_options_give_is_not_asked
     gem, shown = ask("my_gem", "--exe", "--license=mit", "--author=Ada", answers: ["", "", "", ""])
 
-    assert_equal ["my_gem", true, "mit", "Ada"], [gem.name, gem.exe, gem.license, gem.author]
+    assert_equal ["my_gem", true, "mit", "Ada"], [gem.name, gem.exe?, gem.license, gem.author]
     assert_equal "A citation file, CITATION.cff (y/n) [n]: Summary [A Ruby gem.]: " \
                  "Email (- for none) [jane@example.com]: GitHub user [jane]: ", shown
   end
@@ -35,7 +34,7 @@ class TestQuestions < Minitest::Test
     gem, shown = ask("my_gem", "--no-exe", "--no-citation", "--license=mit", "--summary=Hi", "--author=Ada",
                      "--email=a@b.c", "--github=ada")
 
-    assert_equal ["my_gem", false], [gem.name, gem.exe]
+    assert_equal ["my_gem", false], [gem.name, gem.exe?]
     assert_empty shown
   end
 
@@ -51,7 +50,7 @@ class TestQuestions < Minitest::Test
                                "FIXME", "Ada", "a\tb", "ada@example.com", "-ada", "ada"])
 
     assert_equal ["my_gem", true, "apache", "Greets.", "Ada", "ada@example.com", "ada"],
-                 [gem.name, gem.exe, gem.license, gem.summary, gem.author, gem.email, gem.github]
+                 [gem.name, gem.exe?, gem.license, gem.summary, gem.author, gem.email, gem.github]
     ["invalid gem name \"1gem\"", "y or n", "invalid license (mit, apache or dual) \"gpl\"",
      "invalid summary \"TODO\"", "invalid author", "invalid email", "invalid GitHub user \"-ada\""].each do |why|
       assert_includes shown, why
@@ -109,7 +108,7 @@ class TestQuestions < Minitest::Test
 
       gem, shown = ask(answers: ["rubocop-rake", "taken", "helper", "cli", "y", "no", "", "", "", "", "", ""], dir:)
 
-      assert_equal ["cli", false], [gem.name, gem.exe]
+      assert_equal ["cli", false], [gem.name, gem.exe?]
       ["a gem the Gemfile's tools load", "#{File.join(dir, "taken")} already exists",
        "it would write test/test_helper.rb twice", "it would write test/test_cli.rb twice"].each do |why|
         assert_includes shown, why
@@ -120,7 +119,7 @@ class TestQuestions < Minitest::Test
   def test_with_exe_given_a_name_its_command_line_would_break_is_asked_again
     gem, shown = ask("--exe", answers: ["my-c_l_i", "cli", "my_gem", "", "", "", "", "", ""])
 
-    assert_equal ["my_gem", true], [gem.name, gem.exe]
+    assert_equal ["my_gem", true], [gem.name, gem.exe?]
     ["its command line would find another CLI", "it would write test/test_cli.rb twice"].each do |why|
       assert_includes shown, why
     end

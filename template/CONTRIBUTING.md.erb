@@ -37,8 +37,8 @@ bin/setup
 ```
 
 3. Optionally, `bundle exec rake hooks`: `.githooks/` then runs RuboCop, the shell, the workflows
-   and dprint before each commit, checks its message as a Conventional Commit, and each commit's
-   in a pushed ref's history before a push: what CI would refuse, minutes earlier.
+   and dprint on the working tree before each commit, checks its message as a Conventional Commit,
+   and each commit's in a pushed ref's history before a push: what CI would refuse, minutes earlier.
    `git config --unset core.hooksPath` turns them off.
 
 ## Guidelines
@@ -151,7 +151,7 @@ Then, in whichever order suits you:
   rule a workflow pushed to any branch could publish the gem. And limit who creates the release tags
   (Settings → Rules → Rulesets, a tag ruleset on `v*`): a tag pushed on any commit runs that
   commit's workflows in the environment.
-<%- if exe -%>
+<%- if exe? -%>
 - After the first release, make the image public: GHCR publishes a new package as private (its
   page, Package settings → Change visibility).
 - Limit the `image` environment's deployments to the release tags as well (a rule of ref type Tag,
@@ -162,7 +162,7 @@ Then, in whichever order suits you:
   `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`. A Docker Hub
   failure in a push (its login, its name) holds GHCR's tag back too.
 <%- end -%>
-<%- if citation -%>
+<%- if citation? -%>
 - To archive each release with a DOI, enable the repository on [Zenodo](https://zenodo.org) (its
   profile menu → GitHub, the repository's toggle): a GitHub release, `release.yml`'s, is then
   archived, its metadata `CITATION.cff`'s. After the first, uncomment the DOIs at the end of
@@ -178,8 +178,8 @@ Then, in whichever order suits you:
 - Run `bundle exec rake checks` once to confirm your tools are complete: a step that stops on a
   missing command names it ([Prerequisites](#prerequisites) lists them; `nix develop` has them
   all).
-- `bundle exec rake hooks`, if you want git to run the quick checks before each commit and push
-  ([Setup](#setup)).
+- `bundle exec rake hooks`, if you want git to run the quick checks before each commit and check
+  the messages before a push ([Setup](#setup)).
 - Make the project yours: the code, the tests, the signatures, the README and the gemspec's
   summary.
 
@@ -195,20 +195,23 @@ bundle exec rake release
 
 `rake bump` refuses a release with nothing in it: no commit since the last tag, merges and fixups
 aside, which the changelog leaves out. It refuses a shallow clone, a clone missing the tags
-(`git fetch --tags`), a version bumped but not yet released, and one already tagged. It sets the
-version in `lib/<%= path %>/version.rb` (the first release keeps the version declared, whatever the
-level), updates the lock, writes the changelog (git-cliff) and commits.
-<%- if citation -%>
-It sets `CITATION.cff`'s version and date-released too: a citation names the release.
+(`git fetch --tags`), a version bumped but not yet released, one already tagged, and a file it
+commits that git does not track (the version file, the lock, the changelog). `rake changelog`
+refuses the same clones. It sets the version in `lib/<%= path %>/version.rb` (the first release
+keeps the version declared, whatever the level), updates the lock, writes the changelog (git-cliff)
+and commits.
+<%- if citation? -%>
+It sets `CITATION.cff`'s version and date-released too (a citation names the release), and refuses
+it untracked.
 <%- end -%>
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
 tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`), then the build
 (`gem build`, no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted
 Publishing, which shows the gem's provenance, then the GitHub release of the same gem, its notes
 the changelog's new section.
-<%- if exe -%>
+<%- if exe? -%>
 Beside `release.yml`, waiting for no RubyGems push, `image.yml` publishes the command's OCI image
-to GHCR (`nix build .#image` builds it here).
+to GHCR (on Linux, `nix build .#image` builds it here).
 <%- end -%>
 
 Should a run fail, re-run its failed jobs, not all of them: those keep the build's gem and

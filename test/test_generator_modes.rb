@@ -2,8 +2,7 @@
 
 require "test_helper"
 
-# The executables' mode, in git's index on every platform, in the file system where it has one.
-class TestModes < Minitest::Test
+class TestGeneratorModes < Minitest::Test
   include Veragem::GeneratedSupport
 
   EXECUTABLES = %w[bin/console bin/setup .githooks/commit-msg .githooks/pre-commit .githooks/pre-push
@@ -14,7 +13,7 @@ class TestModes < Minitest::Test
   def test_the_executables_keep_their_mode
     with_env("GIT_CONFIG_COUNT" => "1", "GIT_CONFIG_KEY_0" => "core.fileMode", "GIT_CONFIG_VALUE_0" => "false") do
       each_kind do |gem, target, _|
-        executables = EXECUTABLES + (gem.exe ? ["exe/#{gem.name}", ".github/image-registries.sh"] : [])
+        executables = EXECUTABLES + (gem.exe? ? ["exe/#{gem.name}", ".github/image-registries.sh"] : [])
 
         assert_equal executables.sort, indexed_executables(target).sort
       end

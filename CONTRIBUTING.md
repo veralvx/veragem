@@ -15,7 +15,7 @@ smoke test. `bin/setup` installs the gems `Gemfile.lock` pins.
 ```sh
 git clone https://github.com/<you>/veragem && cd veragem
 bin/setup
-bundle exec rake hooks   # optional: the quick checks before a commit and a push
+bundle exec rake hooks   # optional: the quick checks before a commit, the messages before a push
 ```
 
 ## Layout
@@ -88,7 +88,7 @@ failed run keeps that directory and says where.
 Coverage is measured by `rake test` alone (`.simplecov`). Some tests alone
 (`bundle exec rake test N=/probe/`) fail its gate (exit 2) though they pass: Minitest's verdict is
 printed above SimpleCov's. One file run alone is not measured, its warnings raised as `rake test`
-raises them: `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_names.rb` (the helper first,
+raises them: `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_name.rb` (the helper first,
 before the file is parsed).
 
 ## Development Workflow
@@ -130,10 +130,12 @@ bundle exec rake release
 `rake bump` sets the version (`lib/veragem/version.rb`) and `CITATION.cff`'s version and date,
 updates the lock, writes the changelog (git-cliff) and commits; it refuses a release with nothing in
 it, a shallow clone, a clone missing the tags (`git fetch --tags`), a version bumped but not yet
-released, and one already tagged. `rake release`, Bundler's own, builds the gem, tags `v<version>`
-and pushes the branch and the tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks
-(`rake`), then the build (`gem build`, no bundle loaded) and its Sigstore attestation, the push to
-RubyGems by Trusted Publishing, then the GitHub release.
+released, one already tagged, and a file it commits that git does not track (the version file, the
+lock, the changelog, `CITATION.cff`). `rake changelog` refuses the same clones.
+`rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the tag;
+it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`), then the build (`gem build`,
+no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted Publishing, then the
+GitHub release.
 
 Should a run fail, re-run its failed jobs, not all of them: those keep the build's gem and
 digests, and RubyGems refuses a version pushed twice. If the gem reached RubyGems but its job

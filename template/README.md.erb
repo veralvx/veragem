@@ -9,13 +9,13 @@ Ruby 4.0 or later.
 ## Install
 
 ```sh
-<%- if exe -%>
+<%- if exe? -%>
 gem install <%= name %>
 <%- else -%>
 bundle add <%= name %>
 <%- end -%>
 ```
-<%- if exe -%>
+<%- if exe? -%>
 
 With Nix, or as an OCI image for Linux on amd64 and arm64:
 
@@ -26,7 +26,7 @@ docker run --rm ghcr.io/<%= github.downcase %>/<%= name %> --version
 <%- end -%>
 
 ## Usage
-<%- if exe -%>
+<%- if exe? -%>
 
 ```sh
 <%= name %> Ada # => Hello, Ada!
