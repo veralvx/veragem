@@ -37,8 +37,8 @@ bin/setup
 ```
 
 3. Optionally, `bundle exec rake hooks`: `.githooks/` then runs RuboCop, the shell, the workflows
-   and dprint before each commit, checks its message as a Conventional Commit, and each commit's
-   in a pushed ref's history before a push: what CI would refuse, minutes earlier.
+   and dprint on the working tree before each commit, checks its message as a Conventional Commit,
+   and each commit's in a pushed ref's history before a push: what CI would refuse, minutes earlier.
    `git config --unset core.hooksPath` turns them off.
 
 ## Guidelines

@@ -1,6 +1,8 @@
 #!/bin/sh
 # The message, as CI's Conventional Commits check will read it -- a merge
 # commit's excepted, as CI excepts it (cog.toml's ignore_merge_commits).
+# `cog verify` takes a message starting "Merge" for a merge's; pre-push checks
+# what it cannot tell, a merge by its parents.
 set -eu
 if git rev-parse -q --verify MERGE_HEAD > /dev/null; then exit 0; fi
 # `cog verify` reads the author from git's config files, as libgit2 does -- not
