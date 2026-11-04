@@ -124,6 +124,10 @@ for gem in "${gems[@]}"; do
     if [ -e CITATION.cff ]; then
       # a release file not committed is refused: a failed bump's rollback (git reset --hard) would
       # delete it
+      # a level checked first, its usage said whatever the tree
+      echo >> README.md
+      refuses 'usage: rake "bump[major|minor|patch]"' bundle exec rake "bump[bogus]"
+      git checkout -- README.md
       git rm --cached --quiet Gemfile.lock
       git commit --quiet --message "chore: untrack the lock"
       refuses "Gemfile.lock not committed" bundle exec rake "bump[minor]"
@@ -183,8 +187,11 @@ for gem in "${gems[@]}"; do
       git -C "$work/no-tags" for-each-ref --format="delete %(refname)" refs/tags |
         git -C "$work/no-tags" update-ref --stdin
       (cd "$work/no-tags" && refuses "no v* tag" bundle exec rake "bump[patch]")
+      # nor is its changelog previewed
+      (cd "$work/no-tags" && refuses "no v* tag" bundle exec rake changelog)
       git clone --quiet --branch "$branch" --depth 1 "file://$work/$gem.git" "$work/shallow"
       (cd "$work/shallow" && refuses "a shallow clone" bundle exec rake "bump[patch]")
+      (cd "$work/shallow" && refuses "a shallow clone" bundle exec rake changelog)
     fi
   )
 done
