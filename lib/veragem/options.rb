@@ -56,7 +56,8 @@ module Veragem
     # any question.
     private_class_method def self.arguments(argv)
       given = {} #: Hash[Symbol, String | bool]
-      # an argument of invalid UTF-8 as bytes: OptionParser's matching raises on it, Project refuses it
+      # an argument its encoding (the locale's) cannot read, as bytes: OptionParser's matching raises on
+      # it, Project reads them as UTF-8
       names = parser.permute(argv.map { it.valid_encoding? ? it : it.b }, into: given)
       # OptionParser keys --given-names as :"given-names"; Project's are :given_names
       given.transform_keys! { it.name.tr("-", "_").to_sym }
@@ -94,12 +95,12 @@ module Veragem
       raise Error, "one gem name, not #{names.size} (bundle veragem --help)"
     end
 
-    # The options' values, and git's where none is given: one of git's refused says so, and which
-    # options replace it, as a missing author or GitHub user does.
+    # The options' values, and git's where none is given, checked as an option's: one of git's refused
+    # says so, and which options replace it, as a missing author or GitHub user does.
     private_class_method def self.required(defaults, given)
       GIT_CONFIG.except(*given.keys).each do |key, name|
         value = defaults[key] or next
-        Project.check(key, value)
+        checked(key, value)
       rescue Error => e
         replaced = ["--#{key}", Project::OPTIONAL[key]].compact.join(" or ")
         raise Error, "#{e} (git config #{name}; #{replaced} replaces it)"
