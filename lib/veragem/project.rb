@@ -203,9 +203,9 @@ module Veragem
     # characters: CITATION.cff's.
     private_class_method def self.line(field, value)
       line = strip(value) unless value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/)
-      raise Error, "invalid #{field} #{value.inspect}: one line of text" unless line&.match?(/[^[:space:]\p{DI}]/)
+      return line if line&.match?(/[^[:space:]\p{DI}]/)
 
-      line
+      raise Error, "invalid #{field} #{value.inspect}: one line of visible text"
     end
 
     private
