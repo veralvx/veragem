@@ -56,6 +56,9 @@ Layout/HeredocArgumentClosingParenthesis:
 Layout/LeadingCommentSpace:
   AllowSteepAnnotation: true # Steep's inline annotations, `#: Type`, which have no space after the `#`
 
+RBS: # rubocop-on-rbs's recommended setting, explicit: its default.yml sets it too
+  Enabled: true
+
 Style/TopLevelMethodDefinition: # a method on Object, everywhere; a script's helpers are its own
   Enabled: true
   Exclude:
