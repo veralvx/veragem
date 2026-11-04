@@ -198,11 +198,12 @@ module Veragem
       raise Error, "invalid #{field} #{line.inspect}: RubyGems refuses one starting TODO or FIXME"
     end
 
-    # One line, its surrounding spaces stripped (Unicode's too). U+FFFE and U+FFFF are outside YAML's
-    # printable characters: CITATION.cff's.
+    # One line, its surrounding spaces stripped (Unicode's too), a character in it shown: not all
+    # default-ignorable (a zero-width space, a BOM). U+FFFE and U+FFFF are outside YAML's printable
+    # characters: CITATION.cff's.
     private_class_method def self.line(field, value)
-      line = value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/) ? "" : strip(value)
-      raise Error, "invalid #{field} #{value.inspect}: one line of text" if line.empty?
+      line = strip(value) unless value.match?(/[[:cntrl:]\u2028\u2029\uFFFE\uFFFF]/)
+      raise Error, "invalid #{field} #{value.inspect}: one line of text" unless line&.match?(/[^[:space:]\p{DI}]/)
 
       line
     end

@@ -17,9 +17,10 @@ class TestProject < Minitest::Test
     end
   end
 
+  # one with no character shown: blank, or default-ignorable (a zero-width space, a BOM, a soft hyphen)
   def test_a_text_is_one_line_of_utf8_rubygems_takes
-    ["", " ", "\u3000", "two\nlines", "two\u2028lines", "tab\there", "TODO: write", " FIXME", "\xFF".b,
-     "x" * 99].each do |summary|
+    ["", " ", "\u3000", "\u200B", " \uFEFF\u2060 ", "\u00AD \u3164", "two\nlines", "two\u2028lines", "tab\there",
+     "TODO: write", " FIXME", "\xFF".b, "x" * 99].each do |summary|
       assert_raises(Veragem::Error, summary.inspect) { project(summary:) }
     end
   end
