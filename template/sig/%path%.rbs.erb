@@ -1,5 +1,5 @@
 <%# `::`: a module of the gem's could be named String, or Hash -%>
-<%= nest(<<~RBS + (exe ? <<~CLI : ""))
+<%= nest(<<~RBS + (exe? ? <<~CLI : ""))
   VERSION: ::String
 
   def self.greeting: (::String name) -> ::String

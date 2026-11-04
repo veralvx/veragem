@@ -68,8 +68,8 @@ class TestProject < Minitest::Test
   end
 
   def test_exe_is_true_or_absent
-    assert project(exe: true).exe
-    refute project.exe
+    assert_predicate project(exe: true), :exe?
+    refute_predicate project, :exe?
   end
 
   def test_a_quoted_value_reads_back_as_itself

@@ -11,13 +11,13 @@ class TestCitation < Minitest::Test
     gem = parse("my_gem")
 
     assert_equal [false, nil, nil, nil, nil, nil],
-                 [gem.citation, gem.given_names, gem.family_names, gem.alias_name, gem.orcid, gem.keywords]
+                 [gem.citation?, gem.given_names, gem.family_names, gem.alias_name, gem.orcid, gem.keywords]
   end
 
   def test_with_a_citation_the_family_names_are_required_the_given_names_optional
     gem = parse("my_gem", "--citation", "--given-names", " Jane ", "--family-names=van Doe")
 
-    assert_equal [true, "Jane", "van Doe"], [gem.citation, gem.given_names, gem.family_names]
+    assert_equal [true, "Jane", "van Doe"], [gem.citation?, gem.given_names, gem.family_names]
     assert_nil parse("my_gem", "--citation", "--family-names=Doe").given_names
     [%w[--citation], %w[--citation --given-names=Jane]].each do |argv|
       error = assert_raises(Veragem::Error) { parse("my_gem", *argv) }

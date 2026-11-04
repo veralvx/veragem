@@ -4,7 +4,7 @@
 target :lib do
   signature "sig"
   check "lib"
-<%- if exe -%>
+<%- if exe? -%>
   library "optparse"
 <%- end -%>
   configure_code_diagnostics(Steep::Diagnostic::Ruby.strict)

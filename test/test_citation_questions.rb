@@ -11,7 +11,7 @@ class TestCitationQuestions < Minitest::Test
     config = CONFIG.merge("user.name" => "Ana María de Souza")
     gem, shown = ask("my_gem", "--license=mit", "--summary=Hi", answers: ["", "y", *[""] * 8], config:)
 
-    assert_equal [true, "Ana María de", "Souza"], [gem.citation, gem.given_names, gem.family_names]
+    assert_equal [true, "Ana María de", "Souza"], [gem.citation?, gem.given_names, gem.family_names]
     assert_includes shown, "Family names, CITATION.cff's [Souza]: " \
                            "Given names, CITATION.cff's (- for none) [Ana María de]: "
   end
@@ -96,7 +96,7 @@ class TestCitationQuestions < Minitest::Test
   def test_at_a_terminal_a_citations_values_given_need_the_citation
     gem, shown = ask("my_gem", "--family-names=Doe", answers: ["", "n", "", "", "", "", "", "", "", "", "", ""])
 
-    assert_equal [true, "Doe"], [gem.citation, gem.family_names]
+    assert_equal [true, "Doe"], [gem.citation?, gem.family_names]
     assert_includes shown, "CITATION.cff (y/n) [y]: #{NEEDED}\nA citation file"
   end
 
@@ -119,7 +119,7 @@ class TestCitationQuestions < Minitest::Test
     assert_includes shown, "Gem name: invalid gem name ab for a citation"
     gem, shown = ask("ab", answers: ["", "y", "n", "", "", "", "", ""])
 
-    assert_equal ["ab", false], [gem.name, gem.citation]
+    assert_equal ["ab", false], [gem.name, gem.citation?]
     assert_includes shown, "(y/n) [n]: invalid gem name ab for a citation"
   end
 
@@ -146,7 +146,7 @@ class TestCitationQuestions < Minitest::Test
     assert_empty shown
     gem, shown = ask("--orcid=0000-0002-1825-0097", answers: ["ab", "abc", "", "y", "", "", "", "", "", "", "", "", ""])
 
-    assert_equal ["abc", true, ORCID], [gem.name, gem.citation, gem.orcid]
+    assert_equal ["abc", true, ORCID], [gem.name, gem.citation?, gem.orcid]
     assert_includes shown, "Gem name: invalid gem name ab for a citation"
   end
 end

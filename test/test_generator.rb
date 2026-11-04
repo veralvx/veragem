@@ -24,7 +24,7 @@ class TestGenerator < Minitest::Test
       cli = %W[exe/#{gem.name} lib/#{gem.path}/cli.rb test/test_cli.rb .github/workflows/image.yml
                .github/image-registries.sh]
 
-      assert_equal gem.exe ? cli.sort : [], (files & cli).sort
+      assert_equal gem.exe? ? cli.sort : [], (files & cli).sort
     end
   end
 
@@ -73,7 +73,7 @@ class TestGenerator < Minitest::Test
 
   def test_the_gemspec_is_the_projects
     each_kind do |gem, target, _|
-      assert_equal [gem.name, "0.1.0", ["Jane Doe"], ["jane@example.com"], gem.licenses, gem.exe ? [gem.name] : []],
+      assert_equal [gem.name, "0.1.0", ["Jane Doe"], ["jane@example.com"], gem.licenses, gem.exe? ? [gem.name] : []],
                    spec_of(target, gem).values_at(*%w[name version authors email licenses executables])
     end
   end
@@ -83,7 +83,7 @@ class TestGenerator < Minitest::Test
       shipped = spec_of(target, gem)["files"]
 
       code = %W[lib/#{gem.path}.rb lib/#{gem.path}/version.rb sig/#{gem.path}.rbs]
-      code += %W[exe/#{gem.name} lib/#{gem.path}/cli.rb] if gem.exe
+      code += %W[exe/#{gem.name} lib/#{gem.path}/cli.rb] if gem.exe?
 
       assert_empty code - shipped
       assert_empty shipped.grep_v(%r{\A(lib|sig|exe)/|\A(README\.md|LICENSE-MIT|LICENSE-APACHE)\z})

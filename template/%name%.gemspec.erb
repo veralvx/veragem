@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
 
   # What the gem ships: its code, its signatures and its documents -- not the tests or the tooling.
   spec.files = Dir.glob(%w[lib/**/*.rb sig/**/*.rbs exe/* README.md CHANGELOG.md LICENSE-*], base: __dir__)
-<%- if exe -%>
+<%- if exe? -%>
   spec.bindir = "exe"
   spec.executables = ["<%= name %>"]
 <%- end -%>

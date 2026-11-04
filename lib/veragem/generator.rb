@@ -37,7 +37,7 @@ module Veragem
     # @return [void]
     # @raise [Veragem::Error] +target+ exists, its name cannot be generated, or a write or git fails
     def self.generate(project, target)
-      check(project.name, exe: project.exe, citation: project.citation, target:)
+      check(project.name, exe: project.exe?, citation: project.citation?, target:)
       written = files(project)
       Dir.mkdir(target)
       removed_unless_done(target) do
@@ -93,8 +93,8 @@ module Veragem
 
     private_class_method def self.files(project)
       skipped = LICENSE_FILES.reject { |_, spdx| project.licenses.include?(spdx) }.keys
-      skipped << CITATION unless project.citation
-      (templates(project.exe) - skipped).to_h { [it, path_of(it, project.name)] }
+      skipped << CITATION unless project.citation?
+      (templates(project.exe?) - skipped).to_h { [it, path_of(it, project.name)] }
     end
 
     # The template's files a kind takes (+exe+, a command line's too), each licence's included.

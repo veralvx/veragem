@@ -36,12 +36,6 @@ module Veragem
     # Its licence's choice: mit, apache or dual.
     # @return [String]
     attr_reader :license
-    # Whether it has a command line.
-    # @return [Boolean]
-    attr_reader :exe
-    # Whether it has CITATION.cff.
-    # @return [Boolean]
-    attr_reader :citation
     # CITATION.cff's given names, none nil.
     # @return [String, nil]
     attr_reader :given_names
@@ -110,6 +104,14 @@ module Veragem
       @license = Project.check(:license, values[:license])
       extras(values)
     end
+
+    # Whether it has a command line.
+    # @return [Boolean]
+    def exe? = @exe
+
+    # Whether it has CITATION.cff.
+    # @return [Boolean]
+    def citation? = @citation
 
     # The file the gem requires, lib/'s: `my-gem`'s my/gem.
     # @return [String]
@@ -214,8 +216,8 @@ module Veragem
     def extras(values)
       @exe = values[:exe] == true
       @citation = values[:citation] == true
-      Citation.check_values(values, citation)
-      cite(values) if citation
+      Citation.check_values(values, citation?)
+      cite(values) if citation?
     end
 
     # CITATION.cff's author is a person: the family names it needs, the rest it may have.

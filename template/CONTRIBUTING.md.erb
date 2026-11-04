@@ -151,7 +151,7 @@ Then, in whichever order suits you:
   rule a workflow pushed to any branch could publish the gem. And limit who creates the release tags
   (Settings → Rules → Rulesets, a tag ruleset on `v*`): a tag pushed on any commit runs that
   commit's workflows in the environment.
-<%- if exe -%>
+<%- if exe? -%>
 - After the first release, make the image public: GHCR publishes a new package as private (its
   page, Package settings → Change visibility).
 - Limit the `image` environment's deployments to the release tags as well (a rule of ref type Tag,
@@ -162,7 +162,7 @@ Then, in whichever order suits you:
   `DOCKERHUB_REPOSITORY` (`namespace/name`) unless it is `<username>/<%= name %>`. A Docker Hub
   failure in a push (its login, its name) holds GHCR's tag back too.
 <%- end -%>
-<%- if citation -%>
+<%- if citation? -%>
 - To archive each release with a DOI, enable the repository on [Zenodo](https://zenodo.org) (its
   profile menu → GitHub, the repository's toggle): a GitHub release, `release.yml`'s, is then
   archived, its metadata `CITATION.cff`'s. After the first, uncomment the DOIs at the end of
@@ -199,7 +199,7 @@ aside, which the changelog leaves out. It refuses a shallow clone, a clone missi
 (the lock, the changelog) not committed. It sets the version in `lib/<%= path %>/version.rb` (the
 first release keeps the version declared, whatever the level), updates the lock, writes the
 changelog (git-cliff) and commits.
-<%- if citation -%>
+<%- if citation? -%>
 It sets `CITATION.cff`'s version and date-released too: a citation names the release.
 <%- end -%>
 `rake release`, Bundler's own, builds the gem, tags `v<version>` and pushes the branch and the
@@ -207,7 +207,7 @@ tag; it pushes no gem. The tag runs `release.yml`: the Ruby checks (`rake`), the
 (`gem build`, no bundle loaded) and its Sigstore attestation, the push to RubyGems by Trusted
 Publishing, which shows the gem's provenance, then the GitHub release of the same gem, its notes
 the changelog's new section.
-<%- if exe -%>
+<%- if exe? -%>
 Beside `release.yml`, waiting for no RubyGems push, `image.yml` publishes the command's OCI image
 to GHCR (on Linux, `nix build .#image` builds it here).
 <%- end -%>
