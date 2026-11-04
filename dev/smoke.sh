@@ -91,6 +91,18 @@ for gem in "${gems[@]}"; do
     if .githooks/commit-msg "$work/message" 2> /dev/null; then
       fail "the commit-msg hook took a message that is not a Conventional Commit"
     fi
+    # pre-push, as git calls it: a history with a message cog refuses is refused; a tag of a tree,
+    # or a deletion, pushes no commit to check
+    tree="$(git rev-parse 'HEAD^{tree}')"
+    zero="$(printf '%040d' 0)"
+    refused="$(git commit-tree -p HEAD -m "not a Conventional Commit" "$tree")"
+    if .githooks/pre-push <<< "refs/heads/x $refused refs/heads/x $zero" > /dev/null 2>&1; then
+      fail "the pre-push hook took a history that is not of Conventional Commits"
+    fi
+    .githooks/pre-push <<< "refs/tags/tree $tree refs/tags/tree $zero" ||
+      fail "the pre-push hook refused a tag of a tree"
+    .githooks/pre-push <<< "(delete) $zero refs/heads/x $(git rev-parse HEAD)" ||
+      fail "the pre-push hook refused a deletion"
     # `rake checks` but its links, links.yml's: a host's outage would fail an unrelated pull request
     prerequisites="$(bundle exec rake -P)"
     mapfile -t checks < <(awk '$0 == "rake checks" { f = 1; next } /^rake / { f = 0 } f && $1 != "links" { print $1 }' <<< "$prerequisites")
