@@ -229,6 +229,13 @@ def cited(version)
   end
 end
 
+# The release commit's files, where there, committed: its rollback (git reset --hard) would delete
+# one HEAD lacks
+def refuse_untracked(*paths)
+  untracked = output("git", "ls-files", "--others", "--", *paths).lines(chomp: true)
+  abort "error: #{untracked.join(", ")} not committed: commit first" unless untracked.empty?
+end
+
 # The release commit: the version, the lock, the changelog, and CITATION.cff's version and date.
 desc "Bump the version, write the changelog, commit. The level is major, minor or patch; a first release " \
      "keeps the declared version"
@@ -243,6 +250,7 @@ task :bump, [:level] => "release:guard_clean" do |_, args|
 
   file = "lib/#{gemspec.name.tr("-", "/")}/version.rb"
   abort "error: #{file} declares no \"#{current}\"" unless File.read(file).include?(%("#{current}"))
+  refuse_untracked(file, "Gemfile.lock", "CHANGELOG.md", "CITATION.cff")
   citation = cited(version)
   first = !File.exist?("CHANGELOG.md")
   begin

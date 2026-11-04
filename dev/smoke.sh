@@ -122,6 +122,13 @@ for gem in "${gems[@]}"; do
       fi
     fi
     if [ -e CITATION.cff ]; then
+      # a release file not committed is refused: a failed bump's rollback (git reset --hard) would
+      # delete it
+      git rm --cached --quiet Gemfile.lock
+      git commit --quiet --message "chore: untrack the lock"
+      refuses "Gemfile.lock not committed" bundle exec rake "bump[minor]"
+      git reset --quiet HEAD~1
+      committed
       # the first release: no tag yet, the declared version kept, the changelog begun
       bundle exec rake "bump[minor]"
       has CITATION.cff 'version: "0.1.0"'
