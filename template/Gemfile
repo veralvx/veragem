@@ -15,6 +15,7 @@ gem "simplecov"
 
 gem "rubocop"
 gem "rubocop-minitest"
+gem "rubocop-on-rbs"
 gem "rubocop-packaging"
 gem "rubocop-performance"
 gem "rubocop-rake"

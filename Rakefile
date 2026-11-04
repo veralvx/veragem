@@ -20,6 +20,13 @@ TEST_TASK = Minitest::TestTask.create do
   self.test_prelude = %(require "simplecov"; SimpleCov.start; require "test_helper")
 end
 RuboCop::RakeTask.new
+# sig/'s signatures, a run of their own (.rubocop.yml excludes them; named, they run): in the Ruby
+# files' run, the project index would take each for a second definition of its method or constant.
+# Here, rubocop-on-rbs's cops alone inspect them
+desc "Run RuboCop on sig/'s signatures: rubocop-on-rbs's cops. `rake rubocop` runs it too"
+RuboCop::RakeTask.new("rubocop:rbs") { it.patterns = Dir["sig/**/*.rbs"] }
+Rake::Task["rubocop"].enhance(["rubocop:rbs"])
+Rake::Task["rubocop:autocorrect"].enhance(["rubocop:rbs:autocorrect"])
 Steep::RakeTask.new
 Bundler::Audit::Task.new
 
@@ -106,8 +113,8 @@ end
 
 # The files changed since the merge base, uncommitted and untracked ones too (`--changed`); every
 # file where there is none
-desc "Run RuboCop on the files changed since origin/main. `rake rubocop` checks them all"
-task "rubocop:changed" do
+desc "Run RuboCop on the files changed since origin/main, and on sig/. `rake rubocop` checks them all"
+task "rubocop:changed" => "rubocop:rbs" do
   base = merge_base
   sh "rubocop", *("--changed=#{base}" if base)
 end

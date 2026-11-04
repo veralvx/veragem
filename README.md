@@ -14,10 +14,11 @@ and the rest:
   that each call is typed (`rake steep:typed`: none on an untyped receiver); TypeProf infers
   signatures to start them from, and its editor support is configured.
 - **Lint and format**: RuboCop with every new cop, rubocop-minitest, rubocop-packaging,
-  rubocop-performance and rubocop-rake; the project is indexed first (rubydex), so the cops that see
-  across files do. In CI, offences are annotated on the pull request and a failed run's summary
-  holds the safe corrections as a patch, to `git apply`: a Dependabot bump the new cops fail stays
-  unmerged until you apply it, no workflow pushing code the bumped gems wrote.
+  rubocop-performance, rubocop-rake and rubocop-on-rbs, which holds the signatures too; the project
+  is indexed first (rubydex), so the cops that see across files do. In CI, offences are annotated on
+  the pull request and a failed run's summary holds the safe corrections as a patch, to `git apply`:
+  a Dependabot bump the new cops fail stays unmerged until you apply it, no workflow pushing code
+  the bumped gems wrote.
 - **Documentation**: YARD, every public object of `lib/` documented, held by yard-lint at 100%
   coverage (`rake yard` writes it to `doc/`).
 - **Tests**: Minitest, a property test with [pbt](https://github.com/ohbarye/pbt), and SimpleCov's
