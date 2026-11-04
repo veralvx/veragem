@@ -6,10 +6,10 @@
 set -eu
 if git rev-parse -q --verify MERGE_HEAD > /dev/null; then exit 0; fi
 # `cog verify` reads the author from git's config files, as libgit2 does -- not
-# git -c's, GIT_CONFIG_GLOBAL's or GIT_AUTHOR_NAME's -- and panics without it:
-# the identity checked as it reads it
+# git -c's, GIT_CONFIG's, GIT_CONFIG_GLOBAL's or GIT_AUTHOR_NAME's -- and panics
+# without it: the identity checked as it reads it
 if ! (
-  unset GIT_CONFIG_PARAMETERS GIT_CONFIG_COUNT GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM
+  unset GIT_CONFIG GIT_CONFIG_PARAMETERS GIT_CONFIG_COUNT GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM GIT_CONFIG_NOSYSTEM
   git config user.name && git config user.email
 ) > /dev/null; then
   echo "commit-msg: cog verify needs user.name and user.email in git's config files, not git -c's" >&2

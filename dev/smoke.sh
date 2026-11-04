@@ -103,13 +103,14 @@ for gem in "${gems[@]}"; do
       fail "the pre-push hook refused a tag of a tree"
     .githooks/pre-push <<< "(delete) $zero refs/heads/x $(git rev-parse HEAD)" ||
       fail "the pre-push hook refused a deletion"
-    # commit-msg: an identity cog cannot read (git -c's, the environment's) said so, not cog's panic;
-    # a home of no config
+    # commit-msg: an identity cog cannot read (git -c's, GIT_CONFIG's) said so, not cog's panic; a
+    # home of no config. Either alone gives git one.
     git init --quiet "$work/anonymous-$gem"
     echo "fix: a message" > "$work/valid"
+    printf '[user]\n\tname = A\n\temail = a@b\n' > "$work/identity"
     (cd "$work/anonymous-$gem" && refuses "not git -c's" env HOME="$work" XDG_CONFIG_HOME="$work" \
-      GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=user.name GIT_CONFIG_VALUE_0=A GIT_CONFIG_KEY_1=user.email \
-      GIT_CONFIG_VALUE_1=a@b "$OLDPWD/.githooks/commit-msg" "$work/valid")
+      GIT_CONFIG="$work/identity" GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=user.name GIT_CONFIG_VALUE_0=A \
+      GIT_CONFIG_KEY_1=user.email GIT_CONFIG_VALUE_1=a@b "$OLDPWD/.githooks/commit-msg" "$work/valid")
     # `rake checks` but its links, links.yml's: a host's outage would fail an unrelated pull request
     prerequisites="$(bundle exec rake -P)"
     mapfile -t checks < <(awk '$0 == "rake checks" { f = 1; next } /^rake / { f = 0 } f && $1 != "links" { print $1 }' <<< "$prerequisites")
@@ -141,12 +142,12 @@ for gem in "${gems[@]}"; do
       fi
     fi
     if [ -e CITATION.cff ]; then
-      # a release file not committed is refused: a failed bump's rollback (git reset --hard) would
-      # delete it
       # a level checked first, its usage said whatever the tree
       echo >> README.md
       refuses 'usage: rake "bump[major|minor|patch]"' bundle exec rake "bump[bogus]"
       git checkout -- README.md
+      # a release file not committed is refused: a failed bump's rollback (git reset --hard) would
+      # delete it
       git rm --cached --quiet Gemfile.lock
       git commit --quiet --message "chore: untrack the lock"
       refuses "Gemfile.lock not committed" bundle exec rake "bump[minor]"
