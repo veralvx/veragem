@@ -9,7 +9,7 @@ class TestLicenses < Minitest::Test
 
   TAKEN = { "MIT" => "mit", "Ap" => "apache", "d" => "dual", "dual" => "dual", "Apache-2.0" => "apache",
             "mit or apache-2.0" => "dual", "Apache-2.0 OR MIT" => "dual", " mit " => "mit",
-            "\u00A0mit\u3000" => "mit" }.freeze
+            "\u00A0mit\u3000" => "mit", "MIT  OR\tApache-2.0" => "dual" }.freeze
 
   def test_an_option_takes_one_in_any_case_as_spdx_or_abbreviated
     TAKEN.each { |given, license| assert_equal license, parse("my_gem", "--license=#{given}").license }

@@ -15,7 +15,7 @@ module Veragem
     # @raise [Veragem::Error] it names none
     def self.check(value)
       given = value.downcase
-      spdx = SPDX.find { |_, ids| ids.map(&:downcase).sort == given.split(" or ").sort }&.first
+      spdx = SPDX.find { |_, ids| ids.map(&:downcase).sort == given.split(/[[:space:]]+or[[:space:]]+/).sort }&.first
       return spdx if spdx
 
       case SPDX.keys.select { it.start_with?(given) }
