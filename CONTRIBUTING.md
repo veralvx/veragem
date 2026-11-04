@@ -65,7 +65,7 @@ bundle exec rake checks   # and bundler-audit, dprint, cog, the shell, the workf
                           # the changed lines' mutations, the flake's checks
 nix develop --command dev/smoke.sh   # the plugin end to end: smoke.yml
 bundle exec rake mutation # every line of lib/ mutated: what no test catches (mutineer), minutes
-bundle exec rake rubocop:changed     # RuboCop on the files changed since origin/main
+bundle exec rake rubocop:changed     # RuboCop on the files changed since origin/main, and sig/
 bundle exec rake format   # dprint, nixfmt, shfmt and RuboCop's corrections, in place
 ```
 

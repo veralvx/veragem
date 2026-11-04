@@ -1,12 +1,14 @@
 AllCops:
   Exclude:
     - "result*/**/*" # `nix build`'s links: the gem installed, which the project index would take for a second copy
+    - "sig/**/*" # each signature the project index would take for a second definition: rake rubocop:rbs
   NewCops: enable # pending cops on now, not only at the next major release
   ProjectIndexIncludesGems: true # the bundle's gems' sources indexed too: under `bundle exec rubocop` alone
   UseProjectIndex: true # the rubydex gem indexes the project: cops see across files (a method defined twice)
 
 plugins:
   - rubocop-minitest
+  - rubocop-on-rbs
   - rubocop-packaging
   - rubocop-performance
   - rubocop-rake
