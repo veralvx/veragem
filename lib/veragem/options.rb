@@ -32,8 +32,8 @@ module Veragem
     private_constant :GIT_CONFIG, :DEFAULTS, :BANNER, :OPTIONS
 
     # The Project +argv+ gives, what it does not asked of +input+ when a terminal, the questions on
-    # +output+ (stderr, as a prompt is): at a terminal the name checked for +dir+ before any question,
-    # the generation's check otherwise.
+    # +output+ (stderr, as a prompt is): at a terminal the name checked for +dir+ before any question;
+    # otherwise its own rules before git's values, and the generation's check after.
     # @param argv [Array<String>] the command's arguments
     # @param dir [String] where the gem is to be generated
     # @param config [#call] a git config key's value, nil when unset
@@ -45,7 +45,7 @@ module Veragem
       names, given = arguments(argv)
       defaults = { **DEFAULTS, **GIT_CONFIG.transform_values(&config).compact }
       # rubocop:disable-next Lint/NameTypo -- the project index lacks Class#new, and takes Project#nest for it
-      return Project.new(name_of(names), required(defaults, given)) unless input.tty?
+      return Project.new(Name.check(name_of(names)), required(defaults, given)) unless input.tty?
 
       ask(names, given, defaults, Questions.new(input, output, dir, git: GIT_CONFIG))
     rescue OptionParser::ParseError => e

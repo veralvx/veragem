@@ -73,6 +73,13 @@ class TestOptions < Minitest::Test
     end
   end
 
+  # without a terminal as at one: the name, then git's values
+  def test_the_name_is_refused_before_a_missing_value
+    error = assert_raises(Veragem::Error) { parse("My_Gem", config: {}) }
+
+    assert_match(/\Ainvalid gem name "My_Gem": /, error.message)
+  end
+
   def test_one_name_is_required
     { [] => "no gem name", %w[one two] => "one gem name, not 2" }.each do |argv, why|
       error = assert_raises(Veragem::Error) { parse(*argv) }
