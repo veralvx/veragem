@@ -10,6 +10,47 @@ module Veragem
     PATTERN = /\A[a-z][a-z0-9]*(?:_[a-z0-9]+)*(?:-[a-z][a-z0-9]*(?:_[a-z0-9]+)*)*\z/
     # Windows' devices, whose names no file there takes: a path's word, of its dashes
     RESERVED = /\A(?:con|prn|aux|nul|com\d|lpt\d)\z/
+    # What the gem's tools load with its code, where installed: Bundler's CLI, which reads its gemspec
+    # (bin/setup's `bundle install`); the Rakefile's libraries and its tasks' (RuboCop's, Steep's,
+    # YARD's ERB); bin/console's IRB; its tests' (SimpleCov, Pbt).
+    LIBRARIES = %w[bundler bundler/cli rake bundler/audit/task csv json minitest/test_task rubocop/rake_task
+                   steep/rake_task yard rubocop steep erb irb simplecov minitest/autorun pbt].freeze
+    # The child: no stdin, a scratch directory, its arguments cleared before the libraries load, their
+    # own output kept from the answers, no exit hooks (minitest/autorun's). A file shadowed in any
+    # case: a file system may ignore it (macOS', Windows').
+    PROBE = <<~RUBY.freeze
+      library, path, *nestings = ARGV
+      first = nestings.fetch(0)
+      ARGV.clear
+      answers = $stdout.dup
+      $stdout.reopen($stderr)
+      [*#{LIBRARIES.inspect}, library].each do |feature|
+        require feature
+      rescue StandardError, ScriptError
+        nil
+      end
+      files = "\#{path.gsub(/[a-z]/) { "[\#{it}\#{it.upcase}]" }}.{rb,\#{RbConfig::CONFIG["DLEXT"]}}"
+      shadowed = $LOAD_PATH.resolve_feature_path(path)&.last ||
+                 $LOAD_PATH.lazy.flat_map { |dir| Dir.glob(files, base: dir).map { File.join(dir, it) } }
+                           .first
+      answers.puts(shadowed)
+      readers = { "its tests" => defined?(Minitest::Test) && Minitest::Test, "gem build" => Gem::Specification }
+      found = readers.filter_map do |reader, context|
+        owner = context && (context.ancestors - Object.ancestors).find { it.const_defined?(first, false) }
+        "\#{reader} would find \#{owner}::\#{first}" if owner
+      end
+      answers.puts(found.first)
+      nestings.each do |nesting|
+        answers.puts(Object.const_defined?(nesting, false) ? Object.const_get(nesting, false).class : "")
+      rescue TypeError # an outer one no module (`Noisy = 1`): nothing within it
+        answers.puts("")
+      end
+      answers.flush
+      exit!(0)
+    RUBY
+    private_constant :RESERVED, :LIBRARIES, :PROBE
+    # Each probe's answers: a question asked once a process
+    @probed = {} #: Hash[[String, String, Array[String]], Array[String]]
 
     # Its modules, as `bundle gem` names them: `my-gem_tools`' My, GemTools.
     # @param name [String] one PATTERN matches
@@ -57,11 +98,6 @@ module Veragem
       check_defined(name, nestings.zip(answers.drop(2)).take_while { |_, kind| !kind.to_s.empty? }, nestings.last)
     end
 
-    # What the gem's tools load with its code, where installed: Bundler's CLI, which reads its gemspec
-    # (bin/setup's `bundle install`); the Rakefile's libraries and its tasks' (RuboCop's, Steep's,
-    # YARD's ERB); bin/console's IRB; its tests' (SimpleCov, Pbt).
-    LIBRARIES = %w[bundler bundler/cli rake bundler/audit/task csv json minitest/test_task rubocop/rake_task
-                   steep/rake_task yard rubocop steep erb irb simplecov minitest/autorun pbt].freeze
     # Its files' paths: lib/test_helper.rb would shadow the tests' own (Minitest's -Ilib:test); a
     # device's name, whatever its extension, is no file of Windows' (lib/con.rb), nor git's there.
     private_class_method def self.check_paths(name)
@@ -70,43 +106,6 @@ module Veragem
       reserved = name.split("-").grep(RESERVED).first
       raise Error, "invalid gem name #{name}: Windows reserves #{reserved} as a file's name" if reserved
     end
-
-    # The child: no stdin, a scratch directory, its arguments cleared before the libraries load, their
-    # own output kept from the answers, no exit hooks (minitest/autorun's). A file shadowed in any
-    # case: a file system may ignore it (macOS', Windows').
-    PROBE = <<~RUBY.freeze
-      library, path, *nestings = ARGV
-      first = nestings.fetch(0)
-      ARGV.clear
-      answers = $stdout.dup
-      $stdout.reopen($stderr)
-      [*#{LIBRARIES.inspect}, library].each do |feature|
-        require feature
-      rescue StandardError, ScriptError
-        nil
-      end
-      files = "\#{path.gsub(/[a-z]/) { "[\#{it}\#{it.upcase}]" }}.{rb,\#{RbConfig::CONFIG["DLEXT"]}}"
-      shadowed = $LOAD_PATH.resolve_feature_path(path)&.last ||
-                 $LOAD_PATH.lazy.flat_map { |dir| Dir.glob(files, base: dir).map { File.join(dir, it) } }
-                           .first
-      answers.puts(shadowed)
-      readers = { "its tests" => defined?(Minitest::Test) && Minitest::Test, "gem build" => Gem::Specification }
-      found = readers.filter_map do |reader, context|
-        owner = context && (context.ancestors - Object.ancestors).find { it.const_defined?(first, false) }
-        "\#{reader} would find \#{owner}::\#{first}" if owner
-      end
-      answers.puts(found.first)
-      nestings.each do |nesting|
-        answers.puts(Object.const_defined?(nesting, false) ? Object.const_get(nesting, false).class : "")
-      rescue TypeError # an outer one no module (`Noisy = 1`): nothing within it
-        answers.puts("")
-      end
-      answers.flush
-      exit!(0)
-    RUBY
-    private_constant :RESERVED, :LIBRARIES, :PROBE
-    # Each probe's answers: a question asked once a process
-    @probed = {} #: Hash[[String, String, Array[String]], Array[String]]
 
     # The file +path+ already requires, what a Minitest::Test or Gem::Specification finds for the
     # first of +nestings+, then each nesting's class (Module, Class...), each "" when none, where the
