@@ -15,7 +15,7 @@ smoke test. `bin/setup` installs the gems `Gemfile.lock` pins.
 ```sh
 git clone https://github.com/<you>/veragem && cd veragem
 bin/setup
-bundle exec rake hooks   # optional: the quick checks before a commit and a push
+bundle exec rake hooks   # optional: the quick checks before a commit, the messages before a push
 ```
 
 ## Layout

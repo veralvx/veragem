@@ -178,8 +178,8 @@ Then, in whichever order suits you:
 - Run `bundle exec rake checks` once to confirm your tools are complete: a step that stops on a
   missing command names it ([Prerequisites](#prerequisites) lists them; `nix develop` has them
   all).
-- `bundle exec rake hooks`, if you want git to run the quick checks before each commit and push
-  ([Setup](#setup)).
+- `bundle exec rake hooks`, if you want git to run the quick checks before each commit, and check the
+  messages before a push ([Setup](#setup)).
 - Make the project yours: the code, the tests, the signatures, the README and the gemspec's
   summary.
 
@@ -208,7 +208,7 @@ Publishing, which shows the gem's provenance, then the GitHub release of the sam
 the changelog's new section.
 <%- if exe -%>
 Beside `release.yml`, waiting for no RubyGems push, `image.yml` publishes the command's OCI image
-to GHCR (`nix build .#image` builds it here).
+to GHCR (on Linux, `nix build .#image` builds it here).
 <%- end -%>
 
 Should a run fail, re-run its failed jobs, not all of them: those keep the build's gem and
