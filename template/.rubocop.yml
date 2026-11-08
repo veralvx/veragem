@@ -50,6 +50,9 @@ Layout/EmptyLineAfterMultilineCondition:
 Layout/EndOfLine: # LF, as .gitattributes checks every text file out, Windows' too; `native` wants CRLF there
   EnforcedStyle: lf
 
+Layout/FirstMethodParameterLineBreak:
+  Enabled: true
+
 Layout/HeredocArgumentClosingParenthesis:
   Enabled: true
 
