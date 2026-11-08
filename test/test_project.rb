@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "prism"
 require "yaml"
 
 class TestProject < Minitest::Test
@@ -75,11 +76,11 @@ class TestProject < Minitest::Test
     gem = project
     example = "José \"Q\" \\ \#{x} \#@y \#$z # done"
 
-    assert_equal example, eval(gem.quote(example)) # rubocop:disable Security/Eval -- the test's own string
+    assert_equal example, read_back(gem.quote(example))
     texts.each do |text|
       Pbt.assert do
         Pbt.property(text) do |value|
-          assert_equal value, eval(gem.quote(value)) # rubocop:disable Security/Eval -- generated strings, read back
+          assert_equal value, read_back(gem.quote(value))
         end
       end
     end
@@ -119,5 +120,13 @@ class TestProject < Minitest::Test
     end
 
     refute_equal(*days)
+  end
+
+  private
+
+  # The string the Ruby +code+ writes, parsed rather than run: one plain literal, or NoMatchingPatternError.
+  def read_back(code)
+    Prism.parse(code).value.statements.body => [Prism::StringNode => literal]
+    literal.unescaped
   end
 end
