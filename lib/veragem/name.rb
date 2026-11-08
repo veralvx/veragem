@@ -131,7 +131,6 @@ module Veragem
       end
       return answers.map(&:chomp).freeze if answers.size == nestings.size + 2
 
-      # rubocop:disable-next Style/SpecialGlobalVars -- RBS types $?, and has no English for $CHILD_STATUS
       unchecked(nestings, "their Ruby ended: #{$?}")
     rescue SystemCallError => e
       # a refusal, not a raw Errno, which Bundler would report as its own bug

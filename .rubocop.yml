@@ -64,6 +64,9 @@ Style/TopLevelMethodDefinition: # a method on Object, everywhere; a script's hel
   Exclude:
     - Rakefile
 
+Style/SpecialGlobalVars: # $? and $!: their English names need English.rb, which RBS has no signatures of
+  EnforcedStyle: use_builtin_english_names
+
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
