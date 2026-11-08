@@ -68,7 +68,7 @@ generate() {
 }
 # a summary of Markdown's markup, which the README shows as written and dprint takes
 # shellcheck disable=SC2016 # the backticks and $z are the summary's, as written
-generate smoke_lib --summary '+ A __fast__ my_gem  for `JSON` <!-- x, 2) & &amp; ~y~ $z [l](u) http://x/_a_ www._b_'
+generate smoke_lib --summary '+ A __fast__ my_gem  for `JSON` <!-- x, 2) & &amp; ~y~ $z [l](u) http://example.com/_a_ www._b_'
 # a summary the gemspec escapes and the flake reads back; no email
 # shellcheck disable=SC2016 # the interpolations are the summary's, as written
 generate smoke-omniauth-google_oauth2 --exe --license mit --no-email --summary 'Says "hi" \ to #{x} and #$y.'
@@ -209,7 +209,7 @@ for gem in "${gems[@]}"; do
       (cd "$work/no-tags" && refuses "no v* tag" bundle exec rake "bump[patch]")
       # nor is its changelog previewed
       (cd "$work/no-tags" && refuses "no v* tag" bundle exec rake changelog)
-      git clone --quiet --branch "$branch" --depth 1 "file://$work/$gem.git" "$work/shallow"
+      git clone --quiet --branch "$branch" --no-local --depth 1 "$work/$gem.git" "$work/shallow"
       (cd "$work/shallow" && refuses "a shallow clone" bundle exec rake "bump[patch]")
       (cd "$work/shallow" && refuses "a shallow clone" bundle exec rake changelog)
     fi
