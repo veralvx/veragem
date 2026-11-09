@@ -6,32 +6,34 @@ class TestQuestions < Minitest::Test
   include Veragem::TerminalSupport
 
   def test_each_value_no_option_gives_is_asked_its_default_offered
-    gem, shown = ask(answers: ["my_gem", "", "", "", "", "", "", ""])
+    gem, shown = ask(answers: ["my_gem", "", "", "", "", "", "", "", ""])
 
     assert_equal ["my_gem", false, "dual", "A Ruby gem.", "Jane Doe", "jane@example.com", "jane"],
                  [gem.name, gem.exe?, gem.license, gem.summary, gem.author, gem.email, gem.github]
+    assert_predicate gem, :badges?
     assert_equal "Gem name: A command line, exe/my_gem (y/n) [n]: A citation file, CITATION.cff (y/n) [n]: " \
-                 "License (mit, apache or dual) [dual]: Summary [A Ruby gem.]: Author [Jane Doe]: " \
+                 "Badges in the README (y/n) [y]: License (mit, apache or dual) [dual]: Summary [A Ruby gem.]: " \
+                 "Author [Jane Doe]: " \
                  "Email (- for none) [jane@example.com]: GitHub user [jane]: ", shown
   end
 
   def test_the_answers_are_taken_their_spaces_stripped
-    gem, = ask(answers: [" my-gem ", "\u3000y\u00A0", " n ", " M ", "Greets.", "Ada", "ada@example.com", "ada"])
+    gem, = ask(answers: [" my-gem ", "\u3000y\u00A0", " n ", " N ", " M ", "Greets.", "Ada", "ada@example.com", "ada"])
 
-    assert_equal ["my-gem", true, "mit", "Greets.", "Ada", "ada@example.com", "ada"],
-                 [gem.name, gem.exe?, gem.license, gem.summary, gem.author, gem.email, gem.github]
+    assert_equal ["my-gem", true, false, "mit", "Greets.", "Ada", "ada@example.com", "ada"],
+                 [gem.name, gem.exe?, gem.badges?, gem.license, gem.summary, gem.author, gem.email, gem.github]
   end
 
   def test_what_the_options_give_is_not_asked
-    gem, shown = ask("my_gem", "--exe", "--license=mit", "--author=Ada", answers: ["", "", "", ""])
+    gem, shown = ask("my_gem", "--exe", "--license=mit", "--author=Ada", answers: ["", "", "", "", ""])
 
     assert_equal ["my_gem", true, "mit", "Ada"], [gem.name, gem.exe?, gem.license, gem.author]
-    assert_equal "A citation file, CITATION.cff (y/n) [n]: Summary [A Ruby gem.]: " \
+    assert_equal "A citation file, CITATION.cff (y/n) [n]: Badges in the README (y/n) [y]: Summary [A Ruby gem.]: " \
                  "Email (- for none) [jane@example.com]: GitHub user [jane]: ", shown
   end
 
   def test_with_every_option_nothing_is_asked
-    gem, shown = ask("my_gem", "--no-exe", "--no-citation", "--license=mit", "--summary=Hi", "--author=Ada",
+    gem, shown = ask("my_gem", "--no-exe", "--no-citation", "--badges", "--license=mit", "--summary=Hi", "--author=Ada",
                      "--email=a@b.c", "--github=ada")
 
     assert_equal ["my_gem", false], [gem.name, gem.exe?]
@@ -39,14 +41,14 @@ class TestQuestions < Minitest::Test
   end
 
   def test_with_no_email_none_is_asked
-    gem, shown = ask("my_gem", "--no-email", answers: ["", "", "", "", "", ""])
+    gem, shown = ask("my_gem", "--no-email", answers: ["", "", "", "", "", "", ""])
 
     assert_nil gem.email
     assert_match(/Author \[Jane Doe\]: GitHub user \[jane\]: \z/, shown)
   end
 
   def test_a_refused_answer_is_asked_again_saying_why
-    gem, shown = ask(answers: ["1gem", "my_gem", "maybe", "YES", "", "gpl", "apache", "TODO", "Greets.",
+    gem, shown = ask(answers: ["1gem", "my_gem", "maybe", "YES", "", "", "gpl", "apache", "TODO", "Greets.",
                                "FIXME", "Ada", "a\tb", "ada@example.com", "-ada", "ada"])
 
     assert_equal ["my_gem", true, "apache", "Greets.", "Ada", "ada@example.com", "ada"],
@@ -62,7 +64,7 @@ class TestQuestions < Minitest::Test
     invalid = "Jos\xE9".b
 
     config = CONFIG.merge("user.name" => invalid)
-    gem, shown = ask("my_gem", answers: ["", "", "", "", "", "Ada", "", ""], config:)
+    gem, shown = ask("my_gem", answers: ["", "", "", "", "", "", "Ada", "", ""], config:)
 
     assert_equal "Ada", gem.author
     assert_includes shown, %(invalid author "Jos\\xE9": not UTF-8 (git config user.name, not offered)\n)
@@ -71,14 +73,14 @@ class TestQuestions < Minitest::Test
 
   # a guess refused, the author's words: the default, as no git config value gives it
   def test_a_refused_guess_is_the_default
-    gem, shown = ask("my_gem", "--citation", "--author=Ada, B Lovelace", answers: [""] * 10)
+    gem, shown = ask("my_gem", "--citation", "--author=Ada, B Lovelace", answers: [""] * 11)
 
     assert_nil gem.given_names
     assert_match(/invalid given names "Ada, B": .+ \(the default, not offered\)\n/, shown)
   end
 
   def test_with_no_default_an_empty_answer_is_asked_again_but_an_email_may_be_none
-    gem, shown = ask("my_gem", answers: ["", "", "", "", "", "Ada", "", "ada"], config: {})
+    gem, shown = ask("my_gem", answers: ["", "", "", "", "", "", "Ada", "", "ada"], config: {})
 
     assert_equal ["Ada", nil, "ada"], [gem.author, gem.email, gem.github]
     assert_match(/Author: an answer is required\nAuthor: Email \(- for none\): GitHub user: \z/, shown)
@@ -86,17 +88,17 @@ class TestQuestions < Minitest::Test
 
   # "-" for none, where Enter would take the default: git's email, the given names guessed
   def test_an_optional_question_takes_a_dash_for_none
-    gem, shown = ask("my_gem", answers: ["", "", "", "", "", "-", ""])
+    gem, shown = ask("my_gem", answers: ["", "", "", "", "", "", "-", ""])
 
     assert_nil gem.email
     assert_includes shown, "Email (- for none) [jane@example.com]: "
-    gem, = ask("my_gem", "--citation", answers: ["", "", "", "", "", "-", "", "", "", "", ""])
+    gem, = ask("my_gem", "--citation", answers: ["", "", "", "", "", "", "-", "", "", "", "", ""])
 
     assert_equal [nil, "Doe"], [gem.given_names, gem.family_names]
   end
 
   def test_with_its_default_refused_an_email_may_be_none
-    gem, shown = ask("my_gem", answers: ["", "", "", "", "", "", ""], config: CONFIG.merge("user.email" => "TODO@x"))
+    gem, shown = ask("my_gem", answers: [""] * 8, config: CONFIG.merge("user.email" => "TODO@x"))
 
     assert_nil gem.email
     assert_match(/\[Jane Doe\]: invalid email "TODO@x": [^\n]*\nEmail \(- for none\): GitHub user/, shown)
@@ -106,7 +108,7 @@ class TestQuestions < Minitest::Test
     in_tmpdir do |dir|
       Dir.mkdir(File.join(dir, "taken"))
 
-      gem, shown = ask(answers: ["rubocop-rake", "taken", "helper", "cli", "y", "no", "", "", "", "", "", ""], dir:)
+      gem, shown = ask(answers: ["rubocop-rake", "taken", "helper", "cli", "y", "no", "", "", "", "", "", "", ""], dir:)
 
       assert_equal ["cli", false], [gem.name, gem.exe?]
       ["a gem the Gemfile's tools load", "#{File.join(dir, "taken")} already exists",
@@ -117,7 +119,7 @@ class TestQuestions < Minitest::Test
   end
 
   def test_with_exe_given_a_name_its_command_line_would_break_is_asked_again
-    gem, shown = ask("--exe", answers: ["my-c_l_i", "cli", "my_gem", "", "", "", "", "", ""])
+    gem, shown = ask("--exe", answers: ["my-c_l_i", "cli", "my_gem", "", "", "", "", "", "", ""])
 
     assert_equal ["my_gem", true], [gem.name, gem.exe?]
     ["its command line would find another CLI", "it would write test/test_cli.rb twice"].each do |why|

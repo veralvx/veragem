@@ -15,7 +15,7 @@ class TestLicense < Minitest::Test
 
   def test_an_answer_takes_one_alike
     TAKEN.each do |given, license|
-      gem, = ask("my_gem", "--no-exe", "--no-citation", answers: [given, "", "", "", ""])
+      gem, = ask("my_gem", "--no-exe", "--no-citation", answers: ["", given, "", "", "", ""])
 
       assert_equal license, gem.license
     end

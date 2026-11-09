@@ -10,13 +10,10 @@ module Veragem
     GITHUB = /\A[a-zA-Z\d](?:[a-zA-Z\d]|-(?=[a-zA-Z\d])){0,38}\z/
     # Each value a refusal names otherwise than its key.
     FIELDS = { github: "GitHub user", license: "license (#{License::CHOICES})", orcid: "ORCID iD" }.freeze
-    # What Markdown would read as markup in a text: a character to escape, but an `_` within a word;
-    # and a URL's `://` or `www.`, which GFM would link, its escapes shown.
-    MARKUP = %r{[\\`*\[\]<~$] | (?<![[:alnum:]])_ | _(?![[:alnum:]]) | &(?=\#?[[:alnum:]]+;) | :(?=//) | (?<=www)\.}x
     # The values that may be none, and how an option gives none: a question takes "-".
     OPTIONAL = { email: "--no-email", given_names: "--no-given-names", alias: "--no-alias",
                  orcid: "leave --orcid out", keywords: "leave --keywords out" }.freeze
-    private_constant :GITHUB, :FIELDS, :MARKUP
+    private_constant :GITHUB, :FIELDS
 
     # The gem's name.
     # @return [String]
@@ -90,7 +87,8 @@ module Veragem
     # +name+, and +values+: the author, email, github, summary, license and a citation's given and
     # family names, alias, ORCID iD and keywords (strings, but an email, given names or alias false,
     # --no-email's, --no-given-names', --no-alias', or nil for none), exe and citation (true for a
-    # command line, for CITATION.cff), as Options reads them.
+    # command line, for CITATION.cff), and badges (false for none in the README), as Options reads
+    # them.
     # @param name [String] the gem's name, as given
     # @param values [Hash{Symbol => String, Boolean, nil}] the rest, as given
     # @return [void]
@@ -112,6 +110,10 @@ module Veragem
     # Whether it has CITATION.cff.
     # @return [Boolean]
     def citation? = @citation
+
+    # Whether its README shows badges.
+    # @return [Boolean]
+    def badges? = @badges
 
     # The file the gem requires, lib/'s: `my-gem`'s my/gem.
     # @return [String]
@@ -147,14 +149,17 @@ module Veragem
     # @return [String]
     def yaml(value) = JSON.generate(value)
 
-    # +value+ as Markdown's text, shown as written, as RubyGems shows a summary: its markup escaped,
-    # one space between words, as dprint writes them.
+    # Markdown.text, for the templates.
     # @param value [String] a value of the gem's, checked
     # @return [String]
-    def markdown(value)
-      escaped = value.squeeze(" ").gsub(MARKUP) { "\\#{it}" }
-      escaped.sub(/\A(?=[#>+-])|\A\d+\K(?=[.)])/) { "\\" }
-    end
+    def markdown(value) = Markdown.text(value)
+
+    # Markdown.badge, for the templates.
+    # @param label [String] the badge's left text
+    # @param message [String] its right text
+    # @param color [String] the right side's colour, a shields.io name
+    # @return [String] the image's URL
+    def badge(label, message, color) = Markdown.badge(label, message, color)
 
     # Project.quote, for the templates.
     # @param value [String] a value of the gem's, checked
@@ -212,10 +217,11 @@ module Veragem
 
     private
 
-    # What the gem holds beyond the library: a command line, a citation.
+    # What the gem holds beyond the library: a command line, a citation, the README's badges.
     def extras(values)
       @exe = values[:exe] == true
       @citation = values[:citation] == true
+      @badges = values[:badges] != false
       Citation.check_values(values, citation?)
       cite(values) if citation?
     end

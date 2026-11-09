@@ -29,6 +29,7 @@ lib/veragem/name.rb     the gem's name, checked: bundle gem's rules, what its fi
 lib/veragem/citation.rb  CITATION.cff's rules: who may give its values, its title, its ORCID iD
 lib/veragem/license.rb  the licence's choices, their SPDX identifiers, the one a value names
 lib/veragem/summary.rb  the summary, the module's comment too: what yard-lint and RuboCop take
+lib/veragem/markdown.rb  what the templates write as Markdown: a value as text, a badge
 lib/veragem/project.rb  the values, checked, and what follows from them
 lib/veragem/generator.rb  template/ written out (ERB rendered, executables marked); git
 template/               the generated gem
@@ -90,6 +91,9 @@ Coverage is measured by `rake test` alone (`.simplecov`). Some tests alone
 printed above SimpleCov's. One file run alone is not measured, its warnings raised as `rake test`
 raises them: `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_name.rb` (the helper first,
 before the file is parsed).
+
+The README's coverage, mutation and documentation badges say 100%, as `.simplecov`,
+`.mutineer.yml` and `.yard-lint.yml` set it: a gate lowered, change its badge too.
 
 ## Development Workflow
 

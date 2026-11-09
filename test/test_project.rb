@@ -67,6 +67,12 @@ class TestProject < Minitest::Test
     assert_equal "José", Veragem::Project.check(:author, "Jos\xC3\xA9".b)
   end
 
+  def test_badges_are_on_unless_false
+    assert_predicate project, :badges?
+    assert_predicate project(badges: true), :badges?
+    refute_predicate project(badges: false), :badges?
+  end
+
   def test_exe_is_true_or_absent
     assert_predicate project(exe: true), :exe?
     refute_predicate project, :exe?

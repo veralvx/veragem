@@ -1,5 +1,17 @@
 # veragem
 
+[![Ruby CI](https://github.com/veralvx/veragem/actions/workflows/ruby-ci.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/ruby-ci.yml)
+[![Nix](https://github.com/veralvx/veragem/actions/workflows/nix.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/nix.yml)
+[![Security](https://github.com/veralvx/veragem/actions/workflows/security.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/security.yml)
+[![Smoke](https://github.com/veralvx/veragem/actions/workflows/smoke.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/smoke.yml)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](.simplecov)
+[![Mutation score](https://img.shields.io/badge/mutation%20score-100%25-brightgreen)](.mutineer.yml)
+[![Documented](https://img.shields.io/badge/documented-100%25-brightgreen)](.yard-lint.yml)
+[![Gem version](https://img.shields.io/gem/v/veragem)](https://rubygems.org/gems/veragem)
+[![Docs](https://img.shields.io/badge/docs-rubydoc.info-blue)](https://rubydoc.info/gems/veragem)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
+[![Ruby](https://img.shields.io/badge/ruby-%3E%3D%204.0-red)](#install)
+
 A Bundler plugin that generates a Ruby 4.0+ gem with its toolchain wired up: Steep types,
 RuboCop, Minitest at 100% coverage with mutation testing, YARD, CI on Linux, macOS and Windows, a
 Nix flake and releases by Trusted Publishing. It is the Ruby counterpart of the
@@ -88,12 +100,22 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 | `--[no-]email=EMAIL`       | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                                                            |
 | `--github=USER`            | `git config github.user` (required)         | the homepage, the repository's links                                                        |
 | `--summary=TEXT`           | `A Ruby gem.`                               | the gemspec, the README, the module's comment, the flake; with `--citation`, `CITATION.cff` |
+| `--[no-]badges`            | `--badges`                                  | the README's badges: CI, its 100% gates, the gem's version, docs, licence, Ruby             |
 | `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository"                                             |
 | `--family-names=NAMES`     | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff`                                             |
 | `--[no-]given-names=NAMES` | optional; `--no-given-names`: none          | with `--citation`: the author's, `CITATION.cff`                                             |
 | `--[no-]alias=ALIAS`       | optional; `--no-alias`: none                | with `--citation`: the author's handle, `CITATION.cff`                                      |
 | `--orcid=ID`               | optional                                    | with `--citation`: the author's ORCID iD                                                    |
 | `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated                                                |
+
+The badges are images in the README, under its title, each a link: the status of CI, of the flake's
+checks and of the daily bundler-audit (GitHub's own badges of `ruby-ci.yml`, `nix.yml` and
+`security.yml`, each linking to its runs), the gates CI holds at 100% (coverage, mutation score and
+documentation: shields.io's, fixed, each linking to the file that sets its gate), the version on
+RubyGems, the documentation on rubydoc.info, then the licence and the Ruby required (shields.io's,
+linking to the README's own sections). The version reads "not found", and the RubyGems and
+rubydoc.info pages are missing, until the gem is first released; `rake links` skips them, as it
+skips the gem's GitHub pages.
 
 A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
 expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, when veragem
