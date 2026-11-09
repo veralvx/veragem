@@ -6,8 +6,10 @@ class TestGeneratorDocuments < Minitest::Test
   include Veragem::GeneratedSupport
 
   # the README's badges, my_gem's: jane's, its licence the default, dual
-  CI = "https://github.com/jane/my_gem/actions/workflows/ruby-ci.yml"
-  BADGES = ["[![Ruby CI](#{CI}/badge.svg)](#{CI})",
+  WORKFLOWS = "https://github.com/jane/my_gem/actions/workflows"
+  BADGES = ["[![Ruby CI](#{WORKFLOWS}/ruby-ci.yml/badge.svg)](#{WORKFLOWS}/ruby-ci.yml)",
+            "[![Nix](#{WORKFLOWS}/nix.yml/badge.svg)](#{WORKFLOWS}/nix.yml)",
+            "[![Security](#{WORKFLOWS}/security.yml/badge.svg)](#{WORKFLOWS}/security.yml)",
             "[![Gem version](https://img.shields.io/gem/v/my_gem)](https://rubygems.org/gems/my_gem)",
             "[![Docs](https://img.shields.io/badge/docs-rubydoc.info-blue)](https://rubydoc.info/gems/my_gem)",
             "[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)",
@@ -43,7 +45,7 @@ class TestGeneratorDocuments < Minitest::Test
       Veragem::Generator.generate(project, File.join(dir, "my_gem"))
 
       assert_equal ["# my_gem\n", "\n", *BADGES.map { "#{it}\n" }, "\n", "A Ruby gem.\n"],
-                   read(dir, "my_gem/README.md").lines.first(9)
+                   read(dir, "my_gem/README.md").lines.first(11)
     end
   end
 

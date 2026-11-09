@@ -1,8 +1,10 @@
 # <%= name %>
 <%- if badges? -%>
-<%- ci = "https://github.com/#{github}/#{name}/actions/workflows/ruby-ci.yml" -%>
+<%- workflows = "https://github.com/#{github}/#{name}/actions/workflows" -%>
 
-[![Ruby CI](<%= ci %>/badge.svg)](<%= ci %>)
+[![Ruby CI](<%= workflows %>/ruby-ci.yml/badge.svg)](<%= workflows %>/ruby-ci.yml)
+[![Nix](<%= workflows %>/nix.yml/badge.svg)](<%= workflows %>/nix.yml)
+[![Security](<%= workflows %>/security.yml/badge.svg)](<%= workflows %>/security.yml)
 [![Gem version](https://img.shields.io/gem/v/<%= name %>)](https://rubygems.org/gems/<%= name %>)
 [![Docs](<%= badge("docs", "rubydoc.info", "blue") %>)](https://rubydoc.info/gems/<%= name %>)
 [![License](<%= badge("license", licenses.join(" OR "), "blue") %>)](#license)
