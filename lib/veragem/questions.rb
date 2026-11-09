@@ -19,7 +19,9 @@ module Veragem
       github: "GitHub user",
       alias: "Alias, CITATION.cff's"
     }.freeze
-    private_constant :QUESTIONS
+    # A yes-or-no question's answers, in any case.
+    YES = { "y" => true, "yes" => true, "n" => false, "no" => false }.freeze
+    private_constant :QUESTIONS, :YES
 
     # Whether +text+ is "-", an optional question's none, its spaces around it stripped as a value's
     # are (Project.strip).
@@ -147,13 +149,7 @@ module Veragem
       raise Error, "cannot ask #{question}: #{e}"
     end
 
-    def yes?(answer)
-      case answer.downcase
-      in "y" | "yes" then true
-      in "n" | "no" then false
-      else raise Error, "y or n"
-      end
-    end
+    def yes?(answer) = YES.fetch(answer.downcase) { raise Error, "y or n" }
 
     def default(key, defaults, values) = Citation.default(key, values) || { exe: "n", **defaults }[key]
 

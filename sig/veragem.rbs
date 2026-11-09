@@ -141,6 +141,7 @@ module Veragem
     end
 
     QUESTIONS: Hash[Symbol, String]
+    YES: Hash[String, bool]
 
     @input: _Input
     @output: _Output
