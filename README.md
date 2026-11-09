@@ -112,8 +112,9 @@ checks and of the daily bundler-audit (GitHub's own badges of `ruby-ci.yml`, `ni
 `security.yml`, each linking to its runs), the gates CI holds at 100% (coverage, mutation score and
 documentation: shields.io's, fixed, each linking to the file that sets its gate), the version on
 RubyGems, the documentation on rubydoc.info, then the licence and the Ruby required (shields.io's,
-linking to the README's own sections). The version reads "not found" and the RubyGems and rubydoc.info pages are missing until
-the gem is first released; `rake links` skips those, as it skips the gem's own pages.
+linking to the README's own sections). The version reads "not found" and the RubyGems and
+rubydoc.info pages are missing until the gem is first released; `rake links` skips those, as it
+skips the gem's own pages.
 
 A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
 expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, when veragem
