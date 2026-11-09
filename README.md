@@ -90,31 +90,31 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 
 ### Options
 
-| Option                     | Default                                     | Goes into                                                                                      |
-| -------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `NAME`                     | --                                          | the gem, its module, its files: as `bundle gem`                                                |
-| `--[no-]exe`               | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/PATH/cli.rb`                                                  |
-| `--license=LICENSE`        | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE                                                |
-| `--author=NAME`            | `git config user.name` (required)           | the gemspec, the licence's copyright line                                                      |
-| `--[no-]email=EMAIL`       | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                                                               |
-| `--github=USER`            | `git config github.user` (required)         | the homepage, the repository's links                                                           |
-| `--summary=TEXT`           | `A Ruby gem.`                               | the gemspec, the README, the module's comment, the flake; with `--citation`, `CITATION.cff`    |
-| `--[no-]badges`            | `--badges`                                  | the README's badges: CI, Nix, security, the 100% gates, the gem's version, docs, licence, Ruby |
-| `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository"                                                |
-| `--family-names=NAMES`     | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff`                                                |
-| `--[no-]given-names=NAMES` | optional; `--no-given-names`: none          | with `--citation`: the author's, `CITATION.cff`                                                |
-| `--[no-]alias=ALIAS`       | optional; `--no-alias`: none                | with `--citation`: the author's handle, `CITATION.cff`                                         |
-| `--orcid=ID`               | optional                                    | with `--citation`: the author's ORCID iD                                                       |
-| `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated                                                   |
+| Option                     | Default                                     | Goes into                                                                                   |
+| -------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `NAME`                     | --                                          | the gem, its module, its files: as `bundle gem`                                             |
+| `--[no-]exe`               | `--no-exe`: a library alone                 | a command line: `exe/NAME`, `lib/PATH/cli.rb`                                               |
+| `--license=LICENSE`        | `dual` (MIT OR Apache-2.0)                  | `mit`, `apache` or `dual`: the gemspec, LICENSE                                             |
+| `--author=NAME`            | `git config user.name` (required)           | the gemspec, the licence's copyright line                                                   |
+| `--[no-]email=EMAIL`       | `git config user.email`; `--no-email`: none | the gemspec, the code of conduct                                                            |
+| `--github=USER`            | `git config github.user` (required)         | the homepage, the repository's links                                                        |
+| `--summary=TEXT`           | `A Ruby gem.`                               | the gemspec, the README, the module's comment, the flake; with `--citation`, `CITATION.cff` |
+| `--[no-]badges`            | `--badges`                                  | the README's badges: CI, its 100% gates, the gem's version, docs, licence, Ruby             |
+| `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository"                                             |
+| `--family-names=NAMES`     | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff`                                             |
+| `--[no-]given-names=NAMES` | optional; `--no-given-names`: none          | with `--citation`: the author's, `CITATION.cff`                                             |
+| `--[no-]alias=ALIAS`       | optional; `--no-alias`: none                | with `--citation`: the author's handle, `CITATION.cff`                                      |
+| `--orcid=ID`               | optional                                    | with `--citation`: the author's ORCID iD                                                    |
+| `--keywords=LIST`          | optional                                    | with `--citation`: keywords, comma-separated                                                |
 
 The badges are images in the README, under its title, each a link: the status of CI, of the flake's
 checks and of the daily bundler-audit (GitHub's own badges of `ruby-ci.yml`, `nix.yml` and
 `security.yml`, each linking to its runs), the gates CI holds at 100% (coverage, mutation score and
 documentation: shields.io's, fixed, each linking to the file that sets its gate), the version on
 RubyGems, the documentation on rubydoc.info, then the licence and the Ruby required (shields.io's,
-linking to the README's own sections). The version reads "not found" and the RubyGems and
-rubydoc.info pages are missing until the gem is first released; `rake links` skips those, as it
-skips the gem's own pages.
+linking to the README's own sections). The version reads "not found", and the RubyGems and
+rubydoc.info pages are missing, until the gem is first released; `rake links` skips them, as it
+skips the gem's GitHub pages.
 
 A licence, an option's or an answer's, is taken in any case, abbreviated (`a`) or as its SPDX
 expression (`Apache-2.0`, `MIT OR Apache-2.0` in either order). Without a terminal, when veragem
