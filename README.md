@@ -1,5 +1,11 @@
 # veragem
 
+[![Ruby CI](https://github.com/veralvx/veragem/actions/workflows/ruby-ci.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/ruby-ci.yml)
+[![Gem version](https://img.shields.io/gem/v/veragem)](https://rubygems.org/gems/veragem)
+[![Docs](https://img.shields.io/badge/docs-rubydoc.info-blue)](https://rubydoc.info/gems/veragem)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
+[![Ruby](https://img.shields.io/badge/ruby-%3E%3D%204.0-red)](#install)
+
 A Bundler plugin that generates a Ruby 4.0+ gem with its toolchain wired up: Steep types,
 RuboCop, Minitest at 100% coverage with mutation testing, YARD, CI on Linux, macOS and Windows, a
 Nix flake and releases by Trusted Publishing. It is the Ruby counterpart of the
