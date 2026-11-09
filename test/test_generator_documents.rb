@@ -17,6 +17,8 @@ class TestGeneratorDocuments < Minitest::Test
             "[![Docs](https://img.shields.io/badge/docs-rubydoc.info-blue)](https://rubydoc.info/gems/my_gem)",
             "[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)",
             "[![Ruby](https://img.shields.io/badge/ruby-%3E%3D%204.0-red)](#requirements)"].freeze
+  # what CONTRIBUTING says of them: the gates' badges, which restate the gates' files
+  BADGED = "- **Badges:** the README's coverage, mutation and documentation badges say 100%"
 
   # where the documents send a reporter: the gem's own advisories, its maintainer's email alone where
   # one is given
@@ -42,13 +44,14 @@ class TestGeneratorDocuments < Minitest::Test
     end
   end
 
-  # each badge's image and link, between the title and the summary
+  # each badge's image and link, between the title and the summary; CONTRIBUTING says they restate the gates
   def test_the_readme_has_its_badges
     in_tmpdir do |dir|
       Veragem::Generator.generate(project, File.join(dir, "my_gem"))
 
       assert_equal ["# my_gem\n", "\n", *BADGES.map { "#{it}\n" }, "\n", "A Ruby gem.\n"],
                    read(dir, "my_gem/README.md").lines.first(BADGES.size + 4)
+      assert_includes read(dir, "my_gem/CONTRIBUTING.md"), BADGED
     end
   end
 
@@ -57,6 +60,7 @@ class TestGeneratorDocuments < Minitest::Test
       Veragem::Generator.generate(project(badges: false), File.join(dir, "my_gem"))
 
       assert_equal ["# my_gem\n", "\n", "A Ruby gem.\n"], read(dir, "my_gem/README.md").lines.first(3)
+      refute_includes read(dir, "my_gem/CONTRIBUTING.md"), BADGED
     end
   end
 end
