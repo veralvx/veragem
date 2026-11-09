@@ -3,6 +3,7 @@
 [![Ruby CI](https://github.com/veralvx/veragem/actions/workflows/ruby-ci.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/ruby-ci.yml)
 [![Nix](https://github.com/veralvx/veragem/actions/workflows/nix.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/nix.yml)
 [![Security](https://github.com/veralvx/veragem/actions/workflows/security.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/security.yml)
+[![Smoke](https://github.com/veralvx/veragem/actions/workflows/smoke.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/smoke.yml)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](.simplecov)
 [![Mutation score](https://img.shields.io/badge/mutation%20score-100%25-brightgreen)](.mutineer.yml)
 [![Documented](https://img.shields.io/badge/documented-100%25-brightgreen)](.yard-lint.yml)
