@@ -66,10 +66,15 @@ module Veragem
     private def self.annotation?: (String summary) -> bool
   end
 
+  module Markdown
+    MARKUP: Regexp
+
+    def self.text: (String value) -> String
+  end
+
   class Project
     GITHUB: Regexp
     FIELDS: Hash[Symbol, String]
-    MARKUP: Regexp
     OPTIONAL: Hash[Symbol, String]
 
     attr_reader name: String

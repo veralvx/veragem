@@ -10,13 +10,10 @@ module Veragem
     GITHUB = /\A[a-zA-Z\d](?:[a-zA-Z\d]|-(?=[a-zA-Z\d])){0,38}\z/
     # Each value a refusal names otherwise than its key.
     FIELDS = { github: "GitHub user", license: "license (#{License::CHOICES})", orcid: "ORCID iD" }.freeze
-    # What Markdown would read as markup in a text: a character to escape, but an `_` within a word;
-    # and a URL's `://` or `www.`, which GFM would link, its escapes shown.
-    MARKUP = %r{[\\`*\[\]<~$] | (?<![[:alnum:]])_ | _(?![[:alnum:]]) | &(?=\#?[[:alnum:]]+;) | :(?=//) | (?<=www)\.}x
     # The values that may be none, and how an option gives none: a question takes "-".
     OPTIONAL = { email: "--no-email", given_names: "--no-given-names", alias: "--no-alias",
                  orcid: "leave --orcid out", keywords: "leave --keywords out" }.freeze
-    private_constant :GITHUB, :FIELDS, :MARKUP
+    private_constant :GITHUB, :FIELDS
 
     # The gem's name.
     # @return [String]
@@ -147,14 +144,10 @@ module Veragem
     # @return [String]
     def yaml(value) = JSON.generate(value)
 
-    # +value+ as Markdown's text, shown as written, as RubyGems shows a summary: its markup escaped,
-    # one space between words, as dprint writes them.
+    # Markdown.text, for the templates.
     # @param value [String] a value of the gem's, checked
     # @return [String]
-    def markdown(value)
-      escaped = value.squeeze(" ").gsub(MARKUP) { "\\#{it}" }
-      escaped.sub(/\A(?=[#>+-])|\A\d+\K(?=[.)])/) { "\\" }
-    end
+    def markdown(value) = Markdown.text(value)
 
     # Project.quote, for the templates.
     # @param value [String] a value of the gem's, checked
