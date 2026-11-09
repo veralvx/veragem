@@ -1,6 +1,8 @@
 # veragem
 
 [![Ruby CI](https://github.com/veralvx/veragem/actions/workflows/ruby-ci.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/ruby-ci.yml)
+[![Nix](https://github.com/veralvx/veragem/actions/workflows/nix.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/nix.yml)
+[![Security](https://github.com/veralvx/veragem/actions/workflows/security.yml/badge.svg)](https://github.com/veralvx/veragem/actions/workflows/security.yml)
 [![Gem version](https://img.shields.io/gem/v/veragem)](https://rubygems.org/gems/veragem)
 [![Docs](https://img.shields.io/badge/docs-rubydoc.info-blue)](https://rubydoc.info/gems/veragem)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
