@@ -92,6 +92,9 @@ printed above SimpleCov's. One file run alone is not measured, its warnings rais
 raises them: `bundle exec ruby -w -Ilib -Itest -rtest_helper test/test_name.rb` (the helper first,
 before the file is parsed).
 
+The README's coverage, mutation and documentation badges say 100%, as `.simplecov`,
+`.mutineer.yml` and `.yard-lint.yml` set it: a gate lowered, change its badge too.
+
 ## Development Workflow
 
 [Conventional Commits](https://www.conventionalcommits.org/), enforced by `cog check` locally and
