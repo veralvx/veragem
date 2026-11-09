@@ -107,7 +107,7 @@ class TestGenerator < Minitest::Test
   # as Markdown's text (Project#markdown), under its title
   def test_the_readme_shows_the_summary_as_written
     in_tmpdir do |dir|
-      Veragem::Generator.generate(project(summary: "Greets _all_ people."), File.join(dir, "my_gem"))
+      Veragem::Generator.generate(project(summary: "Greets _all_ people.", badges: false), File.join(dir, "my_gem"))
 
       assert_equal "Greets \\_all\\_ people.\n", read(dir, "my_gem/README.md").lines[2]
     end

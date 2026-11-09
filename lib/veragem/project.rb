@@ -87,7 +87,8 @@ module Veragem
     # +name+, and +values+: the author, email, github, summary, license and a citation's given and
     # family names, alias, ORCID iD and keywords (strings, but an email, given names or alias false,
     # --no-email's, --no-given-names', --no-alias', or nil for none), exe and citation (true for a
-    # command line, for CITATION.cff), as Options reads them.
+    # command line, for CITATION.cff), and badges (false for none in the README), as Options reads
+    # them.
     # @param name [String] the gem's name, as given
     # @param values [Hash{Symbol => String, Boolean, nil}] the rest, as given
     # @return [void]
@@ -109,6 +110,10 @@ module Veragem
     # Whether it has CITATION.cff.
     # @return [Boolean]
     def citation? = @citation
+
+    # Whether its README shows badges.
+    # @return [Boolean]
+    def badges? = @badges
 
     # The file the gem requires, lib/'s: `my-gem`'s my/gem.
     # @return [String]
@@ -148,6 +153,13 @@ module Veragem
     # @param value [String] a value of the gem's, checked
     # @return [String]
     def markdown(value) = Markdown.text(value)
+
+    # Markdown.badge, for the templates.
+    # @param label [String] the badge's left text
+    # @param message [String] its right text
+    # @param color [String] the right side's colour, a shields.io name
+    # @return [String] the image's URL
+    def badge(label, message, color) = Markdown.badge(label, message, color)
 
     # Project.quote, for the templates.
     # @param value [String] a value of the gem's, checked
@@ -205,10 +217,11 @@ module Veragem
 
     private
 
-    # What the gem holds beyond the library: a command line, a citation.
+    # What the gem holds beyond the library: a command line, a citation, the README's badges.
     def extras(values)
       @exe = values[:exe] == true
       @citation = values[:citation] == true
+      @badges = values[:badges] != false
       Citation.check_values(values, citation?)
       cite(values) if citation?
     end

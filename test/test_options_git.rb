@@ -38,7 +38,7 @@ class TestOptionsGit < Minitest::Test
 
       IO.pipe(Encoding::UTF_8) do |reader, writer|
         writer.set_encoding(Encoding::UTF_8)
-        input = terminal(*[""] * 6)
+        input = terminal(*[""] * 7)
         gem = Dir.chdir(home) { Veragem::Options.parse(["my_gem", "--github=ada"], input:, output: writer) }
         writer.close
 

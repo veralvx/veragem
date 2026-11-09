@@ -70,6 +70,7 @@ module Veragem
     MARKUP: Regexp
 
     def self.text: (String value) -> String
+    def self.badge: (String label, String message, String color) -> String
   end
 
   class Project
@@ -85,6 +86,7 @@ module Veragem
     attr_reader license: String
     @exe: bool
     @citation: bool
+    @badges: bool
     attr_reader given_names: String?
     attr_reader family_names: String?
     attr_reader alias_name: String?
@@ -94,12 +96,13 @@ module Veragem
     # each key's own type, which no Hash type has: Options' and Questions' hashes, asserted (#:)
     # one. Steep checks each field against the Hash's values.
     type values = { author: String, github: String, summary: String, license: String, ?exe: bool,
-                    ?citation: bool, ?email: (String | false)?, ?given_names: (String | false)?,
+                    ?citation: bool, ?badges: bool, ?email: (String | false)?, ?given_names: (String | false)?,
                     ?family_names: String, ?alias: (String | false)?, ?orcid: String?, ?keywords: String? }
 
     def initialize: (String name, values values) -> void
     def exe?: () -> bool
     def citation?: () -> bool
+    def badges?: () -> bool
     def path: () -> String
     def underscored: () -> String
     def constant: () -> String
@@ -110,6 +113,7 @@ module Veragem
     def yaml: (String value) -> String
     def quote: (String value) -> String
     def markdown: (String value) -> String
+    def badge: (String label, String message, String color) -> String
     def nest: (String body, ?doc: String?) -> String
     def self.field: (Symbol key) -> String
     def self.strip: (String text) -> String

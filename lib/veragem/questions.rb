@@ -8,6 +8,7 @@ module Veragem
     QUESTIONS = {
       exe: "A command line, exe/%<name>s (y/n)",
       citation: "A citation file, CITATION.cff (y/n)",
+      badges: "Badges in the README (y/n)",
       license: "License (#{License::CHOICES})",
       summary: "Summary",
       author: "Author",
@@ -86,6 +87,7 @@ module Veragem
     def answer(key, text, name, values)
       case key
       when :exe then yes?(text).tap { Generator.check_name(name, it) }
+      when :badges then yes?(text)
       when :citation
         yes?(text).tap do |cited|
           Citation.check_values(values, cited)
@@ -151,7 +153,7 @@ module Veragem
 
     def yes?(answer) = YES.fetch(answer.downcase) { raise Error, "y or n" }
 
-    def default(key, defaults, values) = Citation.default(key, values) || { exe: "n", **defaults }[key]
+    def default(key, defaults, values) = Citation.default(key, values) || { exe: "n", badges: "y", **defaults }[key]
 
     # where a default is from, as a refusal of it says
     def source(key) = @git[key] ? "git config #{@git[key]}" : "the default"

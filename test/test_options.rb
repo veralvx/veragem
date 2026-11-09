@@ -12,6 +12,7 @@ class TestOptions < Minitest::Test
            "--[no-]email=EMAIL" => "The author's email (default: git config user.email; --no-email, none)",
            "--github=USER" => "The GitHub user or organization (default: git config github.user, else required)",
            "--summary=TEXT" => "The gem's summary (default: A Ruby gem.)",
+           "--[no-]badges" => "Add the README's badges: CI, version, docs, licence, Ruby (default: --badges)",
            "--[no-]citation" => "Add CITATION.cff, the citation GitHub and Zenodo read (default: --no-citation)",
            "--family-names=NAMES" => "With --citation: the author's family names (required)",
            "--[no-]given-names=NAMES" => "With --citation: the author's given names (--no-given-names: none, unasked)",
@@ -22,16 +23,16 @@ class TestOptions < Minitest::Test
   def test_git_config_gives_the_defaults
     gem = parse("my_gem")
 
-    assert_equal ["my_gem", "Jane Doe", "jane@example.com", "jane", "A Ruby gem.", "dual", false],
-                 [gem.name, gem.author, gem.email, gem.github, gem.summary, gem.license, gem.exe?]
+    assert_equal ["my_gem", "Jane Doe", "jane@example.com", "jane", "A Ruby gem.", "dual", false, true],
+                 [gem.name, gem.author, gem.email, gem.github, gem.summary, gem.license, gem.exe?, gem.badges?]
   end
 
   def test_the_options_override_them
     gem = parse("my_gem", "--exe", "--license=mit", "--author", "Ada", "--email=ada@example.com",
-                "--github=ada", "--summary", "Greets.")
+                "--github=ada", "--summary", "Greets.", "--no-badges")
 
-    assert_equal ["Ada", "ada@example.com", "ada", "Greets.", "mit", true],
-                 [gem.author, gem.email, gem.github, gem.summary, gem.license, gem.exe?]
+    assert_equal ["Ada", "ada@example.com", "ada", "Greets.", "mit", true, false],
+                 [gem.author, gem.email, gem.github, gem.summary, gem.license, gem.exe?, gem.badges?]
   end
 
   def test_the_email_may_be_unset
