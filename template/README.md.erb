@@ -69,6 +69,14 @@ bundle exec rake checks
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the tools those checks need and how a release is cut,
 and [AGENTS.md](AGENTS.md) for the rules a change follows: lint and types, comments, commits.
 
+<%- if citation? -%>
+## Citation
+
+If you use this gem in your work, please cite it: [CITATION.cff](CITATION.cff) holds its
+citation, in the [Citation File Format](https://citation-file-format.github.io/). On GitHub, the
+repository's sidebar has "Cite this repository", which gives it in APA and BibTeX, to copy.
+
+<%- end -%>
 ## License
 <%- if license == "dual" -%>
 

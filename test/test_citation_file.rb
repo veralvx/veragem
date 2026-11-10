@@ -7,6 +7,17 @@ class TestCitationFile < Minitest::Test
   include Veragem::GeneratedSupport
   include Veragem::CitationSupport
 
+  # the README's section on citing the gem: the file, and GitHub's prompt that reads it
+  CITATION = <<~MARKDOWN
+    ## Citation
+
+    If you use this gem in your work, please cite it: [CITATION.cff](CITATION.cff) holds its
+    citation, in the [Citation File Format](https://citation-file-format.github.io/). On GitHub, the
+    repository's sidebar has "Cite this repository", which gives it in APA and BibTeX, to copy.
+
+    ## License
+  MARKDOWN
+
   # the file, and CONTRIBUTING.md's steps for it: Zenodo, and the release that bumps it
   def test_the_file_is_a_citations_alone
     in_tmpdir do |dir|
@@ -18,6 +29,16 @@ class TestCitationFile < Minitest::Test
       cited = %w[my_gem my_cited].map { read(dir, "#{it}/CONTRIBUTING.md").scan("CITATION.cff").size }
 
       assert_equal [0, 4], cited
+    end
+  end
+
+  def test_the_readme_says_how_to_cite_it
+    in_tmpdir do |dir|
+      Veragem::Generator.generate(project, File.join(dir, "my_gem"))
+      Veragem::Generator.generate(project("my_cited", citation: true, family_names: "Doe"), File.join(dir, "my_cited"))
+
+      assert_includes read(dir, "my_cited/README.md"), CITATION
+      refute_includes read(dir, "my_gem/README.md"), "## Citation"
     end
   end
 
