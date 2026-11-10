@@ -101,7 +101,7 @@ the first steps: the repository's settings, RubyGems' pending trusted publisher.
 | `--github=USER`            | `git config github.user` (required)         | the homepage, the repository's links                                                        |
 | `--summary=TEXT`           | `A Ruby gem.`                               | the gemspec, the README, the module's comment, the flake; with `--citation`, `CITATION.cff` |
 | `--[no-]badges`            | `--badges`                                  | the README's badges: CI, its 100% gates, the gem's version, docs, licence, Ruby             |
-| `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository"                                             |
+| `--[no-]citation`          | `--no-citation`                             | `CITATION.cff`: GitHub's "Cite this repository"; the README's Citation section              |
 | `--family-names=NAMES`     | (required with `--citation`)                | with `--citation`: the author's, `CITATION.cff`                                             |
 | `--[no-]given-names=NAMES` | optional; `--no-given-names`: none          | with `--citation`: the author's, `CITATION.cff`                                             |
 | `--[no-]alias=ALIAS`       | optional; `--no-alias`: none                | with `--citation`: the author's handle, `CITATION.cff`                                      |
@@ -136,15 +136,15 @@ questions) nothing is asked: the defaults apply, and a missing name, author, Git
 ### CITATION.cff
 
 `CITATION.cff` (Citation File Format 1.2.0) is for research software meant to be cited: GitHub
-offers its "Cite this repository", and Zenodo, once the repository is enabled there (the generated
-CONTRIBUTING.md's first steps), archives each release with its values and gives it a DOI. Its author
-is a person, family names required, given names, alias, ORCID iD and keywords optional. Asked at a
-terminal, the family names offer the author's last word, the given names the words before the family
-names, where the author ends with them, and the alias, asked last, the GitHub user. That user may be
-an organization, so it is only offered. Without a terminal nothing is offered: there are no given
-names or alias unless `--given-names` or `--alias` gives them. The citation's options need
-`--citation`: given without it, they are refused, and at a terminal they make its question take y
-alone.
+offers its "Cite this repository", the README's Citation section says how to cite it, and Zenodo,
+once the repository is enabled there (the generated CONTRIBUTING.md's first steps), archives each
+release with its values and gives it a DOI. Its author is a person, family names required, given
+names, alias, ORCID iD and keywords optional. Asked at a terminal, the family names offer the
+author's last word, the given names the words before the family names, where the author ends with
+them, and the alias, asked last, the GitHub user. That user may be an organization, so it is only
+offered. Without a terminal nothing is offered: there are no given names or alias unless
+`--given-names` or `--alias` gives them. The citation's options need `--citation`: given without it,
+they are refused, and at a terminal they make its question take y alone.
 
 It holds what GitHub and Zenodo read, written as Zenodo's import takes it (narrower than CFF), but
 the licences as CFF writes them:
@@ -251,6 +251,12 @@ packages few of them, and older).
 [CONTRIBUTING.md](CONTRIBUTING.md) (the tools, the checks, the template, the release),
 [AGENTS.md](AGENTS.md) (the rules), [SECURITY.md](SECURITY.md),
 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+## Citation
+
+If you use veragem in your work, please cite it: [CITATION.cff](CITATION.cff) holds its
+citation, in the [Citation File Format](https://citation-file-format.github.io/). On GitHub, the
+repository's sidebar has "Cite this repository", which gives it in APA and BibTeX, to copy.
 
 ## License
 
