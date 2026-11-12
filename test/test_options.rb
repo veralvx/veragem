@@ -12,7 +12,7 @@ class TestOptions < Minitest::Test
            "--[no-]email=EMAIL" => "The author's email (default: git config user.email; --no-email, none)",
            "--github=USER" => "The GitHub user or organization (default: git config github.user, else required)",
            "--summary=TEXT" => "The gem's summary (default: A Ruby gem.)",
-           "--[no-]badges" => "Add README badges: CI, its 100% gates, version, docs, licence, Ruby (default: --badges)",
+           "--[no-]badges" => "Add README badges: CI, its 100% gates, docs, licence, version, Ruby (default: --badges)",
            "--[no-]citation" => "Add CITATION.cff, the citation GitHub and Zenodo read (default: --no-citation)",
            "--family-names=NAMES" => "With --citation: the author's family names (required)",
            "--[no-]given-names=NAMES" => "With --citation: the author's given names (--no-given-names: none, unasked)",
