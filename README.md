@@ -7,9 +7,9 @@
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](.simplecov)
 [![Mutation score](https://img.shields.io/badge/mutation%20score-100%25-brightgreen)](.mutineer.yml)
 [![Documented](https://img.shields.io/badge/documented-100%25-brightgreen)](.yard-lint.yml)
-[![Gem version](https://img.shields.io/gem/v/veragem)](https://rubygems.org/gems/veragem)
 [![Docs](https://img.shields.io/badge/docs-rubydoc.info-blue)](https://rubydoc.info/gems/veragem)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
+[![Gem version](https://img.shields.io/gem/v/veragem)](https://rubygems.org/gems/veragem)
 [![Ruby](https://img.shields.io/badge/ruby-%3E%3D%204.0-red)](#install)
 
 A Bundler plugin that generates a Ruby 4.0+ gem with its toolchain wired up: Steep types,
