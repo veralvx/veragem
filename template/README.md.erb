@@ -8,9 +8,9 @@
 [![Coverage](<%= badge("coverage", "100%", "brightgreen") %>)](.simplecov)
 [![Mutation score](<%= badge("mutation score", "100%", "brightgreen") %>)](.mutineer.yml)
 [![Documented](<%= badge("documented", "100%", "brightgreen") %>)](.yard-lint.yml)
-[![Gem version](https://img.shields.io/gem/v/<%= name %>)](https://rubygems.org/gems/<%= name %>)
 [![Docs](<%= badge("docs", "rubydoc.info", "blue") %>)](https://rubydoc.info/gems/<%= name %>)
 [![License](<%= badge("license", licenses.join(" OR "), "blue") %>)](#license)
+[![Gem version](https://img.shields.io/gem/v/<%= name %>)](https://rubygems.org/gems/<%= name %>)
 [![Ruby](<%= badge("ruby", ">= 4.0", "red") %>)](#requirements)
 <%- end -%>
 
@@ -57,9 +57,9 @@ require "<%= path %>"
 
 ## Development
 
-`bin/setup` installs the gems at `Gemfile.lock`'s versions. `bundle exec rake` runs the Ruby checks
-(RuboCop, Steep, the tests and their coverage gate, yard-lint); `bundle exec rake checks` runs all
-of CI's, the links too, mutating the changed lines alone:
+`bin/setup` installs the gems at the versions in `Gemfile.lock`. `bundle exec rake` runs the Ruby
+checks: RuboCop, Steep, the tests and their coverage gate, and yard-lint. `bundle exec rake checks`
+runs all of CI's checks, the links too, but mutates only the changed lines:
 
 ```sh
 bin/setup

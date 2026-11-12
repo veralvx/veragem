@@ -13,9 +13,9 @@ class TestGeneratorDocuments < Minitest::Test
             "[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](.simplecov)",
             "[![Mutation score](https://img.shields.io/badge/mutation%20score-100%25-brightgreen)](.mutineer.yml)",
             "[![Documented](https://img.shields.io/badge/documented-100%25-brightgreen)](.yard-lint.yml)",
-            "[![Gem version](https://img.shields.io/gem/v/my_gem)](https://rubygems.org/gems/my_gem)",
             "[![Docs](https://img.shields.io/badge/docs-rubydoc.info-blue)](https://rubydoc.info/gems/my_gem)",
             "[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)",
+            "[![Gem version](https://img.shields.io/gem/v/my_gem)](https://rubygems.org/gems/my_gem)",
             "[![Ruby](https://img.shields.io/badge/ruby-%3E%3D%204.0-red)](#requirements)"].freeze
   # what CONTRIBUTING says of them: the gates' badges, which restate the gates' files
   BADGED = "- **Badges:** the README's coverage, mutation and documentation badges say 100%"
