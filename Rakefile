@@ -16,7 +16,7 @@ require "yard"
 # Coverage, `rake test`'s alone: started in the tests' process before they load lib/ (.simplecov);
 # then the helper, whatever order the test files load in (shuffled): one loaded before it would only
 # print its parse-time warnings
-TEST_TASK = Minitest::TestTask.create do
+Minitest::TestTask.create do
   self.test_prelude = %(require "simplecov"; SimpleCov.start; require "test_helper")
 end
 RuboCop::RakeTask.new
@@ -79,16 +79,16 @@ task :graph do
   sh "yard", "graph", "--protected", "--private", "--full", "--dependencies"
 end
 
-# Every test file `rake test` runs (its globs) but test_helper.rb, which every test requires and holds
-# none: mutineer pairs lib/a/b.rb with one test file by its path (test/a/test_b.rb), and a test may
-# reach any file.
+# Every test file for each source: mutineer takes test/'s test_*.rb, *_test.rb and *_spec.rb but
+# test_helper.rb, `rake test`'s files and a spec's. Without --test it pairs lib/a/b.rb with its own
+# by their paths (test/a/test_b.rb), and a test may reach any file.
 def mutate(*options)
-  tests = FileList[*TEST_TASK.test_globs].exclude("test/test_helper.rb").uniq.flat_map { ["--test", it] }
-  sh "mutineer", "run", *options, *FileList["lib/**/*.rb"], *tests
+  sh "mutineer", "run", *options, *FileList["lib/**/*.rb"], "--test", "test"
 end
 
-# An ignore whose mutant is gone (its method changed or moved) hides nothing and goes stale: migrate
-# --dry-run names each and fails, writing nothing; it counts an ignored copy mutineer drops as used.
+# An ignore whose mutant is gone (its method changed or moved, or mutineer no longer makes it) hides
+# nothing and goes stale: migrate --dry-run over every source names each and fails, writing nothing,
+# the check mutineer documents; `run` warns alone. An ignored mutant's dropped copy counts as used.
 desc "Check that each ignore of .mutineer.yml names a mutant of lib/. mutineer migrate --dry-run"
 task "mutation:ignores" do
   sh "mutineer", "migrate", "--dry-run", *FileList["lib/**/*.rb"]

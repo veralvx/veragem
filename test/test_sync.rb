@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "mutineer/mutator_registry"
+require "yaml"
 
 # This repository's harness is the template's: each file the template holds as is (no ERB) is
 # here too, the same bytes and mode -- but those that must differ, below, and a command line's
@@ -32,6 +34,13 @@ class TestSync < Minitest::Test
 
   def test_the_files_that_differ_are_the_templates_too
     DIFFERENT.each { assert_path_exists File.join(TEMPLATE, it) }
+  end
+
+  # .mutineer.yml's claim, here and in the template: every operator mutineer has, not its default five
+  def test_the_mutation_test_runs_every_operator
+    [ROOT, TEMPLATE].map { File.join(it, ".mutineer.yml") }.each do |file|
+      assert_equal Mutineer::MutatorRegistry::ALL.keys.sort, YAML.load_file(file).fetch("operators").sort, file
+    end
   end
 
   private
