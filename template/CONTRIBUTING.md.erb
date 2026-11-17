@@ -69,7 +69,7 @@ to human and AI-assisted contributions alike.
   (`threshold: 100`). It takes minutes: `rake checks` mutates the lines changed since `origin/main`
   alone (`rake mutation:changed`; all of them where there is none), and `ruby-ci.yml` every line.
   Each first fails on an ignore that names no mutant (`rake mutation:ignores`): its method changed
-  or moved, so it hides nothing.
+  or moved, or mutineer no longer makes it, so it hides nothing.
 <%- if badges? -%>
 - **Badges:** the README's coverage, mutation and documentation badges say 100%, as `.simplecov`,
   `.mutineer.yml` and `.yard-lint.yml` set it: a gate lowered, change its badge too.

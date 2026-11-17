@@ -86,8 +86,9 @@ def mutate(*options)
   sh "mutineer", "run", *options, *FileList["lib/**/*.rb"], "--test", "test"
 end
 
-# An ignore whose mutant is gone (its method changed or moved) hides nothing and goes stale: migrate
-# --dry-run names each and fails, writing nothing; it counts an ignored copy mutineer drops as used.
+# An ignore whose mutant is gone (its method changed or moved, or mutineer no longer makes it) hides
+# nothing and goes stale: migrate --dry-run over every source names each and fails, writing nothing,
+# the check mutineer documents; `run` warns alone. An ignored mutant's dropped copy counts as used.
 desc "Check that each ignore of .mutineer.yml names a mutant of lib/. mutineer migrate --dry-run"
 task "mutation:ignores" do
   sh "mutineer", "migrate", "--dry-run", *FileList["lib/**/*.rb"]
