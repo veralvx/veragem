@@ -24,6 +24,7 @@ operators:
   - condition_true
   - condition_false
   - operator_assignment
+  - rescue_body
 timeout: 60
 threshold: 100
 # The mutants that change no behaviour (equivalent), each with why: this repository's alone, as an id

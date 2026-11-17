@@ -24,5 +24,6 @@ operators:
   - condition_true
   - condition_false
   - operator_assignment
+  - rescue_body
 timeout: 60
 threshold: 100
