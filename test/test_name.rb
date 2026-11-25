@@ -124,7 +124,7 @@ class TestName < Minitest::Test
   def test_an_accepted_name_is_bundle_gems_constant
     # most draws are no name: enough runs for many that are
     Pbt.assert(num_runs: 1000) do
-      Pbt.property(Pbt.array(Pbt.one_of("a", "b", "0", "_", "-"), min: 1, max: 8)) do |chars|
+      Pbt.property(Pbt.array(Pbt.constant_from("a", "b", "0", "_", "-"), min: 1, max: 8)) do |chars|
         name = chars.join
         next unless Veragem::Name::PATTERN.match?(name)
 
