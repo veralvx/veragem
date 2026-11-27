@@ -11,7 +11,7 @@ module Veragem
       # What the Ruby of the veragem runs: Sync.main, a refusal its message alone.
       SCRIPT = "begin; Veragem::Sync.main(ARGV); rescue Veragem::Error => e; abort(e.message); end"
       # --path, or -p after the flags of a group: its directory, if joined to it
-      PATH = /\A(?:--path(?:=(.*))?|-[a-oq-z]*p(.+)?)\z/m
+      PATH = /\A(?:--path(?:=(.*))?|-(?!-)[a-oq-z-]*p(.+)?)\z/m
       private_constant :SCRIPT, :PATH
 
       # Runs `bundle veragem-sync ARGV` in +dir+: the sync of the veragem --path names, or else of
@@ -48,18 +48,18 @@ module Veragem
         end
       end
 
-      # The first --path's directory before --adopt, as OptionParser reads it: --path=DIR, or -p
-      # closing a group of flags, DIR joined to it (-pDIR, -npDIR); else the next argument. Every
+      # The last --path's directory before --adopt and --, as OptionParser reads it: --path=DIR, or
+      # -p closing a group of flags, DIR joined to it (-pDIR, -npDIR); else the next argument. Every
       # other argument is the veragem's to read.
       private_class_method def self.path_of(argv)
-        own = argv.take_while { it != "--adopt" }
-        own.each_with_index do |arg, index|
-          match = PATH.match(arg) or next
-          return match[1] || match[2] || own.fetch(index + 1) do
-            raise Error, "missing argument: #{arg} (bundle veragem-sync --help)"
-          end
+        args = argv.take_while { it != "--adopt" }.take_while { it != "--" }
+        path = nil #: String?
+        until args.empty?
+          match = PATH.match(args.shift) or next
+          path = match[1] || match[2] || args.shift ||
+                 raise(Error, "missing argument: #{match[0]} (bundle veragem-sync --help)")
         end
-        nil
+        path
       end
 
       # veragem +version+, else the latest, unpacked into +dir+.

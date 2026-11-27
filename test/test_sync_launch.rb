@@ -7,14 +7,14 @@ class TestSyncLaunch < Minitest::Test
   include Veragem::SyncSupport
   include Veragem::ReleaseSupport
 
-  # each form OptionParser reads, the first; the rest the veragem's
-  def test_path_is_read_alone
+  # each form OptionParser reads, the last; a value taken, not read as a flag; none after -- or --adopt;
+  # the rest the veragem's
+  def test_path_is_read_as_optionparser_reads_it
     in_tmpdir do |dir|
-      [["--path", dir], ["--path=#{dir}", "--dry-run", "--path", "elsewhere", "--adopt", "x"], ["-p", dir],
-       ["-p#{dir}"], ["--paths", "-np", dir], ["-nfp#{dir}", "-pelsewhere"]].each do |argv|
+      forms(dir).each do |argv, root|
         error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(argv, dir:) }
 
-        assert_equal "#{dir} has no bundle veragem-sync: a veragem checkout has", error.message
+        assert_equal "#{root} has no bundle veragem-sync: a veragem checkout has", error.message, argv.inspect
       end
     end
   end
@@ -38,5 +38,17 @@ class TestSyncLaunch < Minitest::Test
         assert_equal "missing argument: #{flag} (bundle veragem-sync --help)", error.message
       end
     end
+  end
+
+  private
+
+  # arguments naming a checkout, each with the directory it names
+  def forms(dir)
+    {
+      ["--path", dir] => dir, ["-p", dir] => dir, ["-p#{dir}"] => dir, ["--paths", "-np", dir] => dir,
+      ["-nfp#{dir}"] => dir, ["-n-p#{dir}"] => dir, ["-pelsewhere", "--path=#{dir}", "--dry-run"] => dir,
+      ["--path=elsewhere", "-p", dir, "--", "-pnone", "--adopt", "-pnone"] => dir,
+      ["-p", "-pdeeper"] => File.join(dir, "-pdeeper")
+    }
   end
 end
