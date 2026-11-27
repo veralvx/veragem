@@ -232,6 +232,7 @@ module Veragem
     SOURCES: Array[String]
     ID: Regexp
     PART: Regexp
+    INVALID: String
 
     attr_reader version: String
     attr_reader source: String

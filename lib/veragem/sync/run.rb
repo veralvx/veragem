@@ -81,7 +81,7 @@ module Veragem
 
       def ask(shown, taken)
         shown.each.with_index(1) { |row, n| @output.puts "#{taken.include?(row) ? "*" : " "}#{n}. #{line(row)}" }
-        defaults = taken.map { shown.index(it).to_i + 1 }
+        defaults = shown.each.with_index(1).filter_map { |row, n| n if taken.include?(row) }
         Selection.ask(@input, @output, shown.size, defaults).map { shown.fetch(it - 1) }
       end
 

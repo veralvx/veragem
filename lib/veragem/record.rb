@@ -16,7 +16,10 @@ module Veragem
     ID = /\A\h{40}(?:\h{24})?\z/
     # A path's part: a name, neither . nor .., in no other directory's syntax (Windows' \ and C:)
     PART = /\A(?!\.\.?\z)[^\\:]+\z/
-    private_constant :ID, :PART
+    # The refusal of a record that is not one.
+    INVALID = "invalid #{FILE}: version (a gem's), source (release or path), name, values and files " \
+              "(paths in the gem)".freeze
+    private_constant :ID, :PART, :INVALID
 
     # The veragem version that last wrote the harness.
     # @return [String]
@@ -116,13 +119,15 @@ module Veragem
     end
 
     private_class_method def self.parse(data)
+      # checked in the body, not in a guard: coverage sees no line of a pattern run, nor mutineer its mutants
       case data
       in { version: String => version, source: String => source, name: String => name, values: Hash => values,
-           files: Hash => files } if Gem::Version.correct?(version) && SOURCES.include?(source) && valid?(files)
+           files: Hash => files }
+        raise Error, INVALID unless Gem::Version.correct?(version) && SOURCES.include?(source) && valid?(files)
+
         new(version:, source:, name:, values:, files: files.transform_keys(&:to_s))
       else
-        raise Error,
-              "invalid #{FILE}: version (a gem's), source (release or path), name, values and files (paths in the gem)"
+        raise Error, INVALID
       end
     end
   end
