@@ -8,6 +8,21 @@ module Veragem
       # The prompt, after the numbered rows.
       PROMPT = "Sync which (1,3-5, all, none; Enter: the ones marked *)? "
 
+      # The numbers chosen of +count+ rows, asked on +output+ until +input+ gives a choice.
+      # @param input [#gets] where the choice is typed
+      # @param output [#print] where it is asked
+      # @param count [Integer] the rows shown
+      # @param defaults [Array<Integer>] the rows sync takes unasked
+      # @return [Array<Integer>]
+      # @raise [Veragem::Error] the input ends first
+      def self.ask(input, output, count, defaults)
+        loop do
+          output.print PROMPT
+          answer = input.gets or raise Error, "no choice made"
+          chosen = parse(answer, count, defaults) and return chosen
+        end
+      end
+
       # The numbers +answer+ chooses of +count+ rows, from 1; nil when it is not a choice. Blank, the
       # +defaults+.
       # @param answer [String] as typed

@@ -151,6 +151,7 @@ for gem in "${gems[@]}"; do
       version="$(ruby -I "$root/lib" -r veragem/version -e 'print Veragem::VERSION')"
       bundle veragem-sync --path "$root" > "$work/sync"
       has "$work/sync" "Nothing to sync from veragem $version (path)"
+      committed
       bundle veragem-sync --path "$copy" > "$work/sync"
       has "$work/sync" "  sync .editorconfig: veragem changed it, you did not"
       has .editorconfig "# smoke"

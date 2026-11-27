@@ -271,17 +271,20 @@ It compares each file three ways: as veragem last wrote it (its object id in `.v
 | unchanged | removed   | deletes it                                              |
 | changed   | removed   | keeps yours                                             |
 | none      | added     | adds it                                                 |
-| differs   | added     | keeps yours, to resolve                                 |
+| differs   | added     | keeps yours, veragem's its base from then on            |
 
 A merge needs the file as veragem last wrote it: the repository has it, or else, in a fresh clone,
-the release that wrote it writes it again (a checkout cannot, so the file is left to resolve). Sync
-writes the record, then fails if a file is left to resolve: resolve it, then commit.
+the release that wrote it writes it again, before any file changes. Without it (a checkout's, or a
+release that cannot be fetched), the merge marks each difference. Sync writes the record, then
+fails if a merge left conflicts: resolve them, then commit. An executable it writes it stages, its
+mode with it. A file a later veragem makes the gem's own it leaves alone, and records no more.
 
-Sync refuses a harness with changes not committed, a veragem older than the record's, and a release
-after a checkout of its own version, whose changes the release may lack; `--force` syncs from
-either. `--interactive` numbers the files that differ, marks with `*` the ones sync takes unasked,
-and asks which to sync (`1,3-5`, `all`, `none`; Enter takes the marked): one you changed or removed
-then takes veragem's. A file not taken keeps its record, so the next sync shows it again.
+Sync refuses a harness with changes not committed (but for `--dry-run`), a veragem older than the
+record's, and a release after a checkout of its own version, whose changes the release may lack;
+`--force` syncs from either. `--interactive` numbers the files that differ, marks with `*` the ones
+sync takes unasked, and asks which to sync (`1,3-5`, `all`, `none`; Enter takes the marked): one
+you changed or removed then takes veragem's, and one veragem removed is deleted. A file not taken
+is shown again by the next sync.
 
 A gem generated before sync has no `.veragem.yml`: `--adopt` and the values it was generated with,
 as `bundle veragem` takes them (`bundle veragem-sync --adopt my_gem --exe`), record each file

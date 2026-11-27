@@ -10,20 +10,19 @@ module Veragem
       MEANINGS = {
         add: "veragem added it", update: "veragem changed it, you did not", delete: "veragem removed it",
         merge: "veragem and you changed it", keep: "you changed it, veragem did not", removed: "you removed it",
-        orphan: "veragem removed it, you changed it", conflict: "veragem added it, yours differs",
-        adopted: "yours differs from veragem's", conflicted: "merged, its conflicts marked",
-        unmerged: "veragem and you changed it, and its base is lost: merge it by hand"
+        orphan: "veragem removed it, you changed it", adopted: "yours differs from veragem's",
+        conflicted: "merged, its conflicts marked",
+        lost: "merged without its base, which is lost: each difference marked"
       }.freeze
       private_constant :MEANINGS
 
       # @param dir [String] the gem's directory
       # @param record [Veragem::Record] its record, or the one --adopt starts from
-      # @param options [Hash{Symbol => String, Boolean}] Sync.options', and adopt
+      # @param options [Hash{Symbol => String, Boolean}] Sync.options'
       # @param input [#gets, #tty?] where --interactive's choice is typed
       # @param output [#puts, #print] where the plan is shown
       # @option options [Boolean] :dry_run show the plan, and change nothing
       # @option options [Boolean] :interactive ask which files change
-      # @option options [Boolean] :adopt the gem has no record yet
       # @return [void]
       def initialize(dir, record, options, input:, output:)
         @dir = dir
@@ -40,19 +39,27 @@ module Veragem
       def call
         raise Error, "--interactive needs a terminal" if @options[:interactive] && !@input.tty?
 
-        entries = Generator.entries(@record.project).select(&:harness).to_h { [it.path, it] }
-        rows = rows(entries)
+        entries, own = harness
+        rows = rows(entries, own)
         chosen = choose(rows.reject { it.action == :same })
         finish(rows, chosen, entries) unless @options[:dry_run]
       end
 
       private
 
-      def rows(entries)
-        paths = @record.files.keys | entries.keys
+      # this veragem's harness, each file by its path, and the paths of the gem's own
+      def harness
+        harness, own = Generator.entries(@record.project).partition(&:harness)
+        [harness.to_h { [it.path, it] }, own.map(&:path)]
+      end
+
+      # a file this veragem takes as the gem's own is no longer the harness's: unrecorded, untouched
+      def rows(entries, own)
+        recorded = @record.files.except(*own)
+        paths = recorded.keys | entries.keys
         check_clean(paths) unless @options[:dry_run]
         theirs = entries.transform_values { Git.id(@dir, it.path, it.bytes) }
-        Plan.rows(@record.files, ours(paths), theirs, adopt: @options.key?(:adopt))
+        Plan.rows(recorded, ours(paths), theirs)
       end
 
       def check_clean(paths)
@@ -74,74 +81,77 @@ module Veragem
 
       def ask(shown, taken)
         shown.each.with_index(1) { |row, n| @output.puts "#{taken.include?(row) ? "*" : " "}#{n}. #{line(row)}" }
-        choice(shown.size, taken.map { shown.index(it).to_i + 1 }).map { shown.fetch(it - 1) }
+        defaults = taken.map { shown.index(it).to_i + 1 }
+        Selection.ask(@input, @output, shown.size, defaults).map { shown.fetch(it - 1) }
       end
 
-      # The numbers chosen, asked again until a choice
-      def choice(count, defaults)
-        loop do
-          @output.print Selection::PROMPT
-          answer = @input.gets or raise Error, "no choice made"
-          chosen = Selection.parse(answer, count, defaults) and return chosen
-        end
-      end
+      def line(row, why = row.action) = "#{row.path}: #{MEANINGS.fetch(why)}"
 
-      def line(row) = "#{row.path}: #{MEANINGS.fetch(row.action)}"
-
-      # How it went: :done, :conflicted (merged, conflicts marked) or :unmerged (no base, kept)
-      def apply(row, entry)
+      # How it went: :done, :conflicted (conflicts marked) or :lost (its base too)
+      def apply(row, entry, bases)
         case row.action
         when :delete, :orphan then File.delete(File.join(@dir, row.path))
-        when :merge then return merge(row, entry || raise)
+        when :merge then return merge(row, entry || raise, bases[row])
         else Generator.write(@dir, entry || raise)
         end
         :done
       end
 
-      def merge(row, entry)
-        base = base(row.base || raise) or return :unmerged
-        bytes, conflicts = merged(row.path, base, entry.bytes)
+      def merge(row, entry, base)
+        bytes, conflicts = Git.merge(@dir, row.path, base || "", entry.bytes)
         Generator.write(@dir, entry.with(bytes:))
-        conflicts.zero? ? :done : :conflicted
+        return :done if conflicts.zero?
+
+        base ? :conflicted : :lost
       end
 
-      def merged(path, base, theirs)
-        Dir.mktmpdir("veragem-sync") do |tmp|
-          File.binwrite(File.join(tmp, "base"), base)
-          File.binwrite(File.join(tmp, "theirs"), theirs)
-          Git.merge(@dir, path, File.join(tmp, "base"), File.join(tmp, "theirs"))
-        end
+      # Each merge's base, before any file is written: in the repository, or else written again by
+      # the record's release; nil where neither has it
+      def bases(merges)
+        ids = merges.to_h { [it, it.base || raise] }
+        rebuild unless ids.values.all? { Git.object?(@dir, it) }
+        ids.transform_values { Git.output(@dir, "cat-file", "blob", it) if Git.object?(@dir, it) }
       end
 
-      # The base's bytes: in the repository, or else rebuilt by its release, once; nil if neither
-      def base(id)
-        rebuild unless @rebuilt || Git.object?(@dir, id)
-        Git.output(@dir, "cat-file", "blob", id) if Git.object?(@dir, id)
-      end
-
-      # The record's release writes its harness again, each file's object written: the bases
+      # The record's release writes its harness again, each file's object written: the bases. A
+      # checkout's, or a release that cannot be fetched, leaves them lost.
       def rebuild
-        @rebuilt = true
         return unless @record.source == "release"
 
         Source.harness(@record.version, @dir).each { |path, bytes| Git.id(@dir, path, bytes) }
+      rescue Error => e
+        @output.puts "#{e.message}: the merges' bases are lost"
       end
 
+      # The chosen applied, their bases read first; then the record written, and what is left to resolve
+      # refused
       def finish(rows, chosen, entries)
-        outcomes = chosen.to_h { [it, apply(it, entries[it.path])] }
-        files = Plan.recorded(rows, chosen.reject { outcomes[it] == :unmerged })
+        left = applied(chosen, entries).reject { |_, outcome| outcome == :done }
+        record(Plan.recorded(rows, chosen))
+        return if left.empty?
+
+        raise Error, "resolve, then commit:\n#{left.map { |row, why| "  #{line(row, why)}" }.join("\n")}"
+      end
+
+      # Each chosen row's outcome; its executables staged
+      def applied(chosen, entries)
+        bases = bases(chosen.select { it.action == :merge })
+        chosen.to_h { [it, apply(it, entries[it.path], bases)] }.tap do
+          stage(chosen.filter_map { entries[it.path] }.select(&:executable))
+        end
+      end
+
+      def record(files)
         Record.new(version: VERSION, source: Sync.source, name: @record.name, values: @record.values, files:)
               .write(@dir)
-        left = unresolved(rows, chosen, outcomes)
-        raise Error, "resolve, then commit:\n#{left.join("\n")}" unless left.empty?
       end
 
-      # A conflict not taken, and a merge not done
-      def unresolved(rows, chosen, outcomes)
-        left = rows.select { it.action == :conflict && !chosen.include?(it) }.to_h { [it, :conflict] }
-        left.merge(outcomes.reject { |_, outcome| outcome == :done }).map do |row, why|
-          "  #{row.path}: #{MEANINGS.fetch(why)}"
-        end
+      # An executable written is staged, its mode with it: git's index keeps it where the file
+      # system has none (Windows)
+      def stage(executables)
+        return if executables.empty?
+
+        Git.run(@dir, "update-index", "--add", "--chmod=+x", "--", *executables.map(&:path))
       end
     end
   end

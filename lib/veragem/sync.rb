@@ -13,7 +13,8 @@ module Veragem
   # none, merged where you made some, and yours kept where veragem made none. The gem's own files
   # (Generator::OWN) it never touches.
   #
-  # Stable across versions, as one veragem runs another's: main's arguments, and `--render DIR`.
+  # Stable across versions, as one veragem runs another's: lib/veragem/sync.rb, main's arguments,
+  # `--render DIR`, and the record's fields.
   module Sync
     # --help's first line.
     BANNER = "Usage: bundle veragem-sync [--path DIR] [--dry-run] [--interactive] [--force] " \
@@ -41,7 +42,9 @@ module Veragem
 
       options, adopt = options(argv)
       record = adopt ? adopted(adopt, dir) : Record.read(dir).tap { check(it, options.key?(:force)) }
-      Run.new(dir, record, adopt ? options.merge(adopt: true) : options, input:, output:).call
+      Run.new(dir, record, options, input:, output:).call
+    rescue SystemCallError => e
+      raise Error, e.message
     end
 
     # The options +argv+ gives, and the arguments that follow --adopt, nil without it.
@@ -99,6 +102,8 @@ module Veragem
     private_class_method def self.parser
       OptionParser.new(BANNER) do |opts|
         opts.program_name = "bundle veragem-sync"
+        # the launcher reads --path as given, never abbreviated
+        opts.require_exact = true
         opts.version = VERSION
         OPTIONS.each { |switch, help| opts.on(switch, help) }
       end

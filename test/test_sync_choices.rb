@@ -61,12 +61,38 @@ class TestSyncChoices < Minitest::Test
     end
   end
 
+  # the marked, wherever they are shown
   def test_interactive_takes_the_marked_by_default
     in_gem do |gem|
       older(gem, ".yardopts", "old\n")
+      write(gem, ".editorconfig", "# mine\n")
+      older(gem, "Rakefile", "old\n")
       sync(gem, "--interactive", input: terminal(""))
 
-      assert_equal YARDOPTS, read(gem, ".yardopts")
+      assert_equal [YARDOPTS, "# mine\n", theirs_text(gem, "Rakefile")],
+                   [read(gem, ".yardopts"), read(gem, ".editorconfig"), read(gem, "Rakefile")]
+    end
+  end
+
+  # yours replaced by veragem's: an adopted file, a removed one
+  def test_interactive_takes_veragems_over_yours
+    in_gem do |gem|
+      write(gem, ".yardopts", "mine\n")
+      File.delete(File.join(gem, "Rakefile"))
+      rerecord(gem, { ".yardopts" => nil, "Rakefile" => id(gem, "Rakefile", "old\n") })
+      sync(gem, "--interactive", input: terminal("all"))
+
+      assert_equal [YARDOPTS, theirs_text(gem, "Rakefile")], [read(gem, ".yardopts"), read(gem, "Rakefile")]
+    end
+  end
+
+  # yours deleted, as veragem's is
+  def test_interactive_deletes_an_orphan
+    in_gem do |gem|
+      older(gem, "orphan", "mine\n", base: "x\n")
+      sync(gem, "--interactive", input: terminal("1"))
+
+      assert_equal [false, nil], [File.exist?(File.join(gem, "orphan")), recorded(gem, "orphan")]
     end
   end
 

@@ -18,7 +18,7 @@ class TestGit < Minitest::Test
   def test_the_ids_are_the_indexs
     in_tmpdir do |dir|
       Veragem::Git.run(dir, "init", "--quiet")
-      %w[a b].each { File.write(File.join(dir, it), "#{it}\n") }
+      %w[a b].each { File.binwrite(File.join(dir, it), "#{it}\n") }
       Veragem::Git.run(dir, "add", "a", "b")
       indexed = Veragem::Git.output(dir, "ls-files", "--format=%(path) %(objectname)").lines(chomp: true)
 
@@ -49,7 +49,7 @@ class TestGit < Minitest::Test
   def test_an_id_is_of_bytes_at_a_path
     in_tmpdir do |dir|
       Veragem::Git.run(dir, "init", "--quiet")
-      File.write(File.join(dir, "a"), "a\n")
+      File.binwrite(File.join(dir, "a"), "a\n")
       id = Veragem::Git.id(dir, "a", "a\n")
 
       assert_equal Veragem::Git.ids(dir, ["a"]).fetch("a"), id
@@ -62,13 +62,11 @@ class TestGit < Minitest::Test
   def test_a_merge_says_how_many_conflicts
     in_tmpdir do |dir|
       Veragem::Git.run(dir, "init", "--quiet")
-      { "base" => "a\nb\n", "ours" => "a\nb\nc\n", "theirs" => "z\nb\n", "other" => "y\nb\n" }.each do |name, text|
-        File.write(File.join(dir, name), text)
-      end
+      { "ours" => "a\nb\nc\n", "other" => "y\nb\n" }.each { |name, text| File.binwrite(File.join(dir, name), text) }
 
-      assert_equal ["z\nb\nc\n", 0], Veragem::Git.merge(dir, "ours", "base", "theirs")
+      assert_equal ["z\nb\nc\n", 0], Veragem::Git.merge(dir, "ours", "a\nb\n", "z\nb\n")
       assert_equal ["<<<<<<< other\ny\n=======\nz\n>>>>>>> veragem\nb\n", 1],
-                   Veragem::Git.merge(dir, "other", "base", "theirs")
+                   Veragem::Git.merge(dir, "other", "a\nb\n", "z\nb\n")
     end
   end
 
@@ -76,22 +74,19 @@ class TestGit < Minitest::Test
   def test_a_merge_of_many_conflicts_is_one
     in_tmpdir do |dir|
       Veragem::Git.run(dir, "init", "--quiet")
-      %w[base ours theirs].each do |side|
-        File.write(File.join(dir, side), (1..130).map { "#{it}\n#{"-\n" * 4}#{side}\n" }.join)
-      end
+      side = ->(name) { (1..130).map { "#{it}\n#{"-\n" * 4}#{name}\n" }.join }
+      File.binwrite(File.join(dir, "ours"), side.call("ours"))
 
-      assert_equal 127, Veragem::Git.merge(dir, "ours", "base", "theirs").last
+      assert_equal 127, Veragem::Git.merge(dir, "ours", side.call("base"), side.call("theirs")).last
     end
   end
 
   def test_a_merge_that_fails_says_so
     in_tmpdir do |dir|
       Veragem::Git.run(dir, "init", "--quiet")
-      File.write(File.join(dir, "ours"), "a\n")
+      error = assert_raises(Veragem::Error) { capture_subprocess_io { Veragem::Git.merge(dir, "none", "a\n", "b\n") } }
 
-      error = assert_raises(Veragem::Error) { capture_subprocess_io { Veragem::Git.merge(dir, "ours", "none", "ours") } }
-
-      assert_equal "git merge-file ours failed in #{dir}", error.message
+      assert_equal "git merge-file none failed in #{dir}", error.message
     end
   end
 

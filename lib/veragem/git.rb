@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "tmpdir"
+
 module Veragem
   # git, run in a gem's repository whatever repository a git hook running veragem points at, and
   # never reading the terminal's input.
@@ -67,19 +69,24 @@ module Veragem
     # conflicts it marked.
     # @param dir [String] the repository's directory
     # @param ours [String] the file to merge into, in +dir+
-    # @param base [String] their common base's file
-    # @param theirs [String] the other side's file
+    # @param base [String] their common base's bytes
+    # @param theirs [String] the other side's bytes
     # @return [Array(String, Integer)]
     # @raise [Veragem::Error] git could not run, or failed
     def self.merge(dir, ours, base, theirs)
-      args = ["merge-file", "--stdout", "-L", ours, "-L", "base", "-L", "veragem", ours, base, theirs]
-      output, status = capture(dir, args, nil)
-      # its status the count of conflicts, at most 127; an error's -1, 255
-      conflicts = status.exitstatus.to_i
-      raise Error, "git merge-file #{ours} failed in #{dir}" if conflicts > 127
+      Dir.mktmpdir("veragem-merge") do |tmp|
+        files = { "base" => base, "theirs" => theirs }.map { |name, bytes| written(File.join(tmp, name), bytes) }
+        labels = ["-L", ours, "-L", "base", "-L", "veragem"]
+        output, status = capture(dir, ["merge-file", "--stdout", *labels, ours, *files], nil)
+        # its status the count of conflicts, at most 127; an error's -1, 255
+        conflicts = status.exitstatus.to_i
+        raise Error, "git merge-file #{ours} failed in #{dir}" if conflicts > 127
 
-      [output, conflicts]
+        [output, conflicts]
+      end
     end
+
+    private_class_method def self.written(path, bytes) = path.tap { File.binwrite(path, bytes) }
 
     private_class_method def self.capture(dir, args, input)
       output = IO.popen(LOCAL, ["git", *args], "r+", chdir: dir, binmode: true) do |git|

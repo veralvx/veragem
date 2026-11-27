@@ -12,31 +12,27 @@ module Veragem
       # The actions sync takes unasked; the rest it reports, and takes only when selected.
       APPLIED = %i[add update delete merge].freeze
 
-      # The action for a file's ids. +adopt+: there is no record yet, so a file that differs is
-      # the gem's own, its theirs recorded as its base.
+      # The action for a file's ids. A file veragem had not written that the gem has, and that
+      # differs, is adopted: the gem's, veragem's recorded as its base.
       # @param base [String, nil]
       # @param ours [String, nil]
       # @param theirs [String, nil]
-      # @param adopt [Boolean]
-      # @return [Symbol] :same, :add, :conflict, :adopted, :removed, :delete, :orphan, :update,
-      #   :keep or :merge
-      def self.action(base, ours, theirs, adopt: false)
+      # @return [Symbol] :same, :add, :adopted, :removed, :delete, :orphan, :update, :keep or :merge
+      def self.action(base, ours, theirs)
         return :same if ours == theirs
         return changed(base, ours, theirs) if base
-        return :add unless ours
 
-        adopt ? :adopted : :conflict
+        ours ? :adopted : :add
       end
 
       # The rows of every path any side has, sorted.
       # @param base [Hash{String => String}] the record's ids
       # @param ours [Hash{String => String}] the gem's
       # @param theirs [Hash{String => String}] this veragem's
-      # @param adopt [Boolean]
       # @return [Array<Veragem::Sync::Plan::Row>]
-      def self.rows(base, ours, theirs, adopt: false)
+      def self.rows(base, ours, theirs)
         (base.keys | ours.keys | theirs.keys).sort.map do |path|
-          Row.new(path, action(base[path], ours[path], theirs[path], adopt:), base[path], ours[path], theirs[path])
+          Row.new(path, action(base[path], ours[path], theirs[path]), base[path], ours[path], theirs[path])
         end
       end
 

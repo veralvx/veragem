@@ -5,6 +5,9 @@ require "test_helper"
 class TestSyncMerge < Minitest::Test
   include Veragem::SyncSupport
 
+  LOST = "merged without its base, which is lost: each difference marked"
+  BOTH = "veragem and you changed it"
+
   def test_both_changes_are_merged
     in_gem do |gem|
       base = YARDOPTS.lines.drop(1).join
@@ -29,16 +32,33 @@ class TestSyncMerge < Minitest::Test
     end
   end
 
-  # a checkout's: no release writes it again; yours kept, and its base
-  def test_a_merge_without_its_base_is_left_to_resolve
+  # a checkout's: no release writes it again. Each difference marked, veragem's recorded: resolved,
+  # then synced again, yours
+  def test_a_merge_without_its_base_marks_each_difference
     in_gem do |gem|
-      lost = "0" * 40
-      write(gem, ".yardopts", "mine\n")
-      rerecord(gem, { ".yardopts" => lost })
+      older(gem, ".yardopts", "#{YARDOPTS}--mine\n", base: "lost\n")
+      git(gem, "gc", "--quiet", "--prune=now")
 
-      assert_equal ["resolve, then commit:\n  .yardopts: veragem and you changed it, and its base is lost: " \
-                    "merge it by hand", "Sync #{HEADING}\n  sync .yardopts: veragem and you changed it\n"], refused(gem)
-      assert_equal ["mine\n", lost], [read(gem, ".yardopts"), recorded(gem, ".yardopts")]
+      message = stubbed(Veragem::Sync::Source, :harness, ->(*) { flunk "a checkout's fetches no release" }) { refused(gem) }
+
+      assert_equal ["resolve, then commit:\n  .yardopts: #{LOST}", "Sync #{HEADING}\n  sync .yardopts: #{BOTH}\n"],
+                   message
+      assert_equal "#{YARDOPTS}<<<<<<< .yardopts\n--mine\n=======\n>>>>>>> veragem\n", read(gem, ".yardopts")
+      older(gem, ".yardopts", "#{YARDOPTS}--mine\n", base: YARDOPTS)
+
+      assert_equal "Sync #{HEADING}\n  keep .yardopts: you changed it, veragem did not\n", sync(gem)
+    end
+  end
+
+  # a release that cannot be fetched: said so, and its bases lost; before any file is written
+  def test_a_release_not_fetched_leaves_its_bases_lost
+    in_gem do |gem|
+      lost_bases(gem, read(gem, ".editorconfig"))
+      unfetched = ->(*) { raise Veragem::Error, "cannot fetch veragem 0.0.1 from the gem sources" }
+      message, shown = stubbed(Veragem::Sync::Source, :harness, unfetched) { refused(gem) }
+
+      assert_match(/\Aresolve, then commit:\n  \.editorconfig: merged without its base/, message)
+      assert_includes shown, "cannot fetch veragem 0.0.1 from the gem sources: the merges' bases are lost\n"
     end
   end
 

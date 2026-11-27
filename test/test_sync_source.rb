@@ -20,7 +20,7 @@ class TestSyncSource < Minitest::Test
   def test_a_sync_that_fails_exits_so
     in_gem do |gem|
       rerecord(gem, version: "99.0.0")
-      relative = Pathname(ROOT).relative_path_from(gem).to_s
+      relative = relative_to(gem)
 
       refusal = "veragem #{Veragem::VERSION} is older than 99.0.0, which last synced the harness (--force)\n"
 
@@ -46,6 +46,29 @@ class TestSyncSource < Minitest::Test
     end
   end
 
+  def test_path_is_read_alone
+    in_tmpdir do |dir|
+      ["--path=#{dir}", "--dry-run", "--path", dir, "--adopt", "x"].then do |argv|
+        error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(argv, dir:) }
+
+        assert_equal "#{dir} has no bundle veragem-sync: a veragem checkout has", error.message
+      end
+      error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(%w[--dry-run --path], dir:) }
+
+      assert_equal "missing argument: --path (bundle veragem-sync --help)", error.message
+    end
+  end
+
+  def test_no_release_is_refused
+    in_gem do |gem|
+      with_sources do
+        error = assert_raises(Veragem::Error) { capture_subprocess_io { Veragem::Sync::Source.launch([], dir: gem) } }
+
+        assert_equal "cannot fetch veragem (the latest) from the gem sources", error.message
+      end
+    end
+  end
+
   def test_a_release_without_sync_is_refused
     in_gem do |gem|
       with_sources(old) do
@@ -60,9 +83,16 @@ class TestSyncSource < Minitest::Test
     in_gem do |gem|
       harness = Veragem::Generator.entries(project).select(&:harness).to_h { [it.path, it.bytes.b] }
 
-      with_sources(built, old) do
-        assert_equal harness, Veragem::Sync::Source.harness(Veragem::VERSION, gem)
-        assert_empty Veragem::Sync::Source.harness("0.0.1", gem), "a release without sync writes none"
+      with_sources(built) { assert_equal harness, Veragem::Sync::Source.harness(Veragem::VERSION, gem) }
+    end
+  end
+
+  # a release without sync runs nothing; one whose sync fails writes none either
+  def test_a_release_without_a_sync_that_runs_writes_none
+    in_gem do |gem|
+      with_sources(old, broken) do
+        assert_equal([{}, ""], capture_subprocess_io_value { Veragem::Sync::Source.harness("0.0.1", gem) })
+        assert_equal({}, capture_subprocess_io_value { Veragem::Sync::Source.harness("0.0.2", gem) }.first)
       end
     end
   end
@@ -78,6 +108,20 @@ class TestSyncSource < Minitest::Test
   end
 
   private
+
+  # +gem+'s path to this checkout, relative; none across Windows' drives
+  def relative_to(gem)
+    Pathname(ROOT).relative_path_from(gem).to_s
+  rescue ArgumentError
+    skip "#{gem} and #{ROOT} are on different drives"
+  end
+
+  # the block's value, and what it wrote to stderr
+  def capture_subprocess_io_value
+    value = nil
+    _, err = capture_subprocess_io { value = yield }
+    [value, err]
+  end
 
   # what `bundle veragem-sync ARGV` showed in +gem+, and its status when it failed
   def launched(gem, *argv)

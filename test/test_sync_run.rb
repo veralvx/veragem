@@ -78,16 +78,49 @@ class TestSyncRun < Minitest::Test
     end
   end
 
-  # yours kept, and the record without it, written as the rest: the next sync says so again
-  def test_a_file_veragem_added_that_you_have_is_left_to_resolve
+  # yours kept, veragem's recorded as its base: the next sync, your change
+  def test_a_file_veragem_added_that_you_have_is_adopted
     in_gem do |gem|
       write(gem, ".yardopts", "mine\n")
       rerecord(gem, { ".yardopts" => nil }, version: "0.0.1")
 
-      assert_equal ["resolve, then commit:\n  .yardopts: veragem added it, yours differs",
-                    "Sync #{HEADING}\n  keep .yardopts: veragem added it, yours differs\n"], refused(gem)
-      assert_equal ["mine\n", nil], [read(gem, ".yardopts"), recorded(gem, ".yardopts")]
-      assert_equal Veragem::VERSION, Veragem::Record.read(gem).version
+      assert_equal "Sync #{HEADING}\n  keep .yardopts: yours differs from veragem's\n", sync(gem)
+      assert_equal ["mine\n", theirs(gem, ".yardopts"), Veragem::VERSION],
+                   [read(gem, ".yardopts"), recorded(gem, ".yardopts"), Veragem::Record.read(gem).version]
+      commit(gem)
+
+      assert_equal "Sync #{HEADING}\n  keep .yardopts: you changed it, veragem did not\n", sync(gem)
+    end
+  end
+
+  # a later veragem's own: unrecorded, and untouched, whatever its id
+  def test_a_file_now_the_gems_own_is_left_alone
+    in_gem do |gem|
+      rerecord(gem, { "README.md" => id(gem, "README.md", read(gem, "README.md")) })
+
+      assert_equal "Nothing to sync #{HEADING}\n", sync(gem)
+      assert_path_exists File.join(gem, "README.md")
+      assert_nil recorded(gem, "README.md")
+    end
+  end
+
+  # in git's index too, which a commit keeps where the file system has no mode
+  def test_an_executable_written_is_staged_executable
+    in_gem do |gem|
+      File.delete(File.join(gem, "bin/setup"))
+      rerecord(gem, { "bin/setup" => nil })
+      sync(gem)
+
+      assert_equal ["bin/setup"], indexed_executables(gem, "bin/setup")
+    end
+  end
+
+  def test_a_file_that_cannot_be_written_is_refused
+    in_gem do |gem|
+      older(gem, ".yardopts", "old\n")
+      denied = ->(*) { raise Errno::EACCES, ".yardopts" }
+
+      assert_equal "Permission denied - .yardopts", stubbed(Veragem::Generator, :write, denied) { refused(gem).first }
     end
   end
 end

@@ -249,7 +249,8 @@ module Veragem
 
     def status(target) = git(target, "status", "--porcelain")
 
-    def write(target, path, text) = File.write(File.join(target, path), text)
+    # as bytes: a text mode's (Windows') CRLF would differ from every side's LF
+    def write(target, path, text) = File.binwrite(File.join(target, path), text)
 
     # +answers+ typed at a terminal, one a line
     def terminal(*answers) = StringIO.new(answers.map { "#{it}\n" }.join).tap { |io| def io.tty? = true }
@@ -262,14 +263,17 @@ module Veragem
 
     class << self
       # each built once, for every test
-      attr_accessor :built, :old
+      attr_accessor :built, :old, :broken
     end
 
-    Minitest.after_run { [built, old].compact.each { FileUtils.rm_rf(File.dirname(it)) } }
+    Minitest.after_run { [built, old, broken].compact.each { FileUtils.rm_rf(File.dirname(it)) } }
 
     def built = ReleaseSupport.built ||= build_gem
 
     def old = ReleaseSupport.old ||= build_old
+
+    # a release whose sync cannot run: its lib/veragem.rb missing
+    def broken = ReleaseSupport.broken ||= build_old("0.0.2", "lib/veragem/sync.rb" => "")
 
     # the gem sources an index of +gems+ alone, as GEMRC names them; the test's environment, not
     # Bundler's from before it, a sync's
@@ -291,15 +295,22 @@ module Veragem
       out
     end
 
-    def build_old
+    def build_old(version = "0.0.1", files = {})
       dir = Dir.mktmpdir("veragem-old")
-      spec = Gem::Specification.new("veragem", "0.0.1") do |gem|
+      files.each { |path, text| written(File.join(dir, path), text) }
+      spec = Gem::Specification.new("veragem", version) do |gem|
         gem.summary = "old"
         gem.authors = ["x"]
+        gem.files = files.keys
       end
       file = nil
       capture_io { file = Dir.chdir(dir) { Gem::Package.build(spec) } }
       File.join(dir, file)
+    end
+
+    def written(path, text)
+      FileUtils.mkdir_p(File.dirname(path))
+      File.write(path, text)
     end
 
     # RubyGems' index of +gems+: their specs, the latest, none prereleased; each gem and its spec
@@ -311,7 +322,7 @@ module Veragem
 
     def lists(specs)
       tuples = specs.map { [it.name, it.version, it.platform.to_s] }
-      { "specs" => tuples, "latest_specs" => [tuples.max_by { it[1] }], "prerelease_specs" => [] }
+      { "specs" => tuples, "latest_specs" => tuples.max_by(1) { it[1] }, "prerelease_specs" => [] }
     end
 
     def publish(dir, gem, spec)

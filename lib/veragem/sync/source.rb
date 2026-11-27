@@ -17,12 +17,12 @@ module Veragem
       # @param argv [Array<String>] the command's arguments
       # @param dir [String] the gem's directory
       # @return [void]
-      # @raise [Veragem::Error] an option is refused, or no veragem with sync is found
+      # @raise [Veragem::Error] --path has no directory, or no veragem with sync is found
       # @raise [SystemExit] the sync failed, its reason shown
       def self.launch(argv, dir: Dir.pwd)
-        path = Sync.options(argv).first[:path]
+        path = path_of(argv)
         Dir.mktmpdir("veragem-sync") do |tmp|
-          root = path ? File.expand_path(path.to_s, dir) : fetch(nil, tmp)
+          root = path ? File.expand_path(path, dir) : fetch(nil, tmp)
           raise Error, "#{root} has no bundle veragem-sync: a veragem checkout has" unless sync?(root)
 
           exit(1) unless run(root, argv, dir)
@@ -46,9 +46,20 @@ module Veragem
         end
       end
 
+      # --path's directory, as given before --adopt; every other argument the veragem's to read
+      private_class_method def self.path_of(argv)
+        own = argv.take_while { it != "--adopt" }
+        given = own.find { it.start_with?("--path=") } and return given.delete_prefix("--path=")
+        index = own.index("--path") or return
+
+        own.fetch(index + 1) { raise Error, "missing argument: --path (bundle veragem-sync --help)" }
+      end
+
       # veragem +version+, else the latest, unpacked into +dir+.
       private_class_method def self.fetch(version, dir)
-        gem_command(["fetch", "veragem", "--version=#{version || ">= 0"}"], dir)
+        args = %w[fetch veragem]
+        args << "--version=#{version}" if version
+        gem_command(args, dir)
         gem = Dir.glob("veragem-*.gem", base: dir).first
         raise Error, "cannot fetch veragem #{version || "(the latest)"} from the gem sources" unless gem
 

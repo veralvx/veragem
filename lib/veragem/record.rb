@@ -14,7 +14,9 @@ module Veragem
     SOURCES = %w[release path].freeze
     # A git object id: SHA-1's, or SHA-256's.
     ID = /\A\h{40}(?:\h{24})?\z/
-    private_constant :ID
+    # A path's part: a name, neither . nor .., in no other directory's syntax (Windows' \ and C:)
+    PART = /\A(?!\.\.?\z)[^\\:]+\z/
+    private_constant :ID, :PART
 
     # The veragem version that last wrote the harness.
     # @return [String]
@@ -106,14 +108,21 @@ module Veragem
     end
 
     # A record of the YAML's data, every field of its kind.
+    # each file's a path in the gem, its id a git object's
+    private_class_method def self.valid?(files)
+      files.all? do |path, id|
+        path.to_s.split("/", -1).all? { PART.match?(it) } && case id when String then ID.match?(id) end
+      end
+    end
+
     private_class_method def self.parse(data)
       case data
       in { version: String => version, source: String => source, name: String => name, values: Hash => values,
-           files: Hash => files } if Gem::Version.correct?(version) && SOURCES.include?(source) &&
-             files.values.all? { it.is_a?(String) && ID.match?(it) }
+           files: Hash => files } if Gem::Version.correct?(version) && SOURCES.include?(source) && valid?(files)
         new(version:, source:, name:, values:, files: files.transform_keys(&:to_s))
       else
-        raise Error, "invalid #{FILE}: version (a gem's), source (release or path), name, values and files"
+        raise Error,
+              "invalid #{FILE}: version (a gem's), source (release or path), name, values and files (paths in the gem)"
       end
     end
   end

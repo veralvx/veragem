@@ -9,20 +9,13 @@ class TestSyncPlan < Minitest::Test
   # base, ours, theirs: the action
   ACTIONS = {
     %w[b t t] => :same, [nil, "o", "o"] => :same, ["b", nil, nil] => :same,
-    [nil, nil, "t"] => :add, [nil, "o", "t"] => :conflict,
+    [nil, nil, "t"] => :add, [nil, "o", "t"] => :adopted,
     ["b", nil, "t"] => :removed, ["b", "b", nil] => :delete, ["b", "o", nil] => :orphan,
     %w[b b t] => :update, %w[b o b] => :keep, %w[b o t] => :merge
   }.freeze
 
   def test_each_case_has_its_action
     ACTIONS.each { |ids, action| assert_equal action, Plan.action(*ids), ids.inspect }
-  end
-
-  # adopted, a file that differs is the gem's own; every other case as without
-  def test_adopting_a_file_that_differs_keeps_it
-    assert_equal :adopted, Plan.action(nil, "o", "t", adopt: true)
-    assert_equal :add, Plan.action(nil, nil, "t", adopt: true)
-    assert_equal :same, Plan.action(nil, "t", "t", adopt: true)
   end
 
   def test_the_rows_are_every_path_sorted
@@ -32,14 +25,11 @@ class TestSyncPlan < Minitest::Test
                   Plan::Row.new("c", :same, "1", nil, nil)], rows
   end
 
-  def test_the_rows_adopt
-    assert_equal [:adopted], Plan.rows({}, { "a" => "1" }, { "a" => "2" }, adopt: true).map(&:action)
-  end
-
   # applied: theirs; removed, adopted and same: theirs, unapplied; every other its base; none, unrecorded
   def test_the_record_takes_the_applied_files_theirs
-    rows = %i[update keep removed adopted same orphan delete conflict].map.with_index do |action, n|
-      Plan::Row.new("f#{n}", action, ("b#{n}" unless action == :conflict), "o#{n}", ("t#{n}" unless action == :delete))
+    rows = %i[update keep removed adopted same orphan delete add].map.with_index do |action, n|
+      Plan::Row.new("f#{n}", action, ("b#{n}" unless %i[adopted add].include?(action)), "o#{n}",
+                    ("t#{n}" unless action == :delete))
     end
     applied = [rows[0], rows[6]]
 

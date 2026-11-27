@@ -231,6 +231,7 @@ module Veragem
     FILE: String
     SOURCES: Array[String]
     ID: Regexp
+    PART: Regexp
 
     attr_reader version: String
     attr_reader source: String
@@ -246,6 +247,7 @@ module Veragem
                      files: Hash[String, String]) -> void
     def project: () -> Project
     def write: (String dir) -> void
+    private def self.valid?: (Hash[Symbol, untyped] files) -> bool
     private def self.parse: (untyped data) -> Record
   end
 
@@ -258,6 +260,7 @@ module Veragem
     def self.id: (String dir, String path, String bytes) -> String
     def self.object?: (String dir, String id) -> bool
     def self.merge: (String dir, String ours, String base, String theirs) -> [String, Integer]
+    private def self.written: (String path, String bytes) -> String
     private def self.capture: (String dir, Array[String] args, String? input) -> [String, Process::Status]
   end
 
@@ -289,8 +292,8 @@ module Veragem
                     | (path: String, action: Symbol, base: String?, ours: String?, theirs: String?) -> instance
       end
 
-      def self.action: (String? base, String? ours, String? theirs, ?adopt: bool) -> Symbol
-      def self.rows: (Hash[String, String] base, Hash[String, String] ours, Hash[String, String] theirs, ?adopt: bool) -> Array[Row]
+      def self.action: (String? base, String? ours, String? theirs) -> Symbol
+      def self.rows: (Hash[String, String] base, Hash[String, String] ours, Hash[String, String] theirs) -> Array[Row]
       def self.recorded: (Array[Row] rows, Array[Row] applied) -> Hash[String, String]
       private def self.changed: (String base, String? ours, String? theirs) -> Symbol
     end
@@ -298,6 +301,7 @@ module Veragem
     module Selection
       PROMPT: String
 
+      def self.ask: (Questions::_Input input, Questions::_Output output, Integer count, Array[Integer] defaults) -> Array[Integer]
       def self.parse: (String answer, Integer count, Array[Integer] defaults) -> Array[Integer]?
       private def self.numbers: (String list, Integer count) -> Array[Integer]?
     end
@@ -310,27 +314,27 @@ module Veragem
       @options: options
       @input: Questions::_Input
       @output: Questions::_Output
-      @rebuilt: bool
 
       def initialize: (String dir, Record record, options options, input: Questions::_Input, output: Questions::_Output) -> void
       def call: () -> void
 
       private
 
-      def rows: (Hash[String, Generator::Entry] entries) -> Array[Plan::Row]
+      def harness: () -> [Hash[String, Generator::Entry], Array[String]]
+      def rows: (Hash[String, Generator::Entry] entries, Array[String] own) -> Array[Plan::Row]
       def check_clean: (Array[String] paths) -> void
       def ours: (Array[String] paths) -> Hash[String, String]
       def choose: (Array[Plan::Row] shown) -> Array[Plan::Row]
       def ask: (Array[Plan::Row] shown, Array[Plan::Row] taken) -> Array[Plan::Row]
-      def choice: (Integer count, Array[Integer] defaults) -> Array[Integer]
-      def line: (Plan::Row row) -> String
-      def apply: (Plan::Row row, Generator::Entry? entry) -> Symbol
-      def merge: (Plan::Row row, Generator::Entry entry) -> Symbol
-      def merged: (String path, String base, String theirs) -> [String, Integer]
-      def base: (String id) -> String?
+      def line: (Plan::Row row, ?Symbol why) -> String
+      def apply: (Plan::Row row, Generator::Entry? entry, Hash[Plan::Row, String?] bases) -> Symbol
+      def merge: (Plan::Row row, Generator::Entry entry, String? base) -> Symbol
+      def bases: (Array[Plan::Row] merges) -> Hash[Plan::Row, String?]
       def rebuild: () -> void
       def finish: (Array[Plan::Row] rows, Array[Plan::Row] chosen, Hash[String, Generator::Entry] entries) -> void
-      def unresolved: (Array[Plan::Row] rows, Array[Plan::Row] chosen, Hash[Plan::Row, Symbol] outcomes) -> Array[String]
+      def applied: (Array[Plan::Row] chosen, Hash[String, Generator::Entry] entries) -> Hash[Plan::Row, Symbol]
+      def record: (Hash[String, String] files) -> void
+      def stage: (Array[Generator::Entry] executables) -> void
     end
 
     module Source
@@ -338,6 +342,7 @@ module Veragem
 
       def self.launch: (Array[String] argv, ?dir: String) -> void
       def self.harness: (String version, String dir) -> Hash[String, String]
+      private def self.path_of: (Array[String] argv) -> String?
       private def self.fetch: (String? version, String dir) -> String
       private def self.gem_command: (Array[String] args, String dir) -> bool?
       private def self.sync?: (String root) -> bool

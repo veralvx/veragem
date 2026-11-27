@@ -31,6 +31,16 @@ class TestSyncOptions < Minitest::Test
     end
   end
 
+  def test_a_release_after_an_older_checkout_is_synced
+    in_gem do |gem|
+      rerecord(gem, version: "0.0.1")
+
+      stubbed(Veragem::Sync, :source, -> { "release" }) do
+        assert_equal "Nothing to sync from veragem #{Veragem::VERSION} (release)\n", sync(gem)
+      end
+    end
+  end
+
   def test_an_older_record_is_synced
     in_gem do |gem|
       rerecord(gem, version: "0.0.1", source: "path")
@@ -48,7 +58,8 @@ class TestSyncOptions < Minitest::Test
   def test_render_writes_the_harness
     in_gem do |gem|
       in_tmpdir do |out|
-        Veragem::Sync.main(["--render", out], dir: gem)
+        # elsewhere than the tests' directory: a mutant's render would write into it
+        Dir.chdir(out) { Veragem::Sync.main(["--render", out], dir: gem) }
 
         assert_equal Veragem::Record.read(gem).files.keys.sort, files_in(out).sort
         assert_equal read(gem, "Rakefile"), read(out, "Rakefile")
