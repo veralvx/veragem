@@ -65,6 +65,20 @@ class TestGit < Minitest::Test
     end
   end
 
+  # a git that dies before it reads its input (a bad config) fails, not one that cannot run: more
+  # than a pipe holds, its write refused
+  def test_a_git_that_reads_no_input_fails
+    in_tmpdir do |dir|
+      Veragem::Git.run(dir, "init", "--quiet")
+      File.write(File.join(dir, ".git", "config"), "[bad\n", mode: "a")
+      error = assert_raises(Veragem::Error) do
+        capture_subprocess_io { Veragem::Git.output(dir, "hash-object", "--stdin", input: "a" * (1 << 20)) }
+      end
+
+      assert_equal "git hash-object --stdin failed in #{dir}", error.message
+    end
+  end
+
   # in the index, whatever the file system's mode; none, nothing
   def test_files_are_staged_executable
     in_tmpdir do |dir|

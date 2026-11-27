@@ -97,10 +97,16 @@ module Veragem
 
     private_class_method def self.written(path, bytes) = path.tap { File.binwrite(path, bytes) }
 
+    private_class_method def self.fed(git, input)
+      git.write(input)
+      git.close_write
+    rescue Errno::EPIPE
+      # a git that dies first leaves the rest unread: its status says why
+    end
+
     private_class_method def self.capture(dir, args, input)
       output = IO.popen(LOCAL, ["git", *args], "r+", chdir: dir, binmode: true) do |git|
-        git.write(input.to_s)
-        git.close_write
+        fed(git, input)
         git.read
       end #: String
       status = $? #: Process::Status

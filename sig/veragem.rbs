@@ -263,6 +263,7 @@ module Veragem
     def self.executable: (String dir, Array[String] paths) -> void
     def self.merge: (String dir, String ours, String base, String theirs) -> [String, Integer]
     private def self.written: (String path, String bytes) -> String
+    private def self.fed: (IO git, String? input) -> void
     private def self.capture: (String dir, Array[String] args, String? input) -> [String, Process::Status]
   end
 

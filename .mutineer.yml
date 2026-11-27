@@ -71,7 +71,6 @@ ignore:
   - { id: e57d6f4fb781, reason: "project.rb: removing an empty match changes nothing" }
   - { id: 5371c8d83d13, reason: "summary.rb: its one caller reads nil as false" }
   - { id: 4b8660ae2324, reason: "git.rb: cat-file -e reads no input" }
-  - { id: 028bce437c5b, reason: "git.rb: IO#write(nil) writes nothing, as of an empty string" }
   - { id: db73e31f66ce, reason: "git.rb: a temporary directory's prefix names it alone" }
   - { id: cd39a6358964, reason: "source.rb: a temporary directory's prefix names it alone" }
   - { id: 8d00def9c8de, reason: "source.rb: a temporary directory's prefix names it alone" }
