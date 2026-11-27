@@ -65,6 +65,15 @@ module Veragem
     # @raise [Veragem::Error] git could not run
     def self.object?(dir, id) = capture(dir, ["cat-file", "-e", id], nil)[1].success?
 
+    # +paths+ in +dir+ staged, as executables.
+    # @param dir [String] the repository's directory
+    # @param paths [Array<String>] files in it
+    # @return [void]
+    # @raise [Veragem::Error] git could not run, or failed
+    def self.executable(dir, paths)
+      run(dir, "update-index", "--add", "--chmod=+x", "--", *paths) unless paths.empty?
+    end
+
     # +ours+ with what changed from +base+ to +theirs+, as `git merge-file` merges them, and how many
     # conflicts it marked.
     # @param dir [String] the repository's directory

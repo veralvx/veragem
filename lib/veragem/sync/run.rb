@@ -12,7 +12,7 @@ module Veragem
         merge: "veragem and you changed it", keep: "you changed it, veragem did not", removed: "you removed it",
         orphan: "veragem removed it, you changed it", adopted: "yours differs from veragem's",
         conflicted: "merged, its conflicts marked",
-        lost: "merged without its base, which is lost: each difference marked"
+        lost: "merged without its base, which is lost: check it, from its first difference to its last"
       }.freeze
       private_constant :MEANINGS
 
@@ -100,9 +100,10 @@ module Veragem
       def merge(row, entry, base)
         bytes, conflicts = Git.merge(@dir, row.path, base || "", entry.bytes)
         Generator.write(@dir, entry.with(bytes:))
-        return :done if conflicts.zero?
+        # without its base, even a merge git marks nothing in (yours emptied) is yours to check
+        return :lost unless base
 
-        base ? :conflicted : :lost
+        conflicts.zero? ? :done : :conflicted
       end
 
       # Each merge's base, before any file is written: in the repository, or else written again by
@@ -110,7 +111,12 @@ module Veragem
       def bases(merges)
         ids = merges.to_h { [it, it.base || raise] }
         rebuild unless ids.values.all? { Git.object?(@dir, it) }
-        ids.transform_values { Git.output(@dir, "cat-file", "blob", it) if Git.object?(@dir, it) }
+        ids.transform_values { Git.output(@dir, "cat-file", "blob", it) if Git.object?(@dir, it) }.tap { lost(it) }
+      end
+
+      def lost(bases)
+        paths = bases.select { |_, base| base.nil? }.map { |row, _| row.path }
+        @output.puts "No base for #{paths.join(", ")}: veragem #{@record.version}'s, lost" unless paths.empty?
       end
 
       # The record's release writes its harness again, each file's object written: the bases. A
@@ -120,7 +126,7 @@ module Veragem
 
         Source.harness(@record.version, @dir).each { |path, bytes| Git.id(@dir, path, bytes) }
       rescue Error => e
-        @output.puts "#{e.message}: the merges' bases are lost"
+        @output.puts e.message
       end
 
       # The chosen applied, their bases read first; then the record written, and what is left to resolve
@@ -137,21 +143,15 @@ module Veragem
       def applied(chosen, entries)
         bases = bases(chosen.select { it.action == :merge })
         chosen.to_h { [it, apply(it, entries[it.path], bases)] }.tap do
-          stage(chosen.filter_map { entries[it.path] }.select(&:executable))
+          # an executable new to the gem staged, its mode with it, which a file system may lack
+          # (Windows); one it had keeps its index's mode, a merge's markers out of the index
+          Git.executable(@dir, chosen.reject(&:ours).filter_map { entries[it.path] }.select(&:executable).map(&:path))
         end
       end
 
       def record(files)
         Record.new(version: VERSION, source: Sync.source, name: @record.name, values: @record.values, files:)
               .write(@dir)
-      end
-
-      # An executable written is staged, its mode with it: git's index keeps it where the file
-      # system has none (Windows)
-      def stage(executables)
-        return if executables.empty?
-
-        Git.run(@dir, "update-index", "--add", "--chmod=+x", "--", *executables.map(&:path))
       end
     end
   end

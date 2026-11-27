@@ -259,6 +259,7 @@ module Veragem
     def self.ids: (String dir, Array[String] paths) -> Hash[String, String]
     def self.id: (String dir, String path, String bytes) -> String
     def self.object?: (String dir, String id) -> bool
+    def self.executable: (String dir, Array[String] paths) -> void
     def self.merge: (String dir, String ours, String base, String theirs) -> [String, Integer]
     private def self.written: (String path, String bytes) -> String
     private def self.capture: (String dir, Array[String] args, String? input) -> [String, Process::Status]
@@ -330,11 +331,11 @@ module Veragem
       def apply: (Plan::Row row, Generator::Entry? entry, Hash[Plan::Row, String?] bases) -> Symbol
       def merge: (Plan::Row row, Generator::Entry entry, String? base) -> Symbol
       def bases: (Array[Plan::Row] merges) -> Hash[Plan::Row, String?]
+      def lost: (Hash[Plan::Row, String?] bases) -> void
       def rebuild: () -> void
       def finish: (Array[Plan::Row] rows, Array[Plan::Row] chosen, Hash[String, Generator::Entry] entries) -> void
       def applied: (Array[Plan::Row] chosen, Hash[String, Generator::Entry] entries) -> Hash[Plan::Row, Symbol]
       def record: (Hash[String, String] files) -> void
-      def stage: (Array[Generator::Entry] executables) -> void
     end
 
     module Source

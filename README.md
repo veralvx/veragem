@@ -275,9 +275,10 @@ It compares each file three ways: as veragem last wrote it (its object id in `.v
 
 A merge needs the file as veragem last wrote it: the repository has it, or else, in a fresh clone,
 the release that wrote it writes it again, before any file changes. Without it (a checkout's, or a
-release that cannot be fetched), the merge marks each difference. Sync writes the record, then
-fails if a merge left conflicts: resolve them, then commit. An executable it writes it stages, its
-mode with it. A file a later veragem makes the gem's own it leaves alone, and records no more.
+release that cannot be fetched), the merge marks one conflict, from the first difference to the
+last, and sync says so. Sync writes the record, then fails if a merge is left to check: resolve
+it, then commit. A new executable it writes it stages, its mode with it. A file a later veragem
+makes the gem's own it leaves alone, and records no more.
 
 Sync refuses a harness with changes not committed (but for `--dry-run`), a veragem older than the
 record's, and a release after a checkout of its own version, whose changes the release may lack;

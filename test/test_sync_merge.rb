@@ -5,8 +5,10 @@ require "test_helper"
 class TestSyncMerge < Minitest::Test
   include Veragem::SyncSupport
 
-  LOST = "merged without its base, which is lost: each difference marked"
-  BOTH = "veragem and you changed it"
+  LOST = "merged without its base, which is lost: check it, from its first difference to its last"
+  BOTH = "veragem and you changed it\n"
+  # shown after the plan
+  NO_BASE = "No base for .yardopts: veragem #{Veragem::VERSION}'s, lost\n".freeze
 
   def test_both_changes_are_merged
     in_gem do |gem|
@@ -32,8 +34,8 @@ class TestSyncMerge < Minitest::Test
     end
   end
 
-  # a checkout's: no release writes it again. Each difference marked, veragem's recorded: resolved,
-  # then synced again, yours
+  # a checkout's: no release writes it again. Said so, the differences marked, veragem's recorded:
+  # resolved, then synced again, yours
   def test_a_merge_without_its_base_marks_each_difference
     in_gem do |gem|
       older(gem, ".yardopts", "#{YARDOPTS}--mine\n", base: "lost\n")
@@ -41,12 +43,25 @@ class TestSyncMerge < Minitest::Test
 
       message = stubbed(Veragem::Sync::Source, :harness, ->(*) { flunk "a checkout's fetches no release" }) { refused(gem) }
 
-      assert_equal ["resolve, then commit:\n  .yardopts: #{LOST}", "Sync #{HEADING}\n  sync .yardopts: #{BOTH}\n"],
+      assert_equal ["resolve, then commit:\n  .yardopts: #{LOST}", "Sync #{HEADING}\n  sync .yardopts: #{BOTH}#{NO_BASE}"],
                    message
       assert_equal "#{YARDOPTS}<<<<<<< .yardopts\n--mine\n=======\n>>>>>>> veragem\n", read(gem, ".yardopts")
       older(gem, ".yardopts", "#{YARDOPTS}--mine\n", base: YARDOPTS)
 
       assert_equal "Sync #{HEADING}\n  keep .yardopts: you changed it, veragem did not\n", sync(gem)
+    end
+  end
+
+  # yours emptied: veragem's whole, as a merge without a base gives it, but yours to check; an
+  # executable the gem had, not staged, its markers out of the index
+  def test_a_merge_without_its_base_is_left_to_check_whatever_it_marks
+    in_gem do |gem|
+      older(gem, "bin/setup", "", base: "lost\n")
+      git(gem, "gc", "--quiet", "--prune=now")
+
+      assert_equal "resolve, then commit:\n  bin/setup: #{LOST}", refused(gem).first
+      assert_includes status(gem), " M bin/setup\n"
+      refute_match(/^\S/, status(gem), "nothing staged")
     end
   end
 
@@ -58,7 +73,8 @@ class TestSyncMerge < Minitest::Test
       message, shown = stubbed(Veragem::Sync::Source, :harness, unfetched) { refused(gem) }
 
       assert_match(/\Aresolve, then commit:\n  \.editorconfig: merged without its base/, message)
-      assert_includes shown, "cannot fetch veragem 0.0.1 from the gem sources: the merges' bases are lost\n"
+      assert_match(/^cannot fetch veragem 0\.0\.1 from the gem sources\n/, shown)
+      assert_match(/^No base for \.editorconfig, \.yardopts: veragem 0\.0\.1's, lost\n\z/, shown)
     end
   end
 
