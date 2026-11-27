@@ -89,10 +89,11 @@ module Veragem
     private_class_method def self.check(record, force)
       return if force
 
-      if Gem::Version.new(VERSION) < Gem::Version.new(record.version)
+      recorded = Gem::Version.new(record.version)
+      if Gem::Version.new(VERSION) < recorded
         raise Error, "veragem #{VERSION} is older than #{record.version}, which last synced the harness (--force)"
       end
-      return unless record.version == VERSION && source == "release" && record.source == "path"
+      return unless Gem::Version.new(VERSION) == recorded && source == "release" && record.source == "path"
 
       raise Error, "veragem #{VERSION}'s release would undo the checkout of #{VERSION} that last synced the " \
                    "harness: --path to a checkout (--force)"

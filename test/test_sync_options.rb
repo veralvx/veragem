@@ -31,6 +31,15 @@ class TestSyncOptions < Minitest::Test
     end
   end
 
+  # the versions compared as versions: as written, the record's may differ
+  def test_a_release_after_a_checkout_of_its_version_written_otherwise_is_refused
+    in_gem do |gem|
+      rerecord(gem, version: " #{Veragem::VERSION}")
+
+      stubbed(Veragem::Sync, :source, -> { "release" }) { assert_match(/would undo the checkout/, refused(gem).first) }
+    end
+  end
+
   def test_a_release_after_an_older_checkout_is_synced
     in_gem do |gem|
       rerecord(gem, version: "0.0.1")
