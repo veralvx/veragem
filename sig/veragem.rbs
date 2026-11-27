@@ -216,13 +216,13 @@ module Veragem
     def self.entries: (Project project) -> Array[Entry]
     def self.check: (String name, exe: bool, citation: bool, target: String) -> String
     def self.check_name: (String name, bool exe) -> void
+    def self.write: (String target, Entry entry) -> void
     private def self.check_target: (String target) -> void
     private def self.files: (Project project) -> Hash[String, String]
     private def self.templates: (bool exe) -> Array[String]
     private def self.tools: (?String lock) -> Array[String]
     private def self.path_of: (String file, String name) -> String
     private def self.removed_unless_done: (String target) { () -> void } -> void
-    private def self.write: (String target, Entry entry) -> void
     private def self.stage: (String target, Array[Entry] written, Project project) -> void
     private def self.render: (String source, Project project) -> String
   end
@@ -253,7 +253,95 @@ module Veragem
     LOCAL: Hash[String, nil]
 
     def self.run: (String dir, *String args) -> void
-    def self.output: (String dir, *String args) -> String
+    def self.output: (String dir, *String args, ?input: String?) -> String
     def self.ids: (String dir, Array[String] paths) -> Hash[String, String]
+    def self.id: (String dir, String path, String bytes) -> String
+    def self.object?: (String dir, String id) -> bool
+    def self.merge: (String dir, String ours, String base, String theirs) -> [String, Integer]
+    private def self.capture: (String dir, Array[String] args, String? input) -> [String, Process::Status]
+  end
+
+  module Sync
+    BANNER: String
+    OPTIONS: Array[[String, String]]
+
+    type options = Hash[Symbol, String | bool]
+
+    def self.main: (Array[String] argv, ?dir: String, ?input: Questions::_Input, ?output: Questions::_Output) -> void
+    def self.options: (Array[String] argv) -> [options, Array[String]?]
+    def self.render: (Record record, String dir) -> void
+    def self.source: () -> String
+    private def self.adopted: (Array[String] argv, String dir) -> Record
+    private def self.check: (Record record, bool force) -> void
+    private def self.parser: () -> OptionParser
+
+    module Plan
+      APPLIED: Array[Symbol]
+
+      class Row < Data
+        attr_reader path: String
+        attr_reader action: Symbol
+        attr_reader base: String?
+        attr_reader ours: String?
+        attr_reader theirs: String?
+
+        def self.new: (String path, Symbol action, String? base, String? ours, String? theirs) -> instance
+                    | (path: String, action: Symbol, base: String?, ours: String?, theirs: String?) -> instance
+      end
+
+      def self.action: (String? base, String? ours, String? theirs, ?adopt: bool) -> Symbol
+      def self.rows: (Hash[String, String] base, Hash[String, String] ours, Hash[String, String] theirs, ?adopt: bool) -> Array[Row]
+      def self.recorded: (Array[Row] rows, Array[Row] applied) -> Hash[String, String]
+      private def self.changed: (String base, String? ours, String? theirs) -> Symbol
+    end
+
+    module Selection
+      PROMPT: String
+
+      def self.parse: (String answer, Integer count, Array[Integer] defaults) -> Array[Integer]?
+      private def self.numbers: (String list, Integer count) -> Array[Integer]?
+    end
+
+    class Run
+      MEANINGS: Hash[Symbol, String]
+
+      @dir: String
+      @record: Record
+      @options: options
+      @input: Questions::_Input
+      @output: Questions::_Output
+      @rebuilt: bool
+
+      def initialize: (String dir, Record record, options options, input: Questions::_Input, output: Questions::_Output) -> void
+      def call: () -> void
+
+      private
+
+      def rows: (Hash[String, Generator::Entry] entries) -> Array[Plan::Row]
+      def check_clean: (Array[String] paths) -> void
+      def ours: (Array[String] paths) -> Hash[String, String]
+      def choose: (Array[Plan::Row] shown) -> Array[Plan::Row]
+      def ask: (Array[Plan::Row] shown, Array[Plan::Row] taken) -> Array[Plan::Row]
+      def choice: (Integer count, Array[Integer] defaults) -> Array[Integer]
+      def line: (Plan::Row row) -> String
+      def apply: (Plan::Row row, Generator::Entry? entry) -> Symbol
+      def merge: (Plan::Row row, Generator::Entry entry) -> Symbol
+      def merged: (String path, String base, String theirs) -> [String, Integer]
+      def base: (String id) -> String?
+      def rebuild: () -> void
+      def finish: (Array[Plan::Row] rows, Array[Plan::Row] chosen, Hash[String, Generator::Entry] entries) -> void
+      def unresolved: (Array[Plan::Row] rows, Array[Plan::Row] chosen, Hash[Plan::Row, Symbol] outcomes) -> Array[String]
+    end
+
+    module Source
+      SCRIPT: String
+
+      def self.launch: (Array[String] argv, ?dir: String) -> void
+      def self.harness: (String version, String dir) -> Hash[String, String]
+      private def self.fetch: (String? version, String dir) -> String
+      private def self.gem_command: (Array[String] args, String dir) -> bool?
+      private def self.sync?: (String root) -> bool
+      private def self.run: (String root, Array[String] argv, String dir) -> bool?
+    end
   end
 end

@@ -27,16 +27,14 @@ module Veragem
     # git's output in +dir+, as bytes.
     # @param dir [String] the repository's directory
     # @param args [Array<String>] git's arguments
+    # @param input [String, nil] its input; none, an empty one
     # @return [String]
     # @raise [Veragem::Error] git could not run, or failed
-    def self.output(dir, *args)
-      output = IO.popen(LOCAL, ["git", *args], chdir: dir, in: File::NULL, binmode: true, &:read) #: String
-      status = $? #: Process::Status
+    def self.output(dir, *args, input: nil)
+      output, status = capture(dir, args, input)
       raise Error, "git #{args.join(" ")} failed in #{dir}" unless status.success?
 
       output
-    rescue SystemCallError
-      raise Error, "cannot run git in #{dir}"
     end
 
     # The object id git gives each of +paths+ in +dir+, as `git add` would: its attributes' filters
@@ -47,6 +45,52 @@ module Veragem
     # @raise [Veragem::Error] git could not run, or failed
     def self.ids(dir, paths)
       paths.zip(output(dir, "hash-object", "--", *paths).lines(chomp: true)).to_h
+    end
+
+    # The object id of +bytes+ as `git add` would give them at +path+ in +dir+, the object written,
+    # so that a merge finds it as a base.
+    # @param dir [String] the repository's directory
+    # @param path [String] where in it
+    # @param bytes [String]
+    # @return [String]
+    # @raise [Veragem::Error] git could not run, or failed
+    def self.id(dir, path, bytes) = output(dir, "hash-object", "-w", "--stdin", "--path=#{path}", input: bytes).chomp
+
+    # Whether +dir+'s repository holds the object +id+.
+    # @param dir [String] the repository's directory
+    # @param id [String]
+    # @return [Boolean]
+    # @raise [Veragem::Error] git could not run
+    def self.object?(dir, id) = capture(dir, ["cat-file", "-e", id], nil)[1].success?
+
+    # +ours+ with what changed from +base+ to +theirs+, as `git merge-file` merges them, and how many
+    # conflicts it marked.
+    # @param dir [String] the repository's directory
+    # @param ours [String] the file to merge into, in +dir+
+    # @param base [String] their common base's file
+    # @param theirs [String] the other side's file
+    # @return [Array(String, Integer)]
+    # @raise [Veragem::Error] git could not run, or failed
+    def self.merge(dir, ours, base, theirs)
+      args = ["merge-file", "--stdout", "-L", ours, "-L", "base", "-L", "veragem", ours, base, theirs]
+      output, status = capture(dir, args, nil)
+      # its status the count of conflicts, at most 127; an error's -1, 255
+      conflicts = status.exitstatus.to_i
+      raise Error, "git merge-file #{ours} failed in #{dir}" if conflicts > 127
+
+      [output, conflicts]
+    end
+
+    private_class_method def self.capture(dir, args, input)
+      output = IO.popen(LOCAL, ["git", *args], "r+", chdir: dir, binmode: true) do |git|
+        git.write(input) if input
+        git.close_write
+        git.read
+      end #: String
+      status = $? #: Process::Status
+      [output, status]
+    rescue SystemCallError
+      raise Error, "cannot run git in #{dir}"
     end
   end
 end

@@ -23,6 +23,9 @@ require "minitest/autorun"
 require "pbt"
 require "json"
 require "tmpdir"
+require "digest"
+require "rubygems/package"
+require "zlib"
 
 module Veragem
   # What the tests share: a project's values, and a directory to generate into.
@@ -174,6 +177,148 @@ module Veragem
       # without RUBYOPT, whose options (-v) would print before the JSON
       JSON.parse(IO.popen({ "RUBYOPT" => nil }, [RbConfig.ruby, "-rjson", "-e", script, "#{gem.name}.gemspec"],
                           chdir: target, external_encoding: Encoding::UTF_8, &:read))
+    end
+  end
+
+  # What sync's tests share: a gem generated and committed, its record rewritten as an older
+  # veragem's, and a sync of it.
+  module SyncSupport
+    include GeneratedSupport
+
+    HEADING = "from veragem #{VERSION} (path)".freeze
+    YARDOPTS = File.read(File.join(Generator::TEMPLATE, ".yardopts"))
+
+    # my_gem, generated into a directory of its own and committed
+    def in_gem(**values)
+      in_tmpdir do |dir|
+        target = File.join(dir, "my_gem")
+        Generator.generate(project(**values), target)
+        commit(target)
+        yield target
+      end
+    end
+
+    def commit(target, message = "a commit")
+      git(target, "add", "--all")
+      git(target, "-c", "user.name=Jane", "-c", "user.email=jane@example.com", "commit", "--quiet", "--allow-empty",
+          "-m", message)
+    end
+
+    # the record as an older veragem's would be, +changes+ its files' (nil: none), then committed
+    def rerecord(target, changes = {}, **fields)
+      record = Record.read(target)
+      files = record.files.merge(changes).compact
+      given = { version: record.version, source: record.source, name: record.name, values: record.values }
+      Record.new(**given, **fields, files:).write(target)
+      commit(target)
+    end
+
+    # +path+ as an older veragem wrote it, +base+, and as the gem has it, +ours+; committed
+    def older(target, path, ours, base: ours, **fields)
+      write(target, path, ours)
+      rerecord(target, { path => id(target, path, base) }, **fields)
+    end
+
+    # the id of +bytes+ at +path+, written: a base sync finds
+    def id(target, path, bytes) = Git.id(target, path, bytes)
+
+    # the id of +text+, its object not written
+    def blob(text) = Digest::SHA1.hexdigest("blob #{text.bytesize}\0#{text}")
+
+    # what this veragem writes at +path+, and its id
+    def theirs_text(target, path) = Generator.entries(Record.read(target).project).find { it.path == path }.bytes
+
+    def theirs(target, path) = id(target, path, theirs_text(target, path))
+
+    # the record's id of +path+
+    def recorded(target, path) = Record.read(target).files[path]
+
+    # what sync showed, its argv's
+    def sync(target, *argv, input: StringIO.new)
+      output = StringIO.new(+"")
+      Sync.main(argv, dir: target, input:, output:)
+      output.string
+    end
+
+    # the refusal, and what sync showed by then
+    def refused(target, *argv, input: StringIO.new)
+      output = StringIO.new(+"")
+      error = assert_raises(Error) { Sync.main(argv, dir: target, input:, output:) }
+      [error.message, output.string]
+    end
+
+    def status(target) = git(target, "status", "--porcelain")
+
+    def write(target, path, text) = File.write(File.join(target, path), text)
+
+    # +answers+ typed at a terminal, one a line
+    def terminal(*answers) = StringIO.new(answers.map { "#{it}\n" }.join).tap { |io| def io.tty? = true }
+  end
+
+  # What the release's tests share: gem sources of this checkout built as a gem, and of a release
+  # before sync.
+  module ReleaseSupport
+    ROOT = File.expand_path("..", __dir__)
+
+    class << self
+      # each built once, for every test
+      attr_accessor :built, :old
+    end
+
+    Minitest.after_run { [built, old].compact.each { FileUtils.rm_rf(File.dirname(it)) } }
+
+    def built = ReleaseSupport.built ||= build_gem
+
+    def old = ReleaseSupport.old ||= build_old
+
+    # the gem sources an index of +gems+ alone, as GEMRC names them; the test's environment, not
+    # Bundler's from before it, a sync's
+    def with_sources(*gems, &)
+      in_tmpdir do |dir|
+        index(dir, gems)
+        File.write(File.join(dir, "gemrc"), ":sources:\n- file:///#{dir.delete_prefix("/")}/\n")
+        with_env("GEMRC" => File.join(dir, "gemrc")) { stubbed(Bundler, :original_env, -> { ENV.to_h }, &) }
+      end
+    end
+
+    private
+
+    def build_gem
+      out = File.join(Dir.mktmpdir("veragem-built"), "veragem.gem")
+      script = "Gem::CommandManager.instance.run(ARGV)"
+      system({ "RUBYOPT" => nil }, RbConfig.ruby, "-rrubygems/command_manager", "-e", script, "--", "build",
+             "veragem.gemspec", "--output=#{out}", chdir: ROOT, out: File::NULL, exception: true)
+      out
+    end
+
+    def build_old
+      dir = Dir.mktmpdir("veragem-old")
+      spec = Gem::Specification.new("veragem", "0.0.1") do |gem|
+        gem.summary = "old"
+        gem.authors = ["x"]
+      end
+      file = nil
+      capture_io { file = Dir.chdir(dir) { Gem::Package.build(spec) } }
+      File.join(dir, file)
+    end
+
+    # RubyGems' index of +gems+: their specs, the latest, none prereleased; each gem and its spec
+    def index(dir, gems)
+      specs = gems.map { Gem::Package.new(it).spec }
+      lists(specs).each { |name, list| File.binwrite(File.join(dir, "#{name}.4.8.gz"), Zlib.gzip(Marshal.dump(list))) }
+      gems.zip(specs).each { |gem, spec| publish(dir, gem, spec) }
+    end
+
+    def lists(specs)
+      tuples = specs.map { [it.name, it.version, it.platform.to_s] }
+      { "specs" => tuples, "latest_specs" => [tuples.max_by { it[1] }], "prerelease_specs" => [] }
+    end
+
+    def publish(dir, gem, spec)
+      quick = File.join(dir, "quick", "Marshal.4.8")
+      FileUtils.mkdir_p([File.join(dir, "gems"), quick])
+      FileUtils.cp(gem, File.join(dir, "gems", "#{spec.full_name}.gem"))
+      File.binwrite(File.join(quick, "#{spec.full_name}.gemspec.rz"), Zlib::Deflate.deflate(Marshal.dump(spec)))
     end
   end
 end

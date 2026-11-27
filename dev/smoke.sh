@@ -141,6 +141,22 @@ for gem in "${gems[@]}"; do
         echo "smoke: no Docker daemon here: the image is not run (on Linux, rake nix builds it)" >&2
       fi
     fi
+    # the installed plugin's sync, in the gem's bundle: nothing from the checkout that generated it;
+    # from a copy of it whose template changed one harness file, that file
+    if [ "$gem" = smoke_lib ]; then
+      copy="$work/veragem-copy"
+      mkdir -p "$copy/.git"
+      cp -R "$root/lib" "$root/template" "$root/Gemfile.lock" "$copy"
+      echo "# smoke" >> "$copy/template/.editorconfig"
+      version="$(ruby -I "$root/lib" -r veragem/version -e 'print Veragem::VERSION')"
+      bundle veragem-sync --path "$root" > "$work/sync"
+      has "$work/sync" "Nothing to sync from veragem $version (path)"
+      bundle veragem-sync --path "$copy" > "$work/sync"
+      has "$work/sync" "  sync .editorconfig: veragem changed it, you did not"
+      has .editorconfig "# smoke"
+      git commit --quiet --all --message "chore: sync the harness"
+      committed
+    fi
     if [ -e CITATION.cff ]; then
       # a level checked first, its usage said whatever the tree
       echo >> README.md

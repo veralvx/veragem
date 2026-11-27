@@ -139,7 +139,11 @@ module Veragem
       end
     end
 
-    private_class_method def self.write(target, entry)
+    # +entry+ written into +target+, its directories made, executable if it is.
+    # @param target [String] the gem's directory
+    # @param entry [Veragem::Generator::Entry]
+    # @return [void]
+    def self.write(target, entry)
       destination = File.join(target, entry.path)
       FileUtils.mkdir_p(File.dirname(destination))
       File.binwrite(destination, entry.bytes)
