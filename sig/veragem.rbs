@@ -202,7 +202,17 @@ module Veragem
     CITATION: String
     TOOLS_LOCK: String
 
+    class Entry < Data
+      attr_reader path: String
+      attr_reader bytes: String
+      attr_reader executable: bool
+
+      def self.new: (String path, String bytes, bool executable) -> instance
+                  | (path: String, bytes: String, executable: bool) -> instance
+    end
+
     def self.generate: (Project project, String target) -> void
+    def self.entries: (Project project) -> Array[Entry]
     def self.check: (String name, exe: bool, citation: bool, target: String) -> String
     def self.check_name: (String name, bool exe) -> void
     private def self.check_target: (String target) -> void
@@ -211,7 +221,7 @@ module Veragem
     private def self.tools: (?String lock) -> Array[String]
     private def self.path_of: (String file, String name) -> String
     private def self.removed_unless_done: (String target) { () -> void } -> void
-    private def self.write: (String file, String destination, Project project) -> void
+    private def self.write: (String target, Entry entry) -> void
     private def self.stage: (String target, Array[String] executables) -> void
     private def self.render: (String source, Project project) -> String
     private def self.git: (String dir, *String args) -> void

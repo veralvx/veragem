@@ -20,6 +20,15 @@ class TestGeneratorModes < Minitest::Test
     end
   end
 
+  # what sync compares a gem with: each file generate writes, its bytes, and the executables
+  def test_the_entries_are_the_files_written
+    each_kind do |gem, target, files|
+      entries = Veragem::Generator.entries(gem).to_h { [it.path, [it.bytes.b, it.executable]] }
+
+      assert_equal written(target, files), entries
+    end
+  end
+
   def test_the_modes_follow_the_umask
     skip "Windows has no file modes: the index keeps them (test_the_executables_keep_their_mode)" if Gem.win_platform?
     in_tmpdir do |dir|
@@ -32,5 +41,13 @@ class TestGeneratorModes < Minitest::Test
 
       assert_equal([0o600, 0o700], %w[README.md bin/setup].map { File.stat(File.join(dir, "my_gem", it)).mode & 0o777 })
     end
+  end
+
+  private
+
+  # each file's bytes, and whether git's index keeps it executable
+  def written(target, files)
+    executables = indexed_executables(target)
+    files.to_h { [it, [File.binread(File.join(target, it)), executables.include?(it)]] }
   end
 end

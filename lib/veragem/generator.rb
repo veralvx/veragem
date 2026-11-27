@@ -31,6 +31,9 @@ module Veragem
     TOOLS_LOCK = File.expand_path("../../Gemfile.lock", __dir__ || raise)
     private_constant :GIT_LOCAL, :LICENSE_FILES, :CITATION, :TOOLS_LOCK
 
+    # A file of a gem: its path, its bytes, and whether it runs as a command.
+    Entry = Data.define(:path, :bytes, :executable)
+
     # Into +target+, a new directory: a failure, an interrupt included, leaves none behind.
     # @param project [Veragem::Project] the gem
     # @param target [String] its directory, not yet there
@@ -38,14 +41,25 @@ module Veragem
     # @raise [Veragem::Error] +target+ exists, its name cannot be generated, or a write or git fails
     def self.generate(project, target)
       check(project.name, exe: project.exe?, citation: project.citation?, target:)
-      written = files(project)
+      written = entries(project)
       Dir.mkdir(target)
       removed_unless_done(target) do
-        written.each { |file, path| write(file, File.join(target, path), project) }
-        stage(target, written.filter_map { |file, path| path if EXECUTABLES.include?(file) })
+        written.each { write(target, it) }
+        stage(target, written.select(&:executable).map(&:path))
       end
     rescue SystemCallError => e
       raise Error, e.message
+    end
+
+    # Each file +project+'s gem has, as generate writes it: each `.erb` file rendered, every other as is.
+    # @param project [Veragem::Project] the gem
+    # @return [Array<Veragem::Generator::Entry>]
+    def self.entries(project)
+      files(project).map do |file, path|
+        source = File.join(TEMPLATE, file)
+        bytes = file.end_with?(".erb") ? render(source, project) : File.binread(source)
+        Entry.new(path, bytes, EXECUTABLES.include?(file))
+      end
     end
 
     # Every rule a gem's name meets before anything is written, its kinds' and its directory's: the
@@ -123,11 +137,11 @@ module Veragem
       end
     end
 
-    private_class_method def self.write(file, destination, project)
-      source = File.join(TEMPLATE, file)
+    private_class_method def self.write(target, entry)
+      destination = File.join(target, entry.path)
       FileUtils.mkdir_p(File.dirname(destination))
-      File.binwrite(destination, file.end_with?(".erb") ? render(source, project) : File.binread(source))
-      return unless EXECUTABLES.include?(file)
+      File.binwrite(destination, entry.bytes)
+      return unless entry.executable
 
       # executable where readable: the umask decides, as it does the read bits
       mode = File.stat(destination).mode
