@@ -62,9 +62,11 @@ module Veragem
         Plan.rows(recorded, ours(paths), theirs)
       end
 
+      # an ignored file too, which no commit holds: every file sync writes or deletes is git's to restore
       def check_clean(paths)
-        changed = Git.output(@dir, "status", "--porcelain", "--", Record::FILE, *paths)
-        raise Error, "commit or stash the harness's changes first:\n#{changed}" unless changed.empty?
+        changed = Git.output(@dir, "--literal-pathspecs", "status", "--porcelain", "--ignored", "--", Record::FILE,
+                             *paths)
+        raise Error, "commit, stash or remove the harness's changes first:\n#{changed}" unless changed.empty?
       end
 
       def ours(paths) = Git.ids(@dir, paths.select { File.file?(File.join(@dir, it)) })

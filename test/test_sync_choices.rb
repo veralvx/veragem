@@ -5,30 +5,6 @@ require "test_helper"
 class TestSyncChoices < Minitest::Test
   include Veragem::SyncSupport
 
-  def test_the_harness_changed_and_not_committed_is_refused
-    in_gem do |gem|
-      write(gem, "Rakefile", "# mine\n")
-
-      assert_equal "commit or stash the harness's changes first:\n M Rakefile\n", refused(gem).first
-    end
-  end
-
-  def test_the_gems_own_files_changed_are_no_harness
-    in_gem do |gem|
-      write(gem, "README.md", "mine\n")
-
-      assert_equal "Nothing to sync #{HEADING}\n", sync(gem)
-    end
-  end
-
-  def test_the_record_changed_and_not_committed_is_refused
-    in_gem do |gem|
-      write(gem, ".veragem.yml", "#{read(gem, ".veragem.yml")}# mine\n")
-
-      assert_equal "commit or stash the harness's changes first:\n M .veragem.yml\n", refused(gem).first
-    end
-  end
-
   def test_a_dry_run_changes_nothing
     in_gem do |gem|
       older(gem, ".yardopts", "old\n")

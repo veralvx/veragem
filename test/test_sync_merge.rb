@@ -100,7 +100,7 @@ class TestSyncMerge < Minitest::Test
   def lost_bases(gem, editorconfig)
     bases = { ".yardopts" => YARDOPTS.lines.drop(1).join, ".editorconfig" => "# old\n#{editorconfig}" }
     bases.each { |path, base| write(gem, path, "#{base}# mine\n") }
-    rerecord(gem, bases.to_h { |path, base| [path, blob(base)] }, version: "0.0.1", source: "release")
+    rerecord(gem, bases.to_h { |path, base| [path, blob(gem, base)] }, version: "0.0.1", source: "release")
     bases
   end
 end

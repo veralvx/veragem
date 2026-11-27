@@ -23,7 +23,6 @@ require "minitest/autorun"
 require "pbt"
 require "json"
 require "tmpdir"
-require "digest"
 require "rubygems/package"
 require "zlib"
 
@@ -222,8 +221,8 @@ module Veragem
     # the id of +bytes+ at +path+, written: a base sync finds
     def id(target, path, bytes) = Git.id(target, path, bytes)
 
-    # the id of +text+, its object not written
-    def blob(text) = Digest::SHA1.hexdigest("blob #{text.bytesize}\0#{text}")
+    # the id of +text+ in +target+, its object not written
+    def blob(target, text) = Git.output(target, "hash-object", "--stdin", input: text).chomp
 
     # what this veragem writes at +path+, and its id
     def theirs_text(target, path) = Generator.entries(Record.read(target).project).find { it.path == path }.bytes
