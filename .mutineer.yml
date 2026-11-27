@@ -36,12 +36,23 @@ ignore:
   - { id: b295db2a52c7, reason: "citation.rb: the GitHub user, required, is asked before the alias" }
   - { id: 1feb2c391304, reason: "options.rb: a nil default reads as an absent one ([]); compact keeps it String" }
   - { id: cbdceb9248b4, reason: "summary.rb: the keyword is nil only with no match, so no colon nor space either" }
+  - { id: eb67955ee3d9, reason: "git.rb: exitstatus is nil only for a git a signal killed, which output reads empty" }
+  - { id: fa3a44a7f960, reason: "run.rb: a merged row is veragem's, so it has its entry" }
+  - { id: 12881800acf2, reason: "run.rb: an added or updated row is veragem's, so it has its entry" }
+  - { id: 065a3034b2fb, reason: "run.rb: a merged row has its base" }
+  - { id: 95833f35bf10, reason: "run.rb: a nil base is written as the empty one" }
   # an exception's text is its message: puts, interpolation and raise read it alike
   - { id: 2cb248365d33, reason: "generator.rb: Error.new(e) reads e's message" }
   - { id: e828006988c4, reason: "name.rb: a SystemCallError's to_s is its message" }
+  - { id: e6c172f6d44a, reason: "sync.rb: Error.new(e) reads e's message" }
+  - { id: 7913b92a14d2, reason: "run.rb: puts e writes e's message" }
   # each and map alike: the block's value unused
   - { id: b653f69cef85, reason: "options.rb: OptionParser.new ignores its block's value" }
   - { id: a93b0e39900f, reason: "options.rb: the block raises or returns nothing used" }
+  - { id: 643e6dee7882, reason: "sync.rb: OptionParser.new ignores its block's value" }
+  - { id: ea3cd85a1205, reason: "sync.rb: the block's value is unused" }
+  - { id: 15602731c0a8, reason: "run.rb: the block's value is unused" }
+  - { id: ee4f6b5aec92, reason: "run.rb: the block's value is unused" }
   # identities
   - { id: 055cc7bb2a07, reason: "citation.rb: ISO 7064's (12 - r) % 11 is (1 - r) % 11, 12 and 1 alike mod 11" }
   - { id: 68846607f55e, reason: "generator.rb: a GEM section is never empty: Bundler writes its remote first" }
@@ -58,3 +69,14 @@ ignore:
   - { id: 279689c357df, reason: "project.rb: removing an empty match changes nothing" }
   - { id: e57d6f4fb781, reason: "project.rb: removing an empty match changes nothing" }
   - { id: 5371c8d83d13, reason: "summary.rb: its one caller reads nil as false" }
+  - { id: 4b8660ae2324, reason: "git.rb: cat-file -e reads no input" }
+  - { id: 028bce437c5b, reason: "git.rb: IO#write(nil) writes nothing, as of an empty string" }
+  - { id: db73e31f66ce, reason: "git.rb: a temporary directory's prefix names it alone" }
+  - { id: 13f5388ccaf4, reason: "git.rb: merge-file shows the base's label only with --diff3" }
+  - { id: 0a254864a25e, reason: "git.rb: merge-file exits at most 127 for its conflicts, else 255" }
+  - { id: 24f73d66b7e9, reason: "run.rb: a merge without its base is lost whatever it marks, and no line is mutineer's" }
+  - { id: 0af55b5016be, reason: "selection.rb: a range from nothing starts at 0, which no list numbers" }
+  - { id: cd39a6358964, reason: "source.rb: a temporary directory's prefix names it alone" }
+  - { id: 8d00def9c8de, reason: "source.rb: a temporary directory's prefix names it alone" }
+  - { id: 8250b96eb918, reason: "source.rb: gem fetch takes an empty --version as the latest" }
+  - { id: 11c821ec2851, reason: "source.rb: gem fetch writes one .gem" }
