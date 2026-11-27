@@ -79,9 +79,19 @@ class TestSyncOptions < Minitest::Test
     {
       %w[--bogus] => "invalid option: --bogus (bundle veragem-sync --help)",
       %w[--path] => "missing argument: --path (bundle veragem-sync --help)",
-      %w[my_gem] => "no such argument my_gem (bundle veragem-sync --help)"
+      %w[my_gem other] => "no such argument my_gem (bundle veragem-sync --help)",
+      %w[--dry --pa x] => "invalid option: --dry (bundle veragem-sync --help)"
     }.each do |argv, message|
       assert_equal message, assert_raises(Veragem::Error) { Veragem::Sync.options(argv) }.message
     end
+  end
+
+  def test_help_and_version_are_syncs
+    help, = capture_io { assert_raises(SystemExit) { Veragem::Sync.options(%w[--help]) } }
+    version, = capture_io { assert_raises(SystemExit) { Veragem::Sync.options(%w[--version]) } }
+
+    assert_match(/\AUsage: bundle veragem-sync \[--path DIR\]/, help)
+    assert_match(/^ +--path=DIR +Sync from the veragem checkout at DIR/, help)
+    assert_equal "bundle veragem-sync #{Veragem::VERSION}\n", version
   end
 end

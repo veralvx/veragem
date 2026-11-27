@@ -74,7 +74,8 @@ class TestSyncRun < Minitest::Test
       rerecord(gem, { ".yardopts" => nil })
 
       assert_equal "Sync #{HEADING}\n  sync .yardopts: veragem added it\n", sync(gem)
-      assert_equal YARDOPTS, read(gem, ".yardopts")
+      assert_equal [YARDOPTS, "?? .yardopts\n"], [read(gem, ".yardopts"), status(gem).lines.grep(/yardopts/).join],
+                   "not staged: no executable"
     end
   end
 
@@ -121,6 +122,17 @@ class TestSyncRun < Minitest::Test
       denied = ->(*) { raise Errno::EACCES, ".yardopts" }
 
       assert_equal "Permission denied - .yardopts", stubbed(Veragem::Generator, :write, denied) { refused(gem).first }
+    end
+  end
+
+  # veragem's hashed as yours are, at its path: its attributes' filters applied alike
+  def test_veragems_files_are_hashed_as_the_gems
+    in_gem do |gem|
+      write(gem, ".gitattributes", "#{read(gem, ".gitattributes")}Rakefile filter=upper\n")
+      git(gem, "config", "filter.upper.clean", "tr a-z A-Z")
+      commit(gem)
+
+      assert_equal "Sync #{HEADING}\n  keep .gitattributes: you changed it, veragem did not\n", sync(gem)
     end
   end
 end

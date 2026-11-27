@@ -52,7 +52,7 @@ module Veragem
     # @return [Array(Hash{Symbol => String, Boolean}, Array<String>, nil)]
     # @raise [Veragem::Error] an option is refused
     def self.options(argv)
-      own, adopt = argv.index("--adopt").then { it ? [argv[...it], argv[(it + 1)..]] : [argv, nil] }
+      own, adopt = argv.index("--adopt").then { it ? [argv.take(it), argv.drop(it + 1)] : [argv, nil] }
       given = {} #: options
       rest = parser.parse(own, into: given)
       raise Error, "no such argument #{rest.first} (bundle veragem-sync --help)" unless rest.empty?

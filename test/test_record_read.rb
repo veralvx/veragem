@@ -5,7 +5,8 @@ require "test_helper"
 class TestRecordRead < Minitest::Test
   include Veragem::GeneratedSupport
 
-  CITED = TestRecord::CITED
+  CITED = { citation: true, given_names: "Jane", family_names: "Doe", alias: "jd", orcid: "0000-0002-1825-0097",
+            keywords: "gems, tools", email: "jane@example.com" }.freeze
 
   def test_the_record_reads_as_written
     in_tmpdir do |dir|

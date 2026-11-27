@@ -43,8 +43,9 @@ class TestSyncMerge < Minitest::Test
 
       message = stubbed(Veragem::Sync::Source, :harness, ->(*) { flunk "a checkout's fetches no release" }) { refused(gem) }
 
-      assert_equal ["resolve, then commit:\n  .yardopts: #{LOST}", "Sync #{HEADING}\n  sync .yardopts: #{BOTH}#{NO_BASE}"],
-                   message
+      shown = "Sync #{HEADING}\n  sync .yardopts: #{BOTH}#{NO_BASE}"
+
+      assert_equal ["resolve, then commit:\n  .yardopts: #{LOST}", shown], message
       assert_equal "#{YARDOPTS}<<<<<<< .yardopts\n--mine\n=======\n>>>>>>> veragem\n", read(gem, ".yardopts")
       older(gem, ".yardopts", "#{YARDOPTS}--mine\n", base: YARDOPTS)
 
@@ -72,7 +73,7 @@ class TestSyncMerge < Minitest::Test
       unfetched = ->(*) { raise Veragem::Error, "cannot fetch veragem 0.0.1 from the gem sources" }
       message, shown = stubbed(Veragem::Sync::Source, :harness, unfetched) { refused(gem) }
 
-      assert_match(/\Aresolve, then commit:\n  \.editorconfig: merged without its base/, message)
+      assert_equal "resolve, then commit:\n  .editorconfig: #{LOST}\n  .yardopts: #{LOST}", message
       assert_match(/^cannot fetch veragem 0\.0\.1 from the gem sources\n/, shown)
       assert_match(/^No base for \.editorconfig, \.yardopts: veragem 0\.0\.1's, lost\n\z/, shown)
     end

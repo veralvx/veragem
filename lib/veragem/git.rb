@@ -71,7 +71,7 @@ module Veragem
     # @return [void]
     # @raise [Veragem::Error] git could not run, or failed
     def self.executable(dir, paths)
-      run(dir, "update-index", "--add", "--chmod=+x", "--", *paths) unless paths.empty?
+      run(dir, "update-index", "--add", "--chmod=+x", "--", *paths)
     end
 
     # +ours+ with what changed from +base+ to +theirs+, as `git merge-file` merges them, and how many
@@ -99,7 +99,7 @@ module Veragem
 
     private_class_method def self.capture(dir, args, input)
       output = IO.popen(LOCAL, ["git", *args], "r+", chdir: dir, binmode: true) do |git|
-        git.write(input) if input
+        git.write(input.to_s)
         git.close_write
         git.read
       end #: String

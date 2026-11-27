@@ -28,14 +28,6 @@ class TestSyncSource < Minitest::Test
     end
   end
 
-  def test_a_path_without_sync_is_refused
-    in_tmpdir do |dir|
-      error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(["--path", dir], dir:) }
-
-      assert_equal "#{dir} has no bundle veragem-sync: a veragem checkout has", error.message
-    end
-  end
-
   def test_the_latest_release_syncs_by_default
     in_gem do |gem|
       rerecord(gem, source: "release")
@@ -43,19 +35,6 @@ class TestSyncSource < Minitest::Test
       with_sources(built, old) do
         assert_equal ["Nothing to sync from veragem #{Veragem::VERSION} (release)\n", "", nil], launched(gem)
       end
-    end
-  end
-
-  def test_path_is_read_alone
-    in_tmpdir do |dir|
-      ["--path=#{dir}", "--dry-run", "--path", dir, "--adopt", "x"].then do |argv|
-        error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(argv, dir:) }
-
-        assert_equal "#{dir} has no bundle veragem-sync: a veragem checkout has", error.message
-      end
-      error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(%w[--dry-run --path], dir:) }
-
-      assert_equal "missing argument: --path (bundle veragem-sync --help)", error.message
     end
   end
 

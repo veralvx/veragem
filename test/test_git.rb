@@ -95,4 +95,16 @@ class TestGit < Minitest::Test
       assert_equal "a\n", Veragem::Git.output(dir, "stripspace", input: "a\n\n")
     end
   end
+
+  # in the index, whatever the file system's mode; none, nothing
+  def test_files_are_staged_executable
+    in_tmpdir do |dir|
+      Veragem::Git.run(dir, "init", "--quiet")
+      File.binwrite(File.join(dir, "a"), "a\n")
+      Veragem::Git.executable(dir, [])
+      Veragem::Git.executable(dir, ["a"])
+
+      assert_equal "100755 a", Veragem::Git.output(dir, "ls-files", "--format=%(objectmode) %(path)").chomp
+    end
+  end
 end
