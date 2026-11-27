@@ -40,6 +40,7 @@ ignore:
   - { id: 12881800acf2, reason: "run.rb: an added or updated row is veragem's, so it has its entry" }
   - { id: 065a3034b2fb, reason: "run.rb: a merged row has its base" }
   - { id: 95833f35bf10, reason: "run.rb: a nil base is written as the empty one" }
+  - { id: aa95c2ac582d, reason: "source.rb: a local the loop alone assigns reads nil unassigned; Steep's type" }
   # an exception's text is its message: puts, interpolation and raise read it alike
   - { id: 2cb248365d33, reason: "generator.rb: Error.new(e) reads e's message" }
   - { id: e828006988c4, reason: "name.rb: a SystemCallError's to_s is its message" }
