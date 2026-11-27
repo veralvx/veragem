@@ -76,8 +76,8 @@ module Veragem
 
     # @param version [String] the veragem version that wrote the harness
     # @param source [String] "release" or "path"
-    # @param name [String] the gem's name
-    # @param values [Hash{Symbol => String, Boolean, nil}] the gem's values
+    # @param name [String] the name the gem was generated with
+    # @param values [Hash{Symbol => String, Boolean, nil}] as Project.new takes them
     # @param files [Hash{String => String}] each harness file's object id
     # @return [void]
     def initialize(version:, source:, name:, values:, files:)
