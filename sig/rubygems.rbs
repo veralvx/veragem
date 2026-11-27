@@ -1,0 +1,15 @@
+# The part of RubyGems the launcher uses that RBS's core signatures of it lack.
+module Gem
+  class Exception < RuntimeError
+  end
+
+  class Package
+    def initialize: (String gem) -> void
+    def spec: () -> Specification
+  end
+
+  class Specification
+    def version: () -> Version
+    def required_ruby_version: () -> Requirement
+  end
+end

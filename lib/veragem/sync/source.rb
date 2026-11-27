@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "rbconfig"
+require "rubygems/package"
 require "tmpdir"
 
 module Veragem
@@ -21,13 +22,14 @@ module Veragem
       # @param argv [Array<String>] the command's arguments
       # @param dir [String] the gem's directory
       # @return [void]
-      # @raise [Veragem::Error] --path has no directory, or no veragem with sync is found
+      # @raise [Veragem::Error] --path has no directory, or no veragem with sync is found, or one this
+      #   Ruby cannot run
       # @raise [SystemExit] the sync failed, its reason shown
       def self.launch(argv, dir: Dir.pwd)
         path = path_of(argv)
         Dir.mktmpdir("veragem-sync") do |tmp|
-          root = path ? File.expand_path(path, dir) : fetch(nil, tmp)
-          raise Error, "#{root} has no bundle veragem-sync: a veragem checkout has" unless sync?(root)
+          root = path ? expanded(path, dir) : fetch(nil, tmp)
+          raise Error, no_sync(path, root) unless sync?(root)
 
           exit(1) unless run(root, SYNC, argv, dir)
         end
@@ -38,7 +40,7 @@ module Veragem
       # @param version [String]
       # @param dir [String] the gem's directory
       # @return [Hash{String => String}]
-      # @raise [Veragem::Error] the release cannot be fetched
+      # @raise [Veragem::Error] the release cannot be fetched, or this Ruby cannot run it
       def self.harness(version, dir)
         Dir.mktmpdir("veragem-sync") do |tmp|
           root = fetch(version, tmp)
@@ -64,7 +66,21 @@ module Veragem
         path
       end
 
-      # veragem +version+, else the latest, unpacked into +dir+.
+      # a checkout's directory, or the release's name: its directory gone once refused
+      private_class_method def self.no_sync(path, root)
+        return "#{root} has no bundle veragem-sync: a veragem checkout has" if path
+
+        "#{File.basename(root)}, the latest release, has no bundle veragem-sync: --path a checkout"
+      end
+
+      # ~user's, refused as an Error
+      private_class_method def self.expanded(path, dir)
+        File.expand_path(path, dir)
+      rescue ArgumentError => e
+        raise Error, "cannot read --path #{path}: #{e}"
+      end
+
+      # veragem +version+, else the latest, unpacked into +dir+
       private_class_method def self.fetch(version, dir)
         args = %w[fetch veragem]
         args << "--version=#{version}" if version
@@ -72,8 +88,19 @@ module Veragem
         gem = Dir.glob("veragem-*.gem", base: dir).first
         raise Error, "cannot fetch veragem #{version || "(the latest)"} from the gem sources" unless gem
 
+        check_ruby(File.join(dir, gem))
         gem_command(["unpack", gem, "--target=#{dir}"], dir)
         File.join(dir, File.basename(gem, ".gem"))
+      end
+
+      # this Ruby's, which gem fetch takes the latest whatever Ruby it needs
+      private_class_method def self.check_ruby(gem)
+        spec = Gem::Package.new(gem).spec
+        return if spec.required_ruby_version.satisfied_by?(Gem.ruby_version)
+
+        raise Error, "veragem #{spec.version} needs Ruby #{spec.required_ruby_version}, not #{Gem.ruby_version}"
+      rescue Gem::Exception => e
+        raise Error, "cannot read #{File.basename(gem)}: #{e}"
       end
 
       # RubyGems' `gem` command, of this Ruby whichever `gem` is first in PATH, and no gem's plugin

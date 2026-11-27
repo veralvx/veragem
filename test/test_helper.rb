@@ -263,17 +263,20 @@ module Veragem
 
     class << self
       # each built once, for every test
-      attr_accessor :built, :old, :broken
+      attr_accessor :built, :old, :broken, :future
     end
 
-    Minitest.after_run { [built, old, broken].compact.each { FileUtils.rm_rf(File.dirname(it)) } }
+    Minitest.after_run { [built, old, broken, future].compact.each { FileUtils.rm_rf(File.dirname(it)) } }
 
     def built = ReleaseSupport.built ||= build_gem
 
     def old = ReleaseSupport.old ||= build_old
 
     # a release whose sync cannot run: its lib/veragem.rb missing
-    def broken = ReleaseSupport.broken ||= build_old("0.0.2", "lib/veragem/sync.rb" => "")
+    def broken = ReleaseSupport.broken ||= build_old("0.0.2", { "lib/veragem/sync.rb" => "" })
+
+    # a release for a Ruby to come
+    def future = ReleaseSupport.future ||= build_old("9.9.9", ruby: ">= 99")
 
     # the gem sources an index of +gems+ alone, as GEMRC names them; the test's environment, not
     # Bundler's from before it, a sync's
@@ -295,17 +298,21 @@ module Veragem
       out
     end
 
-    def build_old(version = "0.0.1", files = {})
+    def build_old(version = "0.0.1", files = {}, ruby: ">= 0")
       dir = Dir.mktmpdir("veragem-old")
       files.each { |path, text| written(File.join(dir, path), text) }
-      spec = Gem::Specification.new("veragem", version) do |gem|
+      file = nil
+      capture_io { file = Dir.chdir(dir) { Gem::Package.build(old_spec(version, files.keys, ruby)) } }
+      File.join(dir, file)
+    end
+
+    def old_spec(version, files, ruby)
+      Gem::Specification.new("veragem", version) do |gem|
         gem.summary = "old"
         gem.authors = ["x"]
-        gem.files = files.keys
+        gem.files = files
+        gem.required_ruby_version = ruby
       end
-      file = nil
-      capture_io { file = Dir.chdir(dir) { Gem::Package.build(spec) } }
-      File.join(dir, file)
     end
 
     def written(path, text)

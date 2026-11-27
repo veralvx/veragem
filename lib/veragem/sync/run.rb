@@ -120,7 +120,7 @@ module Veragem
       end
 
       # The record's release writes its harness again, each file's object written: the bases. A
-      # checkout's, or a release that cannot be fetched, leaves them lost.
+      # checkout's, or a release that cannot be fetched or run, leaves them lost.
       def rebuild
         return unless @record.source == "release"
 

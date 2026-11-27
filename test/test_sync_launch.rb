@@ -25,7 +25,7 @@ class TestSyncLaunch < Minitest::Test
       with_sources(old) do
         error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(%w[--adopt --path /none], dir:) }
 
-        assert_match %r{/veragem-0\.0\.1 has no bundle veragem-sync}, error.message
+        assert_match(/\Averagem-0\.0\.1, the latest release, has no bundle veragem-sync/, error.message)
       end
     end
   end

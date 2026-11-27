@@ -348,7 +348,10 @@ module Veragem
       def self.launch: (Array[String] argv, ?dir: String) -> void
       def self.harness: (String version, String dir) -> Hash[String, String]
       private def self.path_of: (Array[String] argv) -> String?
+      private def self.no_sync: (String? path, String root) -> String
+      private def self.expanded: (String path, String dir) -> String
       private def self.fetch: (String? version, String dir) -> String
+      private def self.check_ruby: (String gem) -> void
       private def self.gem_command: (Array[String] args, String dir) -> bool?
       private def self.sync?: (String root) -> bool
       private def self.run: (String root, String call, Array[String] argv, String dir) -> bool?

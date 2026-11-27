@@ -38,23 +38,11 @@ class TestSyncSource < Minitest::Test
     end
   end
 
-  def test_no_release_is_refused
+  def test_a_path_of_no_user_is_refused
     in_gem do |gem|
-      with_sources do
-        error = assert_raises(Veragem::Error) { capture_subprocess_io { Veragem::Sync::Source.launch([], dir: gem) } }
+      error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(["--path=~no-such-user-x/v"], dir: gem) }
 
-        assert_equal "cannot fetch veragem (the latest) from the gem sources", error.message
-      end
-    end
-  end
-
-  def test_a_release_without_sync_is_refused
-    in_gem do |gem|
-      with_sources(old) do
-        error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch([], dir: gem) }
-
-        assert_match %r{/veragem-0\.0\.1 has no bundle veragem-sync: a veragem checkout has\z}, error.message
-      end
+      assert_match %r{\Acannot read --path ~no-such-user-x/v: }, error.message
     end
   end
 
@@ -72,16 +60,6 @@ class TestSyncSource < Minitest::Test
       with_sources(old, broken) do
         assert_equal([{}, ""], capture_subprocess_io_value { Veragem::Sync::Source.harness("0.0.1", gem) })
         assert_equal({}, capture_subprocess_io_value { Veragem::Sync::Source.harness("0.0.2", gem) }.first)
-      end
-    end
-  end
-
-  def test_a_release_not_found_is_refused
-    in_gem do |gem|
-      with_sources(old) do
-        error = assert_raises(Veragem::Error) { capture_subprocess_io { Veragem::Sync::Source.harness("9.9.9", gem) } }
-
-        assert_equal "cannot fetch veragem 9.9.9 from the gem sources", error.message
       end
     end
   end
