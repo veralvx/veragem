@@ -48,7 +48,7 @@ module Veragem
 
     # The options +argv+ gives, and the arguments that follow --adopt, nil without it.
     # @param argv [Array<String>] the command's arguments
-    # @return [Array(Hash{Symbol => String, Boolean}, Array<String>, nil)]
+    # @return [Array(Hash{Symbol => String, Boolean}, Array<String>), Array(Hash{Symbol => String, Boolean}, nil)]
     # @raise [Veragem::Error] an option is refused
     def self.options(argv)
       own, adopt = argv.index("--adopt").then { it ? [argv.take(it), argv.drop(it + 1)] : [argv, nil] }

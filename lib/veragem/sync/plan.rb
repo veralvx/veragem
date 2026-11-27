@@ -36,9 +36,9 @@ module Veragem
         end
       end
 
-      # The record's ids once +applied+ are taken: an applied file's theirs; a file the gem removed,
-      # or adopted, theirs too, the gem's file kept as it is; every other its base, so sync reports it
-      # again.
+      # The record's ids once +applied+ are taken: an applied file's theirs; a file the same on both
+      # sides, or the gem removed, or adopted, theirs too, the gem's file kept as it is; every other
+      # its base, so sync reports it again.
       # @param rows [Array<Veragem::Sync::Plan::Row>]
       # @param applied [Array<Veragem::Sync::Plan::Row>] the rows taken
       # @return [Hash{String => String}]

@@ -276,19 +276,21 @@ It compares each file three ways: as veragem last wrote it (its object id in `.v
 | none      | added     | adds it                                                 |
 | differs   | added     | keeps yours, veragem's its base from then on            |
 
-A merge needs the file as veragem last wrote it: the repository has it, or else, in a fresh clone,
-the release that wrote it writes it again, before any file changes. Without it (a checkout's, or a
-release that cannot be fetched), the merge marks one conflict, from the first difference to the
-last, and sync says so. Sync writes the record, then fails if a merge is left to check: resolve
-it, then commit. A new executable it writes it stages, its mode with it. A file a later veragem
-makes the gem's own it leaves alone, and records no more.
+A merge needs the file as veragem last wrote it: the repository has it, or else (a fresh clone, or
+once `git gc` prunes it) the release that wrote it writes it again, before any file changes. Without
+it (a checkout's, or a release that cannot be fetched or run), the merge marks each difference as a
+conflict (in `merge.conflictStyle` diff3's, the whole file as one), and sync says so. Sync writes
+the record, then fails if a merge is left to check: resolve it, then commit; to back out of it,
+restore `.veragem.yml` with the file. A new executable it writes it stages, its mode with it. A file
+a later veragem makes the gem's own it leaves alone, and records no more.
 
-Sync refuses a harness with changes not committed (but for `--dry-run`), a veragem older than the
-record's, and a release after a checkout of its own version, whose changes the release may lack;
-`--force` syncs from either. `--interactive` numbers the files that differ, marks with `*` the ones
-sync takes unasked, and asks which to sync (`1,3-5`, `all`, `none`; Enter takes the marked): one
-you changed or removed then takes veragem's, and one veragem removed is deleted. A file not taken
-is shown again by the next sync.
+Sync refuses a harness with changes not committed or files ignored (remove one, or `git add --force`
+it; but for `--dry-run`), a veragem older than the record's, and a release after a checkout of its
+own version, whose changes the release may lack; `--force` syncs from either. It refuses a release
+this Ruby cannot run. `--interactive` numbers the files that differ, marks with `*` the ones sync
+takes unasked, and asks which to sync (`1,3-5`, `all`, `none`; Enter takes the marked): one you
+changed or removed then takes veragem's, and one veragem removed is deleted. A file not taken is
+shown again by the next sync.
 
 A gem generated before sync has no `.veragem.yml`: `--adopt` and the values it was generated with,
 as `bundle veragem` takes them (`bundle veragem-sync --adopt my_gem --exe`), record each file

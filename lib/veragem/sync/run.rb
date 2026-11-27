@@ -89,7 +89,7 @@ module Veragem
 
       def line(row, why = row.action) = "#{row.path}: #{MEANINGS.fetch(why)}"
 
-      # How it went: :done, :conflicted (conflicts marked) or :lost (its base too)
+      # How it went: :done, :conflicted (conflicts marked) or :lost (merged without its base)
       def apply(row, entry, bases)
         case row.action
         when :delete, :orphan then File.delete(File.join(@dir, row.path))

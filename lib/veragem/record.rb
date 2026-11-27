@@ -45,7 +45,7 @@ module Veragem
     # @return [String] "path" or "release"
     def self.source_of(root) = File.exist?(File.join(root, ".git")) ? "path" : "release"
 
-    # +project+'s values, as Project.new takes them again: none nil, keywords joined by ", ".
+    # +project+'s values, as Project.new takes them again: nil for none, keywords joined by ", ".
     # @param project [Veragem::Project]
     # @return [Hash{Symbol => String, Boolean, nil}]
     def self.values_of(project)
@@ -120,6 +120,7 @@ module Veragem
       end
     end
 
+    # A record of the YAML's data, every field of its kind.
     private_class_method def self.parse(data)
       # checked in the body, not in a guard: coverage sees no line of a pattern run, nor mutineer its mutants
       case data
