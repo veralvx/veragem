@@ -37,10 +37,9 @@ ignore:
   - { id: 1feb2c391304, reason: "options.rb: a nil default reads as an absent one ([]); compact keeps it String" }
   - { id: cbdceb9248b4, reason: "summary.rb: the keyword is nil only with no match, so no colon nor space either" }
   - { id: fa3a44a7f960, reason: "run.rb: a merged row is veragem's, so it has its entry" }
-  - { id: 12881800acf2, reason: "run.rb: an added or updated row is veragem's, so it has its entry" }
+  - { id: 12881800acf2, reason: "run.rb: every row it writes is veragem's, so it has its entry" }
   - { id: 065a3034b2fb, reason: "run.rb: a merged row has its base" }
   - { id: 95833f35bf10, reason: "run.rb: a nil base is written as the empty one" }
-  - { id: aa95c2ac582d, reason: "source.rb: a local the loop alone assigns reads nil unassigned; Steep's type" }
   # an exception's text is its message: puts, interpolation and raise read it alike
   - { id: 2cb248365d33, reason: "generator.rb: Error.new(e) reads e's message" }
   - { id: e828006988c4, reason: "name.rb: a SystemCallError's to_s is its message" }
@@ -59,6 +58,7 @@ ignore:
   - { id: 68846607f55e, reason: "generator.rb: a GEM section is never empty: Bundler writes its remote first" }
   - { id: 4b014462f593, reason: "generator.rb: a spec's line names its gem" }
   - { id: 5a9f582c0451, reason: "generator.rb: done, assigned later, reads nil, as false, until set" }
+  - { id: aa95c2ac582d, reason: "source.rb: a local the loop alone assigns reads nil unassigned" }
   # e61f5f050374 (string_literal) is aaa57fa42f40's edit (literal_mutation), which mutineer runs
   # once, listing the other as its copy; an entry ignores its own id alone, so both stay.
   # test_nothing_is_left_unrendered refuses ERB left in any file generated
@@ -70,13 +70,16 @@ ignore:
   - { id: 279689c357df, reason: "project.rb: removing an empty match changes nothing" }
   - { id: e57d6f4fb781, reason: "project.rb: removing an empty match changes nothing" }
   - { id: 5371c8d83d13, reason: "summary.rb: its one caller reads nil as false" }
+  # git's input: one that reads none takes any alike, written or refused by its closed pipe
   - { id: 4b8660ae2324, reason: "git.rb: cat-file -e reads no input" }
+  - { id: 7a109d18f16e, reason: "git.rb: merge-file reads its files, no input" }
+  # a temporary directory's prefix names it alone
   - { id: db73e31f66ce, reason: "git.rb: a temporary directory's prefix names it alone" }
+  - { id: 9558fe5d2578, reason: "git.rb: a temporary directory's prefix names it alone" }
   - { id: cd39a6358964, reason: "source.rb: a temporary directory's prefix names it alone" }
   - { id: 8d00def9c8de, reason: "source.rb: a temporary directory's prefix names it alone" }
-  - { id: 8250b96eb918, reason: "source.rb: gem fetch takes an empty --version as the latest" }
-  - { id: 11c821ec2851, reason: "source.rb: gem fetch writes one .gem" }
-  - { id: 7a109d18f16e, reason: "git.rb: merge-file reads its files, no input" }
-  - { id: 9558fe5d2578, reason: "git.rb: a temporary directory's prefix names it alone" }
   - { id: e3660141afbb, reason: "source.rb: a temporary directory's prefix names it alone" }
   - { id: 08e6e5920151, reason: "source.rb: a temporary directory's prefix names it alone" }
+  # gem fetch's
+  - { id: 8250b96eb918, reason: "source.rb: gem fetch takes an empty --version as the latest" }
+  - { id: 11c821ec2851, reason: "source.rb: gem fetch writes one .gem" }
