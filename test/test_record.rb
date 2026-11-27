@@ -86,7 +86,7 @@ class TestRecord < Minitest::Test
     files = [{ "Rakefile" => "abc" }, { "Rakefile" => 1 }, { "Rakefile" => "a" * 40, "Gemfile" => "abc" }]
 
     [*files.map { valid.merge("files" => it) }, "version: [", "- a list", valid.merge("source" => "elsewhere"),
-     valid.except("name"), valid.merge("values" => "none")].each do |text|
+     valid.except("name"), valid.merge("values" => "none"), valid.merge("version" => "not one")].each do |text|
       assert_match(/\Ainvalid \.veragem\.yml: /, refusal(text.is_a?(String) ? text : YAML.dump(text)), text.inspect)
     end
   end

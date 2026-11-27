@@ -109,10 +109,11 @@ module Veragem
     private_class_method def self.parse(data)
       case data
       in { version: String => version, source: String => source, name: String => name, values: Hash => values,
-           files: Hash => files } if SOURCES.include?(source) && files.values.all? { it.is_a?(String) && ID.match?(it) }
+           files: Hash => files } if Gem::Version.correct?(version) && SOURCES.include?(source) &&
+             files.values.all? { it.is_a?(String) && ID.match?(it) }
         new(version:, source:, name:, values:, files: files.transform_keys(&:to_s))
       else
-        raise Error, "invalid #{FILE}: version, source (release or path), name, values and files"
+        raise Error, "invalid #{FILE}: version (a gem's), source (release or path), name, values and files"
       end
     end
   end
