@@ -21,7 +21,7 @@ bundle exec rake hooks   # optional: the quick checks before a commit, the messa
 ## Layout
 
 ```
-plugins.rb              what Bundler loads: the `bundle veragem` command
+plugins.rb              what Bundler loads: the `bundle veragem` and `bundle veragem-sync` commands
 lib/veragem.rb          Veragem.run: the command line, the project, the generation
 lib/veragem/options.rb  OptionParser, git config's defaults
 lib/veragem/questions.rb  a terminal's questions for what no option gives
@@ -32,6 +32,11 @@ lib/veragem/summary.rb  the summary, the module's comment too: what yard-lint an
 lib/veragem/markdown.rb  what the templates write as Markdown: a value as text, a badge
 lib/veragem/project.rb  the values, checked, and what follows from them
 lib/veragem/generator.rb  template/ written out (ERB rendered, executables marked); git
+lib/veragem/git.rb      git, run in a gem's repository alone
+lib/veragem/record.rb   .veragem.yml: the harness as veragem last wrote it
+lib/veragem/sync.rb     bundle veragem-sync: sync/plan.rb, what each file takes; sync/run.rb, the
+                        sync; sync/selection.rb, --interactive's choice; sync/source.rb, the
+                        veragem it runs, a checkout or a release
 template/               the generated gem
 sig/, test/, dev/smoke.sh
 ```
@@ -44,7 +49,10 @@ project its `self` (`lib/veragem/project.rb`: `name`, `path`, `constant`, `autho
 are the project's. The command line's files are the `--exe` kind's alone, each LICENSE file its
 licence's, and CITATION.cff a `--citation`'s (`Generator::EXE`, `Generator::LICENSE_FILES`,
 `Generator::CITATION`). A file `Generator::EXECUTABLES` lists is executable, on the disk and in
-git's index (`test/test_sync.rb` holds the list to the template's modes).
+git's index (`test/test_sync.rb` holds the list to the template's modes). A file
+`Generator::OWN` lists is the gem's own once generated; every other is the harness, which
+`bundle veragem-sync` keeps current: `Sync.main` and its `--render DIR` are what one veragem runs of
+another, so they stay as they are.
 
 Keep a file plain unless it needs a value: a plain file is checked in place, as this repository's
 own. **This repository's harness is the template's**: each plain file of `template/` is here too,

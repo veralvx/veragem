@@ -94,7 +94,7 @@ class TestGeneratorRefusals < Minitest::Test
   def test_gits_repository_variables_are_unset
     local = IO.popen(%w[git rev-parse --local-env-vars], &:read).split
 
-    assert_empty local - %w[GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS] - Veragem::Generator.const_get(:GIT_LOCAL).keys
+    assert_empty local - %w[GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS] - Veragem::Git.const_get(:LOCAL).keys
   end
 
   # as from a git hook, which points git at its own repository

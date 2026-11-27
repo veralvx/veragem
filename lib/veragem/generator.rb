@@ -17,11 +17,12 @@ module Veragem
     # commit keeps, where the file system has no mode (Windows: core.fileMode false).
     EXECUTABLES = %w[.githooks/commit-msg .githooks/pre-commit .githooks/pre-push .github/image-registries.sh
                      .github/release-notes.sh bin/console.erb bin/setup exe/%name%.erb].freeze
-    # git's variables that point it at another repository (`git rev-parse --local-env-vars`, but the
-    # configuration given with `git -c`), which a git hook sets: unset, the repository is the gem's.
-    GIT_LOCAL = %w[GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_CONFIG GIT_OBJECT_DIRECTORY GIT_DIR GIT_WORK_TREE
-                   GIT_IMPLICIT_WORK_TREE GIT_GRAFT_FILE GIT_INDEX_FILE GIT_NO_REPLACE_OBJECTS GIT_REPLACE_REF_BASE
-                   GIT_PREFIX GIT_SHALLOW_FILE GIT_COMMON_DIR].to_h { [it, nil] }.freeze
+    # The gem's own files, which it makes its own once generated: its code, signatures and tests, its
+    # gemspec, README, licences and citation. Every other file is the harness, veragem's, which
+    # `bundle veragem-sync` keeps current.
+    OWN = %w[%name%.gemspec.erb CITATION.cff.erb LICENSE-APACHE.erb LICENSE-MIT.erb README.md.erb exe/%name%.erb
+             lib/%path%.rb.erb lib/%path%/cli.rb.erb lib/%path%/version.rb.erb sig/%path%.rbs.erb
+             test/test_%underscored%.rb.erb test/test_cli.rb.erb test/test_helper.rb.erb].freeze
     # Each LICENSE-* file's SPDX identifier.
     LICENSE_FILES = { "LICENSE-MIT.erb" => "MIT", "LICENSE-APACHE.erb" => "Apache-2.0" }.freeze
     # The citation's file, a citation's alone (--citation).
@@ -29,7 +30,11 @@ module Veragem
     # The tools' resolution: this repository's Gemfile is the template's (test_sync.rb), so its lock
     # names every gem a generated gem's tools load, theirs included.
     TOOLS_LOCK = File.expand_path("../../Gemfile.lock", __dir__ || raise)
-    private_constant :GIT_LOCAL, :LICENSE_FILES, :CITATION, :TOOLS_LOCK
+    private_constant :LICENSE_FILES, :CITATION, :TOOLS_LOCK
+
+    # A file of a gem: its path, its bytes, whether it runs as a command, and whether it is the
+    # harness's (not OWN).
+    Entry = Data.define(:path, :bytes, :executable, :harness)
 
     # Into +target+, a new directory: a failure, an interrupt included, leaves none behind.
     # @param project [Veragem::Project] the gem
@@ -38,14 +43,25 @@ module Veragem
     # @raise [Veragem::Error] +target+ exists, its name cannot be generated, or a write or git fails
     def self.generate(project, target)
       check(project.name, exe: project.exe?, citation: project.citation?, target:)
-      written = files(project)
+      written = entries(project)
       Dir.mkdir(target)
       removed_unless_done(target) do
-        written.each { |file, path| write(file, File.join(target, path), project) }
-        stage(target, written.filter_map { |file, path| path if EXECUTABLES.include?(file) })
+        written.each { write(target, it) }
+        stage(target, written, project)
       end
     rescue SystemCallError => e
       raise Error, e.message
+    end
+
+    # Each file +project+'s gem has, as generate writes it: each `.erb` file rendered, every other as is.
+    # @param project [Veragem::Project] the gem
+    # @return [Array<Veragem::Generator::Entry>]
+    def self.entries(project)
+      files(project).map do |file, path|
+        source = File.join(TEMPLATE, file)
+        bytes = file.end_with?(".erb") ? render(source, project) : File.binread(source)
+        Entry.new(path, bytes, EXECUTABLES.include?(file), !OWN.include?(file))
+      end
     end
 
     # Every rule a gem's name meets before anything is written, its kinds' and its directory's: the
@@ -123,36 +139,35 @@ module Veragem
       end
     end
 
-    private_class_method def self.write(file, destination, project)
-      source = File.join(TEMPLATE, file)
+    # +entry+ written into +target+, its directories made, executable if it is.
+    # @param target [String] the gem's directory
+    # @param entry [Veragem::Generator::Entry]
+    # @return [void]
+    def self.write(target, entry)
+      destination = File.join(target, entry.path)
       FileUtils.mkdir_p(File.dirname(destination))
-      File.binwrite(destination, file.end_with?(".erb") ? render(source, project) : File.binread(source))
-      return unless EXECUTABLES.include?(file)
+      File.binwrite(destination, entry.bytes)
+      return unless entry.executable
 
       # executable where readable: the umask decides, as it does the read bits
       mode = File.stat(destination).mode
       File.chmod(mode | ((mode & 0o444) >> 2), destination)
     end
 
-    # A repository of its own, every file added, the executables' mode in the index too
-    private_class_method def self.stage(target, executables)
-      git(target, "init", "--quiet", "--initial-branch=main")
+    # A repository of its own, every file added, the executables' mode in the index too; then the
+    # record of the harness added, as the index holds it
+    private_class_method def self.stage(target, written, project)
+      Git.run(target, "init", "--quiet", "--initial-branch=main")
       # --force: the user's own excludes (core.excludesFile) keep none of the gem's files out
-      git(target, "add", "--all", "--force")
-      git(target, "update-index", "--chmod=+x", "--", *executables)
+      Git.run(target, "add", "--all", "--force")
+      Git.run(target, "update-index", "--chmod=+x", "--", *written.select(&:executable).map(&:path))
+      Record.of(project, target, written).write(target)
+      Git.run(target, "add", "--force", "--", Record::FILE)
     end
 
     # The ERB's values are +project+'s: its methods, called bare.
     private_class_method def self.render(source, project)
       ERB.new(File.read(source, encoding: Encoding::UTF_8), trim_mode: "-").result(project.instance_eval { binding })
-    end
-
-    # system's nil: git could not run; false: it failed
-    private_class_method def self.git(dir, *args)
-      case system(GIT_LOCAL, "git", *args, chdir: dir)
-      when nil then raise Error, "cannot run git in #{dir}"
-      when false then raise Error, "git #{args.join(" ")} failed in #{dir}"
-      end
     end
   end
 end

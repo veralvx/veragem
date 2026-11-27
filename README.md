@@ -246,6 +246,57 @@ not take as documentation:
   first;
 - a backtick or `**` left open.
 
+## Sync
+
+`bundle veragem-sync`, run in a gem veragem generated, brings its harness to the latest veragem
+release's: the workflows, the flake, the hooks, the tools' configuration, every file but the gem's
+own. Its code, signatures and tests, its gemspec, README, licences and citation are yours: sync
+never touches them (`Generator::OWN`).
+
+```sh
+bundle veragem-sync --dry-run          # what would change
+bundle veragem-sync                    # change it; review, then commit
+bundle veragem-sync --path ../veragem  # from a veragem checkout instead
+```
+
+Each option but `--adopt` has a letter too: `-p DIR`, `-n` (`--dry-run`), `-i` (`--interactive`)
+and `-f` (`--force`), joined as `-nf`.
+
+It compares each file three ways: as veragem last wrote it (its object id in `.veragem.yml`, which
+`bundle veragem` writes and each sync updates), as the gem has it, and as this veragem writes it.
+
+| You       | veragem   | Sync                                                    |
+| --------- | --------- | ------------------------------------------------------- |
+| unchanged | changed   | takes veragem's                                         |
+| changed   | unchanged | keeps yours                                             |
+| changed   | changed   | merges both, as `git merge-file` does, conflicts marked |
+| removed   | any       | keeps it removed                                        |
+| unchanged | removed   | deletes it                                              |
+| changed   | removed   | keeps yours                                             |
+| none      | added     | adds it                                                 |
+| differs   | added     | keeps yours, veragem's its base from then on            |
+
+A merge needs the file as veragem last wrote it: the repository has it, or else (a fresh clone, or
+once `git gc` prunes it) the release that wrote it writes it again, before any file changes. Without
+it (a checkout's, or a release that cannot be fetched or run), the merge marks each difference as a
+conflict (in `merge.conflictStyle` diff3's, the whole file as one), and sync says so. Sync writes
+the record, then fails if a merge is left to check: resolve it, then commit; to back out of it,
+restore `.veragem.yml` with the file. A new executable it writes it stages, its mode with it. A file
+a later veragem makes the gem's own it leaves alone, and records no more.
+
+Sync refuses a harness with changes not committed or files ignored (remove one, or `git add --force`
+it; but for `--dry-run`), a veragem older than the record's, and a release after a checkout of its
+own version, whose changes the release may lack; `--force` syncs from either. It refuses a release
+this Ruby cannot run. `--interactive` numbers the files that differ, marks with `*` the ones sync
+takes unasked, and asks which to sync (`1,3-5`, `all`, `none`; Enter takes the marked): one you
+changed or removed then takes veragem's, and one veragem removed is deleted. A file not taken is
+shown again by the next sync.
+
+A gem generated before sync has no `.veragem.yml`: `--adopt` and the values it was generated with,
+as `bundle veragem` takes them (`bundle veragem-sync --adopt my_gem --exe`), record each file
+veragem writes, yours kept where they differ. Bundler registers a plugin's commands when it installs
+it: a plugin installed before sync has none until installed again (`bundle plugin install veragem`).
+
 ## Generated files
 
 ```
@@ -269,6 +320,7 @@ dprint.json, .editorconfig
                       and pull request templates
 README, CONTRIBUTING, AGENTS, SECURITY, CODE_OF_CONDUCT, LICENSE-MIT / LICENSE-APACHE
 CITATION.cff          with --citation: the citation, its version and date `rake bump`'s
+.veragem.yml          the harness's record, which `bundle veragem-sync` reads and rewrites
 ```
 
 The Gemfile leaves the development tools unconstrained: the lock pins them at the versions current

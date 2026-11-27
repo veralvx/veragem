@@ -8,9 +8,12 @@ require_relative "veragem/license"
 require_relative "veragem/summary"
 require_relative "veragem/markdown"
 require_relative "veragem/project"
+require_relative "veragem/git"
+require_relative "veragem/record"
 require_relative "veragem/questions"
 require_relative "veragem/options"
 require_relative "veragem/generator"
+require_relative "veragem/sync"
 
 # `bundle veragem NAME`: a new gem, its toolchain wired up.
 module Veragem
