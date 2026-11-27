@@ -49,7 +49,7 @@ class TestSyncPlan < Minitest::Test
   end
 
   def test_what_is_no_choice_is_nil
-    ["0", "5", "1-5", "3-1", "0-2", "1,", "a", "1 2", "-1", "1-", "1,2-", "1,9", "all,1"].each do |answer|
+    ["0", "5", "1-5", "3-1", "0-2", "1,", "a", "1 2", "-1", "1-", "1,2-", "1,9", "all,1", ",3"].each do |answer|
       assert_nil Selection.parse(answer, 4, [2]), answer.inspect
     end
   end

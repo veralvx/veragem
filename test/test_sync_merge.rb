@@ -61,6 +61,7 @@ class TestSyncMerge < Minitest::Test
       git(gem, "gc", "--quiet", "--prune=now")
 
       assert_equal "resolve, then commit:\n  bin/setup: #{LOST}", refused(gem).first
+      assert_equal theirs_text(gem, "bin/setup"), read(gem, "bin/setup")
       assert_includes status(gem), " M bin/setup\n"
       refute_match(/^\S/, status(gem), "nothing staged")
     end

@@ -48,8 +48,8 @@ ignore:
   # each and map alike: the block's value unused
   - { id: b653f69cef85, reason: "options.rb: OptionParser.new ignores its block's value" }
   - { id: a93b0e39900f, reason: "options.rb: the block raises or returns nothing used" }
-  - { id: 643e6dee7882, reason: "sync.rb: OptionParser.new ignores its block's value" }
-  - { id: ea3cd85a1205, reason: "sync.rb: the block's value is unused" }
+  - { id: 643e6dee7882, reason: "sync.rb: the block's value is unused" }
+  - { id: ea3cd85a1205, reason: "sync.rb: OptionParser.new ignores its block's value" }
   - { id: 15602731c0a8, reason: "run.rb: the block's value is unused" }
   - { id: ee4f6b5aec92, reason: "run.rb: the block's value is unused" }
   - { id: ae6ff0c7ef52, reason: "run.rb: with_index's block reads each element alike" }
@@ -72,8 +72,6 @@ ignore:
   - { id: 4b8660ae2324, reason: "git.rb: cat-file -e reads no input" }
   - { id: 028bce437c5b, reason: "git.rb: IO#write(nil) writes nothing, as of an empty string" }
   - { id: db73e31f66ce, reason: "git.rb: a temporary directory's prefix names it alone" }
-  - { id: 24f73d66b7e9, reason: "run.rb: a merge without its base is lost whatever it marks, and no line is mutineer's" }
-  - { id: 0af55b5016be, reason: "selection.rb: a range from nothing starts at 0, which no list numbers" }
   - { id: cd39a6358964, reason: "source.rb: a temporary directory's prefix names it alone" }
   - { id: 8d00def9c8de, reason: "source.rb: a temporary directory's prefix names it alone" }
   - { id: 8250b96eb918, reason: "source.rb: gem fetch takes an empty --version as the latest" }
