@@ -12,10 +12,12 @@ module Veragem
     FILE = ".veragem.yml"
     # Where a veragem comes from: RubyGems, or a checkout.
     SOURCES = %w[release path].freeze
-    # A git object id: SHA-1's, or SHA-256's.
-    ID = /\A\h{40}(?:\h{24})?\z/
-    # A path's part: a name, neither . nor .., in no other directory's syntax (Windows' \ and C:)
-    PART = /\A(?!\.\.?\z)[^\\:]+\z/
+    # A git object id, as git writes it: SHA-1's, or SHA-256's.
+    ID = /\A[0-9a-f]{40}(?:[0-9a-f]{24})?\z/
+    # A path's part: a name, neither . nor .., nor git's own .git as a file system may name it (in
+    # any case; NTFS's, with trailing dots or spaces, or GIT~1), in no other directory's syntax
+    # (Windows' \ and C:), and no NUL
+    PART = /\A(?!\.\.?\z)(?!\.git[. ]*\z)(?!git~\d+\z)[^\\:\0]+\z/i
     # The refusal of a record that is not one.
     INVALID = "invalid #{FILE}: version (a gem's), source (release or path), name, values and files " \
               "(paths in the gem)".freeze
@@ -110,11 +112,11 @@ module Veragem
       File.binwrite(File.join(dir, FILE), "# bundle veragem-sync reads this file, and rewrites it\n#{YAML.dump(data)}")
     end
 
-    # A record of the YAML's data, every field of its kind.
-    # each file's a path in the gem, its id a git object's
-    private_class_method def self.valid?(files)
-      files.all? do |path, id|
-        path.to_s.split("/", -1).all? { PART.match?(it) } && case id when String then ID.match?(id) end
+    # each value a string, a boolean or none; each file's a path in the gem, its id a git object's
+    private_class_method def self.valid?(values, files)
+      values.values.all? { it in String | true | false | nil } && files.all? do |path, id|
+        parts = path.to_s.split("/", -1)
+        !parts.empty? && parts.all? { PART.match?(it) } && case id when String then ID.match?(id) end
       end
     end
 
@@ -123,7 +125,7 @@ module Veragem
       case data
       in { version: String => version, source: String => source, name: String => name, values: Hash => values,
            files: Hash => files }
-        raise Error, INVALID unless Gem::Version.correct?(version) && SOURCES.include?(source) && valid?(files)
+        raise Error, INVALID unless Gem::Version.correct?(version) && SOURCES.include?(source) && valid?(values, files)
 
         new(version:, source:, name:, values:, files: files.transform_keys(&:to_s))
       else

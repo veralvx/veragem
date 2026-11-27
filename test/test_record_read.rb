@@ -47,14 +47,17 @@ class TestRecordRead < Minitest::Test
 
   def invalid_fields
     ["version: [", "- a list", valid.merge("source" => "elsewhere"), valid.except("name"),
-     valid.merge("values" => "none"), valid.merge("version" => "not one")]
+     valid.merge("values" => "none"), valid.merge("version" => "not one"), valid.merge("values" => { "author" => 5 }),
+     valid.merge("values" => { "author" => "Jane", "exe" => ["yes"] })]
   end
 
-  # ids no git object has, and paths outside the gem or in another system's syntax
+  # ids no git object has, nor git writes, and paths outside the gem, git's own, none, or in another
+  # system's syntax
   def invalid_files
     [{ "Rakefile" => "abc" }, { "Rakefile" => 1 }, { "Rakefile" => "a" * 40, "Gemfile" => "abc" },
-     { "Rakefile" => "a" * 41 }, { "Rakefile" => "a" * 63 }, { "Rakefile" => "g" * 40 },
-     *["/etc/x", "../x", "a/../x", "a/..", ".", "a//b", "a/", "C:/x", "a\\b"].map { { it => "a" * 40 } }]
+     { "Rakefile" => "a" * 41 }, { "Rakefile" => "a" * 63 }, { "Rakefile" => "g" * 40 }, { "Rakefile" => "A" * 40 },
+     *["/etc/x", "../x", "a/../x", "a/..", ".", "a//b", "a/", "C:/x", "a\\b", "", "a\0b", ".git/HEAD", "a/.GIT/x",
+       ".git./x", ".git /x", "GIT~1/HEAD"].map { { it => "a" * 40 } }]
   end
 
   def valid

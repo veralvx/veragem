@@ -248,7 +248,7 @@ module Veragem
                      files: Hash[String, String]) -> void
     def project: () -> Project
     def write: (String dir) -> void
-    private def self.valid?: (Hash[Symbol, untyped] files) -> bool
+    private def self.valid?: (Hash[Symbol, untyped] values, Hash[Symbol, untyped] files) -> bool
     private def self.parse: (untyped data) -> Record
   end
 
