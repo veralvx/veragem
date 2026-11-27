@@ -42,7 +42,7 @@ module Veragem
     # git's output in +dir+'s repository, whatever repository a git hook running the tests points at;
     # a failure raises, not read as no output
     def git(dir, *args)
-      output = IO.popen(Generator.const_get(:GIT_LOCAL), ["git", *args], chdir: dir, &:read)
+      output = IO.popen(Git.const_get(:LOCAL), ["git", *args], chdir: dir, &:read)
       raise "git #{args.join(" ")} failed in #{dir}" unless Process.last_status.success?
 
       output

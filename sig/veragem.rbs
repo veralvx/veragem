@@ -197,7 +197,6 @@ module Veragem
     TEMPLATE: String
     EXE: Array[String]
     EXECUTABLES: Array[String]
-    GIT_LOCAL: Hash[String, nil]
     LICENSE_FILES: Hash[String, String]
     CITATION: String
     TOOLS_LOCK: String
@@ -224,6 +223,11 @@ module Veragem
     private def self.write: (String target, Entry entry) -> void
     private def self.stage: (String target, Array[String] executables) -> void
     private def self.render: (String source, Project project) -> String
-    private def self.git: (String dir, *String args) -> void
+  end
+
+  module Git
+    LOCAL: Hash[String, nil]
+
+    def self.run: (String dir, *String args) -> void
   end
 end

@@ -17,11 +17,6 @@ module Veragem
     # commit keeps, where the file system has no mode (Windows: core.fileMode false).
     EXECUTABLES = %w[.githooks/commit-msg .githooks/pre-commit .githooks/pre-push .github/image-registries.sh
                      .github/release-notes.sh bin/console.erb bin/setup exe/%name%.erb].freeze
-    # git's variables that point it at another repository (`git rev-parse --local-env-vars`, but the
-    # configuration given with `git -c`), which a git hook sets: unset, the repository is the gem's.
-    GIT_LOCAL = %w[GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_CONFIG GIT_OBJECT_DIRECTORY GIT_DIR GIT_WORK_TREE
-                   GIT_IMPLICIT_WORK_TREE GIT_GRAFT_FILE GIT_INDEX_FILE GIT_NO_REPLACE_OBJECTS GIT_REPLACE_REF_BASE
-                   GIT_PREFIX GIT_SHALLOW_FILE GIT_COMMON_DIR].to_h { [it, nil] }.freeze
     # Each LICENSE-* file's SPDX identifier.
     LICENSE_FILES = { "LICENSE-MIT.erb" => "MIT", "LICENSE-APACHE.erb" => "Apache-2.0" }.freeze
     # The citation's file, a citation's alone (--citation).
@@ -29,7 +24,7 @@ module Veragem
     # The tools' resolution: this repository's Gemfile is the template's (test_sync.rb), so its lock
     # names every gem a generated gem's tools load, theirs included.
     TOOLS_LOCK = File.expand_path("../../Gemfile.lock", __dir__ || raise)
-    private_constant :GIT_LOCAL, :LICENSE_FILES, :CITATION, :TOOLS_LOCK
+    private_constant :LICENSE_FILES, :CITATION, :TOOLS_LOCK
 
     # A file of a gem: its path, its bytes, and whether it runs as a command.
     Entry = Data.define(:path, :bytes, :executable)
@@ -150,23 +145,15 @@ module Veragem
 
     # A repository of its own, every file added, the executables' mode in the index too
     private_class_method def self.stage(target, executables)
-      git(target, "init", "--quiet", "--initial-branch=main")
+      Git.run(target, "init", "--quiet", "--initial-branch=main")
       # --force: the user's own excludes (core.excludesFile) keep none of the gem's files out
-      git(target, "add", "--all", "--force")
-      git(target, "update-index", "--chmod=+x", "--", *executables)
+      Git.run(target, "add", "--all", "--force")
+      Git.run(target, "update-index", "--chmod=+x", "--", *executables)
     end
 
     # The ERB's values are +project+'s: its methods, called bare.
     private_class_method def self.render(source, project)
       ERB.new(File.read(source, encoding: Encoding::UTF_8), trim_mode: "-").result(project.instance_eval { binding })
-    end
-
-    # system's nil: git could not run; false: it failed
-    private_class_method def self.git(dir, *args)
-      case system(GIT_LOCAL, "git", *args, chdir: dir)
-      when nil then raise Error, "cannot run git in #{dir}"
-      when false then raise Error, "git #{args.join(" ")} failed in #{dir}"
-      end
     end
   end
 end

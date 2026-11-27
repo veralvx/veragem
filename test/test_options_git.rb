@@ -104,7 +104,7 @@ class TestOptionsGit < Minitest::Test
       env = { "HOME" => home, "GIT_CONFIG_GLOBAL" => File.join(home, ".gitconfig"), "GIT_CONFIG_NOSYSTEM" => "1",
               "GIT_CONFIG_COUNT" => nil, "GIT_CONFIG_PARAMETERS" => nil,
               "GIT_CEILING_DIRECTORIES" => File.dirname(home), "LC_ALL" => "C" }
-      with_env(Veragem::Generator.const_get(:GIT_LOCAL).merge(env)) { yield home }
+      with_env(Veragem::Git.const_get(:LOCAL).merge(env)) { yield home }
     end
   end
 end
