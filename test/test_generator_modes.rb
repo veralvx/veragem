@@ -25,7 +25,7 @@ class TestGeneratorModes < Minitest::Test
     each_kind do |gem, target, files|
       entries = Veragem::Generator.entries(gem).to_h { [it.path, [it.bytes.b, it.executable]] }
 
-      assert_equal written(target, files), entries
+      assert_equal written(target, files - [Veragem::Record::FILE]), entries
     end
   end
 

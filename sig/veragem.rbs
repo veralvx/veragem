@@ -197,6 +197,7 @@ module Veragem
     TEMPLATE: String
     EXE: Array[String]
     EXECUTABLES: Array[String]
+    OWN: Array[String]
     LICENSE_FILES: Hash[String, String]
     CITATION: String
     TOOLS_LOCK: String
@@ -205,9 +206,10 @@ module Veragem
       attr_reader path: String
       attr_reader bytes: String
       attr_reader executable: bool
+      attr_reader harness: bool
 
-      def self.new: (String path, String bytes, bool executable) -> instance
-                  | (path: String, bytes: String, executable: bool) -> instance
+      def self.new: (String path, String bytes, bool executable, bool harness) -> instance
+                  | (path: String, bytes: String, executable: bool, harness: bool) -> instance
     end
 
     def self.generate: (Project project, String target) -> void
@@ -221,13 +223,37 @@ module Veragem
     private def self.path_of: (String file, String name) -> String
     private def self.removed_unless_done: (String target) { () -> void } -> void
     private def self.write: (String target, Entry entry) -> void
-    private def self.stage: (String target, Array[String] executables) -> void
+    private def self.stage: (String target, Array[Entry] written, Project project) -> void
     private def self.render: (String source, Project project) -> String
+  end
+
+  class Record
+    FILE: String
+    SOURCES: Array[String]
+    ID: Regexp
+
+    attr_reader version: String
+    attr_reader source: String
+    attr_reader name: String
+    attr_reader values: Hash[Symbol, String | bool | nil]
+    attr_reader files: Hash[String, String]
+
+    def self.source_of: (String root) -> String
+    def self.values_of: (Project project) -> Hash[Symbol, String | bool | nil]
+    def self.of: (Project project, String target, Array[Generator::Entry] entries) -> Record
+    def self.read: (String dir) -> Record
+    def initialize: (version: String, source: String, name: String, values: Hash[Symbol, String | bool | nil],
+                     files: Hash[String, String]) -> void
+    def project: () -> Project
+    def write: (String dir) -> void
+    private def self.parse: (untyped data) -> Record
   end
 
   module Git
     LOCAL: Hash[String, nil]
 
     def self.run: (String dir, *String args) -> void
+    def self.output: (String dir, *String args) -> String
+    def self.ids: (String dir, Array[String] paths) -> Hash[String, String]
   end
 end

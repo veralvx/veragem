@@ -17,6 +17,12 @@ module Veragem
     # commit keeps, where the file system has no mode (Windows: core.fileMode false).
     EXECUTABLES = %w[.githooks/commit-msg .githooks/pre-commit .githooks/pre-push .github/image-registries.sh
                      .github/release-notes.sh bin/console.erb bin/setup exe/%name%.erb].freeze
+    # The gem's own files, which it makes its own once generated: its code, signatures and tests, its
+    # gemspec, README, licences and citation. Every other file is the harness, veragem's, which
+    # `bundle veragem-sync` keeps current.
+    OWN = %w[%name%.gemspec.erb CITATION.cff.erb LICENSE-APACHE.erb LICENSE-MIT.erb README.md.erb exe/%name%.erb
+             lib/%path%.rb.erb lib/%path%/cli.rb.erb lib/%path%/version.rb.erb sig/%path%.rbs.erb
+             test/test_%underscored%.rb.erb test/test_cli.rb.erb test/test_helper.rb.erb].freeze
     # Each LICENSE-* file's SPDX identifier.
     LICENSE_FILES = { "LICENSE-MIT.erb" => "MIT", "LICENSE-APACHE.erb" => "Apache-2.0" }.freeze
     # The citation's file, a citation's alone (--citation).
@@ -26,8 +32,9 @@ module Veragem
     TOOLS_LOCK = File.expand_path("../../Gemfile.lock", __dir__ || raise)
     private_constant :LICENSE_FILES, :CITATION, :TOOLS_LOCK
 
-    # A file of a gem: its path, its bytes, and whether it runs as a command.
-    Entry = Data.define(:path, :bytes, :executable)
+    # A file of a gem: its path, its bytes, whether it runs as a command, and whether it is the
+    # harness's (not OWN).
+    Entry = Data.define(:path, :bytes, :executable, :harness)
 
     # Into +target+, a new directory: a failure, an interrupt included, leaves none behind.
     # @param project [Veragem::Project] the gem
@@ -40,7 +47,7 @@ module Veragem
       Dir.mkdir(target)
       removed_unless_done(target) do
         written.each { write(target, it) }
-        stage(target, written.select(&:executable).map(&:path))
+        stage(target, written, project)
       end
     rescue SystemCallError => e
       raise Error, e.message
@@ -53,7 +60,7 @@ module Veragem
       files(project).map do |file, path|
         source = File.join(TEMPLATE, file)
         bytes = file.end_with?(".erb") ? render(source, project) : File.binread(source)
-        Entry.new(path, bytes, EXECUTABLES.include?(file))
+        Entry.new(path, bytes, EXECUTABLES.include?(file), !OWN.include?(file))
       end
     end
 
@@ -143,12 +150,15 @@ module Veragem
       File.chmod(mode | ((mode & 0o444) >> 2), destination)
     end
 
-    # A repository of its own, every file added, the executables' mode in the index too
-    private_class_method def self.stage(target, executables)
+    # A repository of its own, every file added, the executables' mode in the index too; then the
+    # record of the harness added, as the index holds it
+    private_class_method def self.stage(target, written, project)
       Git.run(target, "init", "--quiet", "--initial-branch=main")
       # --force: the user's own excludes (core.excludesFile) keep none of the gem's files out
       Git.run(target, "add", "--all", "--force")
-      Git.run(target, "update-index", "--chmod=+x", "--", *executables)
+      Git.run(target, "update-index", "--chmod=+x", "--", *written.select(&:executable).map(&:path))
+      Record.of(project, target, written).write(target)
+      Git.run(target, "add", "--force", "--", Record::FILE)
     end
 
     # The ERB's values are +project+'s: its methods, called bare.
