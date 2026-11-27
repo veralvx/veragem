@@ -183,15 +183,18 @@ module Veragem
   # veragem's, and a sync of it.
   module SyncSupport
     include GeneratedSupport
+    include TerminalSupport
 
     HEADING = "from veragem #{VERSION} (path)".freeze
     YARDOPTS = File.read(File.join(Generator::TEMPLATE, ".yardopts"))
 
-    # my_gem, generated into a directory of its own and committed
+    # my_gem, generated into a directory of its own and committed; its conflicts marked in git's own
+    # style, whatever the user's
     def in_gem(**values)
       in_tmpdir do |dir|
         target = File.join(dir, "my_gem")
         Generator.generate(project(**values), target)
+        git(target, "config", "merge.conflictStyle", "merge")
         commit(target)
         yield target
       end
@@ -250,9 +253,6 @@ module Veragem
 
     # as bytes: a text mode's (Windows') CRLF would differ from every side's LF
     def write(target, path, text) = File.binwrite(File.join(target, path), text)
-
-    # +answers+ typed at a terminal, one a line
-    def terminal(*answers) = StringIO.new(answers.map { "#{it}\n" }.join).tap { |io| def io.tty? = true }
   end
 
   # What the release's tests share: gem sources of this checkout built as a gem, and of a release
