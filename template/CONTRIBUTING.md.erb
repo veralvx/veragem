@@ -247,3 +247,9 @@ brings new cops (`NewCops: enable`), a new Steep new diagnostics: read them befo
 bump the new cops fail stays unmerged: its failed run's summary holds RuboCop's safe corrections as
 a patch, to `git apply` on its branch (no workflow pushes code the bumped gems wrote); what they
 leave is yours to fix.
+
+The harness, every file but the gem's own (its code, signatures and tests, gemspec, README,
+licences and citation), is veragem's: `bundle veragem-sync` brings it to the latest veragem
+release's, your changes merged with veragem's, and records it in `.veragem.yml` (`--dry-run` shows
+what would change). Commit what it changes, the record included;
+[veragem's README](https://github.com/veralvx/veragem#sync) describes it.
