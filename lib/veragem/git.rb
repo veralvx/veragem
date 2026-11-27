@@ -87,9 +87,9 @@ module Veragem
         files = { "base" => base, "theirs" => theirs }.map { |name, bytes| written(File.join(tmp, name), bytes) }
         labels = ["-L", ours, "-L", "base", "-L", "veragem"]
         output, status = capture(dir, ["merge-file", "--stdout", *labels, ours, *files], nil)
-        # its status the count of conflicts, at most 127; an error's -1, 255
-        conflicts = status.exitstatus.to_i
-        raise Error, "git merge-file #{ours} failed in #{dir}" if conflicts > 127
+        # its status the count of conflicts, at most 127; an error's 255, git's death 128, a signal's none
+        conflicts = status.exitstatus
+        raise Error, "git merge-file #{ours} failed in #{dir}" unless conflicts && conflicts <= 127
 
         [output, conflicts]
       end

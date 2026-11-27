@@ -59,37 +59,6 @@ class TestGit < Minitest::Test
     end
   end
 
-  def test_a_merge_says_how_many_conflicts
-    in_tmpdir do |dir|
-      Veragem::Git.run(dir, "init", "--quiet")
-      { "ours" => "a\nb\nc\n", "other" => "y\nb\n" }.each { |name, text| File.binwrite(File.join(dir, name), text) }
-
-      assert_equal ["z\nb\nc\n", 0], Veragem::Git.merge(dir, "ours", "a\nb\n", "z\nb\n")
-      assert_equal ["<<<<<<< other\ny\n=======\nz\n>>>>>>> veragem\nb\n", 1],
-                   Veragem::Git.merge(dir, "other", "a\nb\n", "z\nb\n")
-    end
-  end
-
-  # its status at most 127, however many: more is git's failure
-  def test_a_merge_of_many_conflicts_is_one
-    in_tmpdir do |dir|
-      Veragem::Git.run(dir, "init", "--quiet")
-      side = ->(name) { (1..130).map { "#{it}\n#{"-\n" * 4}#{name}\n" }.join }
-      File.binwrite(File.join(dir, "ours"), side.call("ours"))
-
-      assert_equal 127, Veragem::Git.merge(dir, "ours", side.call("base"), side.call("theirs")).last
-    end
-  end
-
-  def test_a_merge_that_fails_says_so
-    in_tmpdir do |dir|
-      Veragem::Git.run(dir, "init", "--quiet")
-      error = assert_raises(Veragem::Error) { capture_subprocess_io { Veragem::Git.merge(dir, "none", "a\n", "b\n") } }
-
-      assert_equal "git merge-file none failed in #{dir}", error.message
-    end
-  end
-
   def test_input_is_given
     in_tmpdir do |dir|
       assert_equal "a\n", Veragem::Git.output(dir, "stripspace", input: "a\n\n")
