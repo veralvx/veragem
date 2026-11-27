@@ -13,8 +13,10 @@ module Veragem
   # none, merged where you made some, and yours kept where veragem made none. The gem's own files
   # (Generator::OWN) it never touches.
   #
-  # Stable across versions, as one veragem runs another's: lib/veragem/sync.rb, main's arguments,
-  # `--render DIR`, and the record's fields.
+  # Stable across versions, as one veragem runs another's (Source): lib/veragem/sync.rb, main's
+  # arguments, render, Record.read and the record's fields, Veragem::Error, and veragem loaded with
+  # the standard library alone. An installed plugin's launcher reads --path as Source::PATH does:
+  # --path never abbreviated, and a short option before -p in a group takes no value.
   module Sync
     # --help's first line.
     BANNER = "Usage: bundle veragem-sync [--path DIR] [--dry-run] [--interactive] [--force] " \
@@ -29,8 +31,7 @@ module Veragem
     ].freeze #: Array[Array[String]]
     private_constant :OPTIONS
 
-    # Syncs the gem in +dir+ from this veragem, as +argv+ says; or, given `--render DIR`, writes into
-    # DIR the harness this veragem would write for the gem.
+    # Syncs the gem in +dir+ from this veragem, as +argv+ says.
     # @param argv [Array<String>] the command's arguments
     # @param dir [String] the gem's directory
     # @param input [#gets, #tty?] where --interactive's choice is typed
@@ -38,8 +39,6 @@ module Veragem
     # @return [void]
     # @raise [Veragem::Error] sync refuses, or a file is left in conflict
     def self.main(argv, dir: Dir.pwd, input: $stdin, output: $stdout)
-      return render(Record.read(dir), argv.fetch(1)) if argv.first == "--render"
-
       options, adopt = options(argv)
       record = adopt ? adopted(adopt, dir) : Record.read(dir).tap { check(it, options.key?(:force)) }
       Run.new(dir, record, options, input:, output:).call

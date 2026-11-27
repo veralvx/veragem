@@ -341,7 +341,8 @@ module Veragem
     end
 
     module Source
-      SCRIPT: String
+      SYNC: String
+      RENDER: String
       PATH: Regexp
 
       def self.launch: (Array[String] argv, ?dir: String) -> void
@@ -350,7 +351,7 @@ module Veragem
       private def self.fetch: (String? version, String dir) -> String
       private def self.gem_command: (Array[String] args, String dir) -> bool?
       private def self.sync?: (String root) -> bool
-      private def self.run: (String root, Array[String] argv, String dir) -> bool?
+      private def self.run: (String root, String call, Array[String] argv, String dir) -> bool?
     end
   end
 end

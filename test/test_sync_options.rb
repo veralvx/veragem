@@ -59,10 +59,20 @@ class TestSyncOptions < Minitest::Test
     in_gem do |gem|
       in_tmpdir do |out|
         # elsewhere than the tests' directory: a mutant's render would write into it
-        Dir.chdir(out) { Veragem::Sync.main(["--render", out], dir: gem) }
+        Dir.chdir(out) { Veragem::Sync.render(Veragem::Record.read(gem), out) }
 
         assert_equal Veragem::Record.read(gem).files.keys.sort, files_in(out).sort
         assert_equal read(gem, "Rakefile"), read(out, "Rakefile")
+      end
+    end
+  end
+
+  # a release's alone, which a sync runs: from the command line, its harness would overwrite yours
+  def test_render_is_no_option
+    in_gem do |gem|
+      in_tmpdir do |out|
+        assert_equal "invalid option: --render (bundle veragem-sync --help)", refused(gem, "--render", out).first
+        assert_empty files_in(out)
       end
     end
   end

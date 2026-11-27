@@ -8,11 +8,13 @@ module Veragem
     # The veragem a sync runs: a checkout (--path), or a release fetched from the gem sources, in a
     # Ruby of its own (Bundler's environment unset): its code, not the plugin's.
     module Source
-      # What the Ruby of the veragem runs: Sync.main, a refusal its message alone.
-      SCRIPT = "begin; Veragem::Sync.main(ARGV); rescue Veragem::Error => e; abort(e.message); end"
+      # What the Ruby of the veragem runs: the command's sync, or the harness it writes for the gem
+      # into ARGV's directory; a refusal its message alone.
+      SYNC = "Veragem::Sync.main(ARGV)"
+      RENDER = "Veragem::Sync.render(Veragem::Record.read(Dir.pwd), ARGV.fetch(0))"
       # --path, or -p after the flags of a group: its directory, if joined to it
       PATH = /\A(?:--path(?:=(.*))?|-(?!-)[a-oq-z-]*p(.+)?)\z/m
-      private_constant :SCRIPT, :PATH
+      private_constant :SYNC, :RENDER, :PATH
 
       # Runs `bundle veragem-sync ARGV` in +dir+: the sync of the veragem --path names, or else of
       # the latest release.
@@ -27,7 +29,7 @@ module Veragem
           root = path ? File.expand_path(path, dir) : fetch(nil, tmp)
           raise Error, "#{root} has no bundle veragem-sync: a veragem checkout has" unless sync?(root)
 
-          exit(1) unless run(root, argv, dir)
+          exit(1) unless run(root, SYNC, argv, dir)
         end
       end
 
@@ -41,7 +43,7 @@ module Veragem
         Dir.mktmpdir("veragem-sync") do |tmp|
           root = fetch(version, tmp)
           out = File.join(tmp, "harness")
-          next {} unless sync?(root) && run(root, ["--render", out], dir)
+          next {} unless sync?(root) && run(root, RENDER, [out], dir)
 
           files = Dir.glob("**/*", File::FNM_DOTMATCH, base: out).select { File.file?(File.join(out, it)) }
           files.to_h { [it, File.binread(File.join(out, it))] }
@@ -84,9 +86,10 @@ module Veragem
 
       private_class_method def self.sync?(root) = File.file?(File.join(root, "lib", "veragem", "sync.rb"))
 
-      private_class_method def self.run(root, argv, dir)
+      private_class_method def self.run(root, call, argv, dir)
+        script = "begin; #{call}; rescue Veragem::Error => e; abort(e.message); end"
         Bundler.with_unbundled_env do
-          system(RbConfig.ruby, "-I", File.join(root, "lib"), "-rveragem", "-e", SCRIPT, "--", *argv, chdir: dir)
+          system(RbConfig.ruby, "-I", File.join(root, "lib"), "-rveragem", "-e", script, "--", *argv, chdir: dir)
         end
       end
     end
