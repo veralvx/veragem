@@ -70,6 +70,7 @@ class TestSyncOptions < Minitest::Test
   def test_options_are_read
     assert_equal [{ path: "x", dry_run: true, interactive: true, force: true }, nil],
                  Veragem::Sync.options(%w[--path x --dry-run --interactive --force])
+    assert_equal [{ path: "x", dry_run: true, interactive: true, force: true }, nil], Veragem::Sync.options(%w[-nifp x])
     assert_equal [{ dry_run: true }, %w[my_gem --exe --path y]],
                  Veragem::Sync.options(%w[--dry-run --adopt my_gem --exe --path y])
     assert_equal [{}, []], Veragem::Sync.options(%w[--adopt])
@@ -91,7 +92,8 @@ class TestSyncOptions < Minitest::Test
     version, = capture_io { assert_raises(SystemExit) { Veragem::Sync.options(%w[--version]) } }
 
     assert_match(/\AUsage: bundle veragem-sync \[--path DIR\]/, help)
-    assert_match(/^ +--path=DIR +Sync from the veragem checkout at DIR/, help)
+    assert_match(/^ +-p, --path=DIR +Sync from the veragem checkout at DIR/, help)
+    assert_match(/^ +-n, --dry-run +Show what would change/, help)
     assert_equal "bundle veragem-sync #{Veragem::VERSION}\n", version
   end
 end

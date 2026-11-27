@@ -259,6 +259,9 @@ bundle veragem-sync                    # change it; review, then commit
 bundle veragem-sync --path ../veragem  # from a veragem checkout instead
 ```
 
+Each option but `--adopt` has a letter too: `-p DIR`, `-n` (`--dry-run`), `-i` (`--interactive`)
+and `-f` (`--force`), joined as `-nf`.
+
 It compares each file three ways: as veragem last wrote it (its object id in `.veragem.yml`, which
 `bundle veragem` writes and each sync updates), as the gem has it, and as this veragem writes it.
 

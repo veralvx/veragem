@@ -268,7 +268,7 @@ module Veragem
 
   module Sync
     BANNER: String
-    OPTIONS: Array[[String, String]]
+    OPTIONS: Array[Array[String]]
 
     type options = Hash[Symbol, String | bool]
 
@@ -341,6 +341,7 @@ module Veragem
 
     module Source
       SCRIPT: String
+      PATH: Regexp
 
       def self.launch: (Array[String] argv, ?dir: String) -> void
       def self.harness: (String version, String dir) -> Hash[String, String]

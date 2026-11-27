@@ -21,12 +21,12 @@ module Veragem
              "[--adopt NAME [bundle veragem's options]]"
     # Each option and its --help.
     OPTIONS = [
-      ["--path=DIR", "Sync from the veragem checkout at DIR (default: the latest release)"],
-      ["--dry-run", "Show what would change, and change nothing"],
-      ["--interactive", "Choose which files change"],
-      ["--force", "Sync from an older veragem, or a release after a checkout of its version"],
+      ["-p", "--path=DIR", "Sync from the veragem checkout at DIR (default: the latest release)"],
+      ["-n", "--dry-run", "Show what would change, and change nothing"],
+      ["-i", "--interactive", "Choose which files change"],
+      ["-f", "--force", "Sync from an older veragem, or a release after a checkout of its version"],
       ["--adopt", "A gem with no .veragem.yml: its values, as bundle veragem takes them, follow"]
-    ].freeze #: Array[[String, String]]
+    ].freeze #: Array[Array[String]]
     private_constant :OPTIONS
 
     # Syncs the gem in +dir+ from this veragem, as +argv+ says; or, given `--render DIR`, writes into
@@ -105,7 +105,7 @@ module Veragem
         # the launcher reads --path as given, never abbreviated
         opts.require_exact = true
         opts.version = VERSION
-        OPTIONS.each { |switch, help| opts.on(switch, help) }
+        OPTIONS.each { opts.on(*it) }
       end
     end
   end

@@ -7,10 +7,11 @@ class TestSyncLaunch < Minitest::Test
   include Veragem::SyncSupport
   include Veragem::ReleaseSupport
 
-  # either form, the first; the rest the veragem's
+  # each form OptionParser reads, the first; the rest the veragem's
   def test_path_is_read_alone
     in_tmpdir do |dir|
-      [["--path", dir], ["--path=#{dir}", "--dry-run", "--path", "elsewhere", "--adopt", "x"]].each do |argv|
+      [["--path", dir], ["--path=#{dir}", "--dry-run", "--path", "elsewhere", "--adopt", "x"], ["-p", dir],
+       ["-p#{dir}"], ["--paths", "-np", dir], ["-nfp#{dir}", "-pelsewhere"]].each do |argv|
         error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(argv, dir:) }
 
         assert_equal "#{dir} has no bundle veragem-sync: a veragem checkout has", error.message
@@ -31,9 +32,11 @@ class TestSyncLaunch < Minitest::Test
 
   def test_a_path_without_a_directory_is_refused
     in_tmpdir do |dir|
-      error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(%w[--dry-run --path], dir:) }
+      { %w[--dry-run --path] => "--path", %w[-np] => "-np" }.each do |argv, flag|
+        error = assert_raises(Veragem::Error) { Veragem::Sync::Source.launch(argv, dir:) }
 
-      assert_equal "missing argument: --path (bundle veragem-sync --help)", error.message
+        assert_equal "missing argument: #{flag} (bundle veragem-sync --help)", error.message
+      end
     end
   end
 end
